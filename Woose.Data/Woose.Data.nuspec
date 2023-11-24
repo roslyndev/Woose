@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Woose.Data</id>
+    <version>1.0.0</version>
+    <title>Woose Data Library</title>
+    <authors>https://parkheesung.github.io</authors>
+    <owners>Parkheesung</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/parkheesung/Woose</projectUrl>
+    <iconUrl>https://ko.gravatar.com/userimage/174965688/6f5f295bad0e3eb61298885602b9c318?size=200</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>.Net Standard Library 2.1 for ASP.NET MVC</description>
+    <releaseNotes>First Commit</releaseNotes>
+    <copyright>Copyright 2023</copyright>
+    <tags>ASP.NET, StandardLibrary, Woose, SqlDataClient</tags>
+  <dependencies>
+    <group targetFramework=".NETStandard2.1">
+		<dependency id="Woose.Core" version="1.0.3" />
+		<dependency id="System.Data.SqlClient" version="4.8.5" />
+		<dependency id="Newtonsoft.Json" version="13.0.3" />
+    </group>
+  </dependencies>
+  </metadata>
+</package>
