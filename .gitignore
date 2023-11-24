@@ -1,0 +1,9 @@
+﻿/.vs
+/Woose.Core/bin
+/Woose.Core/obj
+/Woose.Data/bin
+/Woose.Data/obj
+/Woose.Tests/bin
+/Woose.Test/obj
+*.nupkg
+/Woose.Tests/obj
