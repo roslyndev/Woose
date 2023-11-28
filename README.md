@@ -1,6 +1,6 @@
 # Woose .net Library for mssql  
 
-**beta** 버전
+:beta: 버전
 
 Woose는 ASP.NET 라이브러리로, 좀 더 편리하게 개발을 할 수 있도록 도와주는 여러가지 라이브러리와
 MSSQL 연동시 어플리케이션 의존성 없이도 동적 쿼리를 생성하여 결과물을 리턴받을 수 있습니다.
