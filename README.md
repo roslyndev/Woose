@@ -7,7 +7,7 @@ MSSQL 연동시 어플리케이션 의존성 없이도 동적 쿼리를 생성�
 
 ## 설치
 
-NuGet 패키지 관리자 콘솔에서 다음 명령어를 사용하여 MyLibrary를 설치하세요.
+NuGet 패키지 관리자 콘솔에서 다음 명령어를 사용하여 Woose를 설치하세요.
 
 ```bash
 Install-Package Woose.Core
