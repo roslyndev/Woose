@@ -39,12 +39,12 @@ Install-Package Woose.Data
   using (var db = context.getConnection())
   using (var handler = new SqlDbOperater(db))
   {
-      var list = Entity<TableEntity>.Query
-                                    .Select(1)
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .Execute(handler.Command)
-                                    .ToScalar();
+      var instance = Entity<TableEntity>.Query
+                                        .Select(1)
+                                        .Where(x => x.ColumnA == "Value1")
+                                        .And(x => x.ColumnB == "Value2")
+                                        .Execute(handler.Command)
+                                        .ToScalar();
   }
 ```
 
