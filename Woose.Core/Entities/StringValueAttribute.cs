@@ -25,8 +25,8 @@ namespace Woose.Core
             if (type.IsEnum)
             {
                 FieldInfo fi = type.GetField(enumValue.ToString());
-                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof(StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs.Length > 0)
+                StringValueAttribute[]? attrs = fi.GetCustomAttributes(typeof(StringValueAttribute), false) as StringValueAttribute[];
+                if (attrs != null && attrs.Length > 0)
                 {
                     result = attrs[0].Value;
                 }

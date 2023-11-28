@@ -11,7 +11,7 @@ namespace Woose.Data
 
         public DatabaseType DbType { get; set; } = DatabaseType.Unknown;
 
-        protected SqlConnection SqlConn { get; set; }
+        protected SqlConnection? SqlConn { get; set; }
 
         public DatabaseConnection(string connectionstring) 
         { 
@@ -33,7 +33,7 @@ namespace Woose.Data
             }
         }
 
-        public SqlConnection GetSqlServer()
+        public SqlConnection? GetSqlServer()
         {
             return this.SqlConn;
         }

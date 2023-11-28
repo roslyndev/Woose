@@ -2,17 +2,6 @@ using Woose.Data;
 
 namespace Woose.Tests
 {
-    public class InputCode
-    {
-        public long CodeIDX { get; set; } = -1;
-        public string MajorCode { get; set; } = string.Empty;
-        public string MinorCode { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-        public string MajorName { get; set; } = string.Empty;
-        public string MinorName { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-    }
-
     public class DataTests
     {
         protected string connStr { get; set; } = string.Empty;
@@ -32,15 +21,18 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                handler.Command.CreateQuery<GlobalCode>(true).Select()
-                               .Where("MajorCode='Member'")
-                               .Where("MinorCode='Status'")
-                               .Set();
-                codeList = handler.Command.ExecuteEntities<GlobalCode>();
+                var rst = Entity<GlobalCode>.Query
+                                            .Select()
+                                            .Where(x => x.MajorCode == "Member")
+                                            .And(x => x.MinorCode == "Status")
+                                            .Execute(handler.Command)
+                                            .ToResult() as ReturnValues<List<GlobalCode>>;
+                
+                codeList = (rst != null) ? rst.Data as List<GlobalCode> : new List<GlobalCode>();
             }
 
             Assert.IsNotNull(codeList);
-            Assert.AreEqual(codeList.Count, 1);
+            Assert.That(codeList.Count, Is.EqualTo(1));
         }
 
         [Test, Order(1)]
@@ -54,22 +46,21 @@ namespace Woose.Tests
             paramData.MajorCode = "Member";
             paramData.MinorName = "상태";
             paramData.MinorCode = "Status";
-            paramData.Name = "정상";
-            paramData.Code = "Active";
+            paramData.KeyName = "정상";
+            paramData.KeyCode = "Active";
+
 
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                handler.Command.CreateQuery<GlobalCode>(true)
-                               .InsertAll(paramData)
-                               .NotExists()
-                               .Where("MajorCode='Member'")
-                               .Where("MinorCode='Status'")
-                               .ToResult<ExecuteResult>();
-                rst = handler.Command.ExecuteResult();
+                rst = Entity<GlobalCode>.Query
+                                        .Insert(paramData)
+                                        .SetResult<ExecuteResult>()
+                                        .Execute(handler.Command)
+                                        .ToResult() as ExecuteResult;
             }
 
-            Assert.AreEqual(rst.IsSuccess, true);
+            Assert.IsTrue(rst!.IsSuccess);
         }
 
         [Test, Order(3)]
@@ -78,42 +69,101 @@ namespace Woose.Tests
             IContext context = new DbContext(this.connStr);
             var rst = new ExecuteResult();
 
+            GlobalCode paramData = new GlobalCode();
+            paramData.MajorName = "회원";
+            paramData.MajorCode = "Member";
+            paramData.MinorName = "상태";
+            paramData.MinorCode = "Status";
+            paramData.KeyName = "정상";
+            paramData.KeyCode = "Absolute";
+
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                handler.Command.CreateQuery<GlobalCode>().Select(1).Where("MajorCode='Member'").Where("MinorCode='Status'").Set();
-                GlobalCode target = handler.Command.ExecuteEntity<GlobalCode>();
-                target.Code = "Absolute";
-
-                handler.Command.CreateQuery<GlobalCode>(true)
-                               .UpdateAll(target)
-                               .Where("MajorCode='Member'")
-                               .Where("MinorCode='Status'")
-                               .ToResult<ExecuteResult>();
-                rst = handler.Command.ExecuteResult();
+                rst = Entity<GlobalCode>.Query
+                                        .Update(paramData)
+                                        .Where(x => x.MajorCode == "Member")
+                                        .And(x => x.MinorCode == "Status")
+                                        .SetResult<ExecuteResult>()
+                                        .Execute(handler.Command)
+                                        .ToResult() as ExecuteResult;
             }
 
-            Assert.AreEqual(rst.IsSuccess, true);
+            Assert.IsTrue(rst!.IsSuccess);
         }
 
         [Test, Order(4)]
         public void ContextAndQueryHelper_TestCase_Delete()
         {
             IContext context = new DbContext(this.connStr);
-            int num = 0;
+            var rst = new ExecuteResult();
 
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                handler.Command.CreateQuery<GlobalCode>(true)
-                               .Delete()
-                               .Where("MajorCode='Member'")
-                               .Where("MinorCode='Status'")
-                               .Set();
-                num = handler.Command.ExecuteNonQuery();
+                rst = Entity<GlobalCode>.Query
+                                        .Delete()
+                                        .Where(x => x.MajorCode == "Member")
+                                        .And(x => x.MinorCode == "Status")
+                                        .SetResult<ExecuteResult>()
+                                        .Execute(handler.Command)
+                                        .ToResult() as ExecuteResult;
             }
 
-            Assert.AreEqual(num, 1);
+            Assert.IsTrue(rst!.IsSuccess);
+        }
+
+        [Test, Order(5)]
+        public void Entity_Test_Select_Case1()
+        {
+            IContext context = new DbContext(this.connStr);
+
+            List<GlobalCode> list = new List<GlobalCode>();
+            int paramCount = 0;
+            object paramValue = default!;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var rst = Entity<GlobalCode>.Query
+                                            .Select()
+                                            .Where(x => x.KeyCode == "test")
+                                            .Execute(handler.Command)
+                                            .ToResult() as ReturnValues<List<GlobalCode>>;
+                
+                paramCount = handler.Command!.Parameters.Count;
+                paramValue = handler.Command!.Parameters[0].Value;
+            }
+
+            Assert.That(paramCount, Is.EqualTo(1));
+            Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
+        }
+
+        [Test, Order(5)]
+        public void Entity_Test_Select_Case2()
+        {
+            IContext context = new DbContext(this.connStr);
+
+            List<GlobalCode> list = new List<GlobalCode>();
+            int paramCount = 0;
+            object paramValue = default!;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var rst = Entity<GlobalCode>.Query
+                                            .Select()
+                                            .Where(x => x.KeyCode == "test")
+                                            .And(x => x.IsEnabled)
+                                            .Execute(handler.Command)
+                                            .ToResult() as ReturnValues<List<GlobalCode>>;
+
+                paramCount = handler.Command!.Parameters.Count;
+                paramValue = handler.Command!.Parameters[0].Value;
+            }
+
+            Assert.That(paramCount, Is.EqualTo(2));
+            Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
         }
     }
 }

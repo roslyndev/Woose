@@ -49,7 +49,7 @@ namespace Woose.Core
             var properties = GetProperties<T>();
             var columns = data.Columns.Cast<DataColumn>().ToList();
 
-            DataRow row = (data.Rows.Count > 0) ? data.Rows[0] : null;
+            DataRow? row = (data.Rows.Count > 0) ? data.Rows[0] : null;
             DataColumn? column;
             if (row != null)
             {

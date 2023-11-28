@@ -1,6 +1,6 @@
 ﻿using Woose.Core;
 
-namespace Woose.Data
+namespace Woose.Tests
 {
     public class GlobalCode : BaseEntity, IEntity
     {
@@ -13,8 +13,8 @@ namespace Woose.Data
         [Entity("MinorCode", System.Data.SqlDbType.VarChar, 50)]
         public string MinorCode { get; set; } = string.Empty;
 
-        [Entity("Code", System.Data.SqlDbType.VarChar, 50)]
-        public string Code { get; set; } = string.Empty;
+        [Entity("KeyCode", System.Data.SqlDbType.VarChar, 50)]
+        public string KeyCode { get; set; } = string.Empty;
 
         [Entity("MajorName", System.Data.SqlDbType.NVarChar, 30)]
         public string MajorName { get; set; } = string.Empty;
@@ -22,8 +22,8 @@ namespace Woose.Data
         [Entity("MinorName", System.Data.SqlDbType.NVarChar, 30)]
         public string MinorName { get; set; } = string.Empty;
 
-        [Entity("Name", System.Data.SqlDbType.NVarChar, 30)]
-        public string Name { get; set; } = string.Empty;
+        [Entity("KeyName", System.Data.SqlDbType.NVarChar, 30)]
+        public string KeyName { get; set; } = string.Empty;
 
         [Entity("MappingKey", System.Data.SqlDbType.BigInt, 8)]
         public long MappingKey { get; set; } = -1;
@@ -37,5 +37,6 @@ namespace Woose.Data
             this.TableName = "GlobalCode";
             this.PrimaryColumn = "CodeIDX";
         }
+
     }
 }

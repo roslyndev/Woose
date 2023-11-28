@@ -55,13 +55,13 @@ namespace Woose.Data
             return result;
         }
 
-        public static void Set(this SqlParameterCollection Parameter, string Name, SqlDbType type, object Value)
+        public static void Set(this SqlParameterCollection Parameter, string Name, SqlDbType type, object? Value)
         {
             Parameter.Add(Name, type);
             Parameter[Name].Value = Value;
         }
 
-        public static void Set(this SqlParameterCollection Parameter, string Name, SqlDbType type, object Value, int size)
+        public static void Set(this SqlParameterCollection Parameter, string Name, SqlDbType type, object? Value, int size)
         {
             Parameter.Add(Name, type, size);
             Parameter[Name].Value = Value;
@@ -75,19 +75,19 @@ namespace Woose.Data
             Parameter[Name].Value = Value;
         }
 
-        public static void Out(this SqlParameterCollection Parameter, string Name, SqlDbType type)
+        public static void SetOutput(this SqlParameterCollection Parameter, string Name, SqlDbType type)
         {
             Parameter.Add(Name, type);
             Parameter[Name].Direction = ParameterDirection.Output;
         }
 
-        public static void Out(this SqlParameterCollection Parameter, string Name, SqlDbType type, int size)
+        public static void SetOutput(this SqlParameterCollection Parameter, string Name, SqlDbType type, int size)
         {
             Parameter.Add(Name, type, size);
             Parameter[Name].Direction = ParameterDirection.Output;
         }
 
-        public static void ReturnValue(this SqlParameterCollection Parameter)
+        public static void SetReturnValue(this SqlParameterCollection Parameter)
         {
             Parameter.Add("@Code", SqlDbType.BigInt);
             Parameter["@Code"].Direction = ParameterDirection.Output;
@@ -106,7 +106,7 @@ namespace Woose.Data
         {
             var result = new ReturnValue();
 
-            cmd.Parameters.ReturnValue();
+            cmd.Parameters.SetReturnValue();
             cmd.ExecuteNonQuery();
             result.Code = Convert.ToInt64(cmd.GetOutParameterValue("@Code"));
             result.Value = Convert.ToString(cmd.GetOutParameterValue("@Value"));
@@ -120,7 +120,7 @@ namespace Woose.Data
         {
             var result = new ReturnValues<List<T>>();
 
-            cmd.Parameters.ReturnValue();
+            cmd.Parameters.SetReturnValue();
             var tmp = new DataTable();
             using (var adp = new SqlDataAdapter(cmd))
             {

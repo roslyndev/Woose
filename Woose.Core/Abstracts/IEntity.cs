@@ -13,6 +13,6 @@ namespace Woose.Core
 
         List<EntityInfo> GetInfo();
 
-        object GetValue(string propertyName);
+        object? GetValue(string propertyName);
     }
 }

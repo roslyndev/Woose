@@ -20,15 +20,15 @@ namespace Woose.Core
 
     public static class ExtendEntity
     {
-        public static EntityInfo GetColumnInfo<T>(this T enumValue) where T : struct
+        public static EntityInfo? GetColumnInfo<T>(this T enumValue) where T : struct
         {
-            EntityInfo result = null;
+            EntityInfo? result = null;
 
             Type type = enumValue.GetType();
             if (type.IsPublic)
             {
                 FieldInfo fi = type.GetField(enumValue.ToString());
-                EntityAttribute[] attrs = fi.GetCustomAttributes(typeof(EntityAttribute), false) as EntityAttribute[];
+                EntityAttribute[]? attrs = fi.GetCustomAttributes(typeof(EntityAttribute), false) as EntityAttribute[];
                 if (attrs != null && attrs.Length > 0)
                 {
                     result = attrs[0].info;

@@ -23,7 +23,7 @@ namespace Woose.Core
         {
             if (String.IsNullOrWhiteSpace(this.SecretKey)) throw new ArgumentNullException("SecretKey is Empty.");
 
-            byte[] PlainText = null;
+            byte[]? PlainText = null;
             int DecryptedCount = -1;
 
             using (RijndaelManaged RijndaelCipher = new RijndaelManaged())
@@ -52,7 +52,7 @@ namespace Woose.Core
         {
             if (String.IsNullOrWhiteSpace(this.SecretKey)) throw new ArgumentNullException("SecretKey is Empty.");
 
-            byte[] CipherBytes = null;
+            byte[]? CipherBytes = null;
 
             using (RijndaelManaged RijndaelCipher = new RijndaelManaged())
             {

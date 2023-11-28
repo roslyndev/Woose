@@ -1,4 +1,5 @@
 ﻿using System.Data.SqlClient;
+using System.Text;
 
 namespace Woose.Data
 {
@@ -6,7 +7,25 @@ namespace Woose.Data
     {
         private bool disposedValue;
 
-        protected SqlCommand cmd { get; set; }
+        protected SqlCommand? cmd { get; set; }
+
+        protected StringBuilder query { get; set; } = new StringBuilder(200);
+
+        public string Query
+        {
+            get
+            {
+                return query.ToString();
+            }
+            set
+            {
+                query = new StringBuilder(value);
+                if (this.cmd != null)
+                {
+                    this.cmd.CommandType = System.Data.CommandType.Text;
+                }
+            }
+        }
 
         public SqlDbOperater(DatabaseConnection db)
         {
@@ -14,7 +33,7 @@ namespace Woose.Data
             this.cmd.Connection = db.GetSqlServer();
         }
 
-        public SqlCommand Command
+        public SqlCommand? Command
         {
             get
             {

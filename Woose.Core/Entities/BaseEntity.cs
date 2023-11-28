@@ -39,7 +39,7 @@ namespace Woose.Core
 
             foreach (PropertyInfo property in properties)
             {
-                EntityAttribute[] attrs = property.GetCustomAttributes(typeof(EntityAttribute), false) as EntityAttribute[];
+                EntityAttribute[]? attrs = property.GetCustomAttributes(typeof(EntityAttribute), false) as EntityAttribute[];
 
                 if (attrs != null && attrs.Length > 0)
                 {
@@ -52,7 +52,7 @@ namespace Woose.Core
             return infoList;
         }
 
-        public object GetValue(string propertyName)
+        public object? GetValue(string propertyName)
         {
             Type type = this.GetType();
             PropertyInfo property = type.GetProperty(propertyName);

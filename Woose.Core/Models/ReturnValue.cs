@@ -14,7 +14,7 @@ namespace Woose.Core
             this.Type = ResultType.OutputParameter;
         }
 
-        public BaseResult.ResultType GetResultType()
+        public virtual BaseResult.ResultType GetResultType()
         {
             return this.Type;
         }

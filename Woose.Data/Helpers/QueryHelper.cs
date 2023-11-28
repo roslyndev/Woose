@@ -1,7 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text;
 using Woose.Core;
 
@@ -11,7 +14,7 @@ namespace Woose.Data
     {
         protected StringBuilder query = new StringBuilder(200);
 
-        protected T target { get; set; }
+        public T target { get; set; }
 
         public string Method { get; set; } = string.Empty;
 
@@ -23,13 +26,13 @@ namespace Woose.Data
 
         public bool IsWrap { get; set; } = false;
 
-        public IFeedback Result { get; set; }
+        public IFeedback? Result { get; set; }
 
         public long PrimaryKeyValue { get; set; } = -1;
 
         public ConcurrentDictionary<string, QueryOption> Options { get; set; } = new ConcurrentDictionary<string, QueryOption>();
 
-        public ConcurrentDictionary<string, object> WhereOptions { get; set; } = new ConcurrentDictionary<string, object>();
+        public ConcurrentDictionary<string, object?> WhereOptions { get; set; } = new ConcurrentDictionary<string, object?>();
 
         public int TopCount { get; set; } = -1;
 
@@ -37,12 +40,12 @@ namespace Woose.Data
 
         public QueryOption.Sequence OrderType { get; set; } = QueryOption.Sequence.DESC;
 
-        protected SqlCommand cmd { get; set; }
+        public SqlCommand Command { get; set; }
 
-        public QueryHelper(SqlCommand _cmd) 
+
+        public QueryHelper() 
         {
             this.target = new T();
-            this.cmd = _cmd;
         }
 
         public List<EntityInfo> GetInfos
@@ -58,7 +61,7 @@ namespace Woose.Data
             this.target = _target;
         }
 
-        public object GetValue(string columnName)
+        public object? GetValue(string columnName)
         {
             return target.GetValue(columnName);
         }
@@ -84,46 +87,12 @@ namespace Woose.Data
             }
         }
 
-        public void Set()
-        {
-            this.cmd.CommandText = this.ToQuery();
-            this.cmd.CommandType = System.Data.CommandType.Text;
-            switch (this.Method.ToUpper().Trim())
-            {
-                case "UPDATE":
-                case "INSERT":
-                    foreach(var property in this.target.GetInfo())
-                    {
-                        var option = (from a in this.Options where a.Value.Column.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
-                        if (option != null)
-                        {
-                            this.cmd.Parameters.Set($"@{property.ColumnName}", property.Type, option.Value, property.Size);
-                        }
-                        object whereValue = (from a in this.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
-                        if (whereValue != null)
-                        {
-                            this.cmd.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
-                        }
-                    }
-                    break;
-                default:
-                    foreach (var property in this.target.GetInfo())
-                    {
-                        object whereValue = (from a in this.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
-                        if (whereValue != null)
-                        {
-                            this.cmd.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
-                        }
-                    }
-                    break;
-            }
-        }
 
-        public void ToResult<U>() where U : IFeedback, new()
+        public QueryHelper<T> SetResult<U>() where U : IFeedback, new()
         {
             this.IsWrap = true;
             this.Result = new U();
-            this.Set();
+            return this;
         }
 
 
@@ -176,7 +145,7 @@ namespace Woose.Data
                         result.Append($"Where {this.Where} ");
                         IsWhere = true;
                     }
-
+                    /*
                     if (this.WhereOptions.Count > 0)
                     {
                         result.Append((IsWhere) ? " And " : " Where ");
@@ -188,6 +157,7 @@ namespace Woose.Data
                             num++;
                         }
                     }
+                    */
                     if (!string.IsNullOrWhiteSpace(this.OrderColumn))
                     {
                         result.Append($"Order by {this.OrderColumn} {this.OrderType.ToString()}");
@@ -214,7 +184,7 @@ namespace Woose.Data
                     foreach(QueryOption item in this.Options.Values)
                     {
                         if (num > 0) result.Append(",");
-                        result.Append($"[{item.Column}] = @{item.Column} ");
+                        result.Append($"[{item.Column.Trim()}] = @{item.Column.Trim()}Value ");
                         num++;
                     }
                     IsWhere = false;
@@ -223,7 +193,7 @@ namespace Woose.Data
                         result.Append($"Where {this.Where} ");
                         IsWhere = true;
                     }
-
+                    /*
                     if (this.WhereOptions.Count > 0)
                     {
                         result.Append((IsWhere) ? " And " : " Where ");
@@ -235,6 +205,7 @@ namespace Woose.Data
                             num++;
                         }
                     }
+                    */
                     if (this.IsWrap)
                     {
                         result.AppendLine($"");
@@ -245,18 +216,21 @@ namespace Woose.Data
                         result.AppendLine($"SET @msg = ERROR_MESSAGE()");
                         result.AppendLine($"END CATCH");
 
-                        switch (this.Result.GetResultType())
+                        if (this.Result != null)
                         {
-                            case BaseResult.ResultType.DeclareSelect:
-                                result.AppendLine("");
-                                result.AppendLine("Select");
-                                result.AppendLine("(case when @rows > 0 then 0 else 1 end) as [IsError]");
-                                result.AppendLine(",@msg as [Message]");
-                                break;
-                            case BaseResult.ResultType.OutputParameter:
-                                result.AppendLine("");
-                                result.AppendLine("SET @Code = @rows");
-                                break;
+                            switch (this.Result.GetResultType())
+                            {
+                                case BaseResult.ResultType.DeclareSelect:
+                                    result.AppendLine("");
+                                    result.AppendLine("Select");
+                                    result.AppendLine("(case when @rows > 0 then 0 else 1 end) as [IsError]");
+                                    result.AppendLine(",@msg as [Message]");
+                                    break;
+                                case BaseResult.ResultType.OutputParameter:
+                                    result.AppendLine("");
+                                    result.AppendLine("SET @Code = @rows");
+                                    break;
+                            }
                         }
                     }
                     break;
@@ -286,7 +260,7 @@ namespace Woose.Data
                     foreach (QueryOption item in this.Options.Values)
                     {
                         if (num > 0) result.Append(",");
-                        result.Append($"[{item.Column}]");
+                        result.Append($"{item.Column}");
                         num++;
                     }
                     result.Append(") values (");
@@ -294,7 +268,7 @@ namespace Woose.Data
                     foreach (QueryOption item in this.Options.Values)
                     {
                         if (num > 0) result.Append(",");
-                        result.Append($"@{item.Column}");
+                        result.Append($"{item.Value}");
                         num++;
                     }
                     result.AppendLine(")");
@@ -308,18 +282,21 @@ namespace Woose.Data
                         result.AppendLine($"SET @msg = ERROR_MESSAGE()");
                         result.AppendLine($"END CATCH");
 
-                        switch (this.Result.GetResultType())
+                        if (this.Result != null)
                         {
-                            case BaseResult.ResultType.DeclareSelect:
-                                result.AppendLine("");
-                                result.AppendLine("Select");
-                                result.AppendLine("(case when @rows > 0 then 0 else 1 end) as [IsError]");
-                                result.AppendLine(",@msg as [Message]");
-                                break;
-                            case BaseResult.ResultType.OutputParameter:
-                                result.AppendLine("");
-                                result.AppendLine("SET @Code = @rows");
-                                break;
+                            switch (this.Result.GetResultType())
+                            {
+                                case BaseResult.ResultType.DeclareSelect:
+                                    result.AppendLine("");
+                                    result.AppendLine("Select");
+                                    result.AppendLine("(case when @rows > 0 then 0 else 1 end) as [IsError]");
+                                    result.AppendLine(",@msg as [Message]");
+                                    break;
+                                case BaseResult.ResultType.OutputParameter:
+                                    result.AppendLine("");
+                                    result.AppendLine("SET @Code = @rows");
+                                    break;
+                            }
                         }
                     }
                     if (this.IsExists)
@@ -336,7 +313,7 @@ namespace Woose.Data
                         result.Append($"Where {this.Where} ");
                         IsWhere = true;
                     }
-
+                    /*
                     if (this.WhereOptions.Count > 0)
                     {
                         result.Append((IsWhere) ? " And " : " Where ");
@@ -348,6 +325,7 @@ namespace Woose.Data
                             num++;
                         }
                     }
+                    */
                     break;
                 case "COUNT":
                     result.Append("Select Count(1) as [Count] ");
@@ -359,7 +337,7 @@ namespace Woose.Data
                         result.Append($"Where {this.Where} ");
                         IsWhere = true;
                     }
-
+                    /*
                     if (this.WhereOptions.Count > 0)
                     {
                         result.Append((IsWhere) ? " And " : " Where ");
@@ -371,6 +349,7 @@ namespace Woose.Data
                             num++;
                         }
                     }
+                    */
                     break;
                 case "GROUP":
                     result.Append("Select ");
@@ -386,7 +365,7 @@ namespace Woose.Data
                         result.Append($"Where {this.Where} ");
                         IsWhere = true;
                     }
-
+                    /*
                     if (this.WhereOptions.Count > 0)
                     {
                         result.Append((IsWhere) ? " And " : " Where ");
@@ -398,23 +377,68 @@ namespace Woose.Data
                             num++;
                         }
                     }
+                    */
                     result.Append($"Group by  {this.Columns} ");
                     break;
             }
             return result.ToString();
         }
 
+        public IFeedback ToResult()
+        {
+            if (this.Result != null)
+            {
+                switch (this.Result.GetResultType())
+                {
+                    case BaseResult.ResultType.DeclareSelect:
+                        this.Result = this.Command.ExecuteResult();
+                        break;
+                    case BaseResult.ResultType.OutputParameter:
+                        this.Result = this.Command.ExecuteReturnValue();
+                        break;
+                    default:
+                        var rtn = new ReturnValues<List<T>>();
+                        var tmp = this.Command.ExecuteEntities<T>();
+                        if (tmp != null && tmp.Count > 0)
+                        {
+                            rtn.Success(tmp.Count, tmp);
+                        }
+                        else
+                        {
+                            rtn.Success(0, new List<T>());
+                        }
+                        this.Result = rtn;
+                        break;
+                }
+            }
+            else
+            {
+                var rtn = new ReturnValues<List<T>>();
+                var tmp = this.Command.ExecuteEntities<T>();
+                if (tmp != null && tmp.Count > 0)
+                {
+                    rtn.Success(tmp.Count, tmp);
+                }
+                else
+                {
+                    rtn.Success(0, new List<T>());
+                }
+                this.Result = rtn;
+            }
+
+            return this.Result;
+        }
     }
 
     public class QueryOption
     {
         public string Column { get; set; } = string.Empty;
 
-        public object Value { get; set; } = default!;
+        public object? Value { get; set; } = default!;
 
         public QueryOption() { }
 
-        public QueryOption(string column, object value)
+        public QueryOption(string column, object? value)
         {
             this.Column = column;
             this.Value = value;
@@ -428,6 +452,63 @@ namespace Woose.Data
 
     public static class ExtendQueryHelper
     {
+        public static QueryHelper<T> Execute<T>(this QueryHelper<T> helper, SqlCommand? cmd) where T : IEntity, new()
+        {
+            if (cmd != null)
+            {
+                cmd.CommandText = helper.ToQuery();
+                cmd.CommandType = System.Data.CommandType.Text;
+                switch (helper.Method.ToUpper().Trim())
+                {
+                    case "UPDATE":
+                        foreach (var property in helper.target.GetInfo())
+                        {
+                            var option = (from a in helper.Options where a.Value.Column.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (option != null)
+                            {
+                                cmd.Parameters.Set($"@{property.ColumnName.Trim()}Value", property.Type, option.Value, property.Size);
+                            }
+                            object whereValue = (from a in helper.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (whereValue != null)
+                            {
+                                cmd.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
+                            }
+                        }
+                        break;
+                    case "INSERT":
+                        foreach (var property in helper.target.GetInfo())
+                        {
+                            var option = (from a in helper.Options where a.Value.Column.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (option != null)
+                            {
+                                cmd.Parameters.Set($"@{property.ColumnName.Trim()}", property.Type, option.Value, property.Size);
+                            }
+                            object whereValue = (from a in helper.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (whereValue != null)
+                            {
+                                cmd.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
+                            }
+                        }
+                        break;
+                    default:
+                        foreach (var property in helper.target.GetInfo())
+                        {
+                            object whereValue = (from a in helper.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (whereValue != null)
+                            {
+                                cmd.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
+                            }
+                        }
+                        break;
+                }
+
+                helper.Command = cmd;
+            }
+
+            return helper;
+        }
+
+
         public static QueryHelper<T> NotExists<T>(this QueryHelper<T> query) where T : IEntity, new()
         {
             query.IsExists = true;
@@ -443,10 +524,10 @@ namespace Woose.Data
 
         public static QueryHelper<T> CreateQuery<T>(this SqlCommand cmd, bool IsDynamicEntity = false) where T : IEntity, new() 
         {
-            var query = new QueryHelper<T>(cmd);
+            var query = new QueryHelper<T>();
             if (IsDynamicEntity)
             {
-                query.Create().NotExists().Set();
+                query.Create().NotExists().Execute(cmd);
                 cmd.ExecuteNonQuery();
                 cmd.Parameters.Clear();
             }
@@ -474,11 +555,23 @@ namespace Woose.Data
             return query;
         }
 
-        public static QueryHelper<T> Update<T>(this QueryHelper<T> query, string column, object value) where T : IEntity, new()
+        public static QueryHelper<T> Update<T>(this QueryHelper<T> query, T paramData) where T : IEntity, new()
         {
             query.Method = "Update";
-            var option = new QueryOption(column, value);
-            query.Options.AddOrUpdate(column.ToUpper().Trim(), option, (x, y) => option);
+
+            QueryOption option = new QueryOption();
+            foreach (var info in query.GetInfos)
+            {
+                if (info != null && !string.IsNullOrWhiteSpace(info.ColumnName))
+                {
+                    if (!info.IsKey)
+                    {
+                        option = new QueryOption(info.ColumnName, paramData.GetValue(info.ColumnName));
+                        query.Options.AddOrUpdate(info.ColumnName.ToUpper().Trim(), option, (x, y) => option);
+                    }
+                }
+            }
+
             return query;
         }
 
@@ -543,7 +636,244 @@ namespace Woose.Data
             return query;
         }
 
-        public static QueryHelper<T> Where<T>(this QueryHelper<T> query, string ColumnName, object ColumnValue) where T : IEntity, new()
+        public static QueryHelper<T> Where<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate) where T : IEntity, new()
+        {
+            if (predicate != null)
+            {
+                query = TranslateExpressionToQuery(query, predicate);
+            }
+            return query;
+        }
+
+        public static QueryHelper<T> And<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate) where T : IEntity, new()
+        {
+            if (predicate != null)
+            {
+                query = TranslateExpressionToQuery(query, predicate, "and");
+            }
+            return query;
+        }
+
+        public static QueryHelper<T> Or<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate) where T : IEntity, new()
+        {
+            if (predicate != null)
+            {
+                query = TranslateExpressionToQuery(query, predicate, "or");
+            }
+            return query;
+        }
+
+
+        private static QueryHelper<T> TranslateExpressionToQuery<T>(QueryHelper<T> helper, Expression<Func<T, object>> predicate, string operatorStr = "") where T : IEntity, new()
+        {
+            Expression body = predicate.Body;
+
+            // UnaryExpression 언랩
+            if (body is UnaryExpression unaryExpression)
+            {
+                body = unaryExpression.Operand;
+            }
+
+            if (body is BinaryExpression binaryExpression)
+            {
+                return TranslateBinaryExpression(helper, binaryExpression.Left, binaryExpression.NodeType, binaryExpression.Right, operatorStr);
+            }
+            else
+            {
+                return TranslateBinaryExpression(helper, body, operatorStr);
+            }
+        }
+
+        private static QueryHelper<T> TranslateBinaryExpression<T>(QueryHelper<T> helper, Expression left, string operatorStr = "") where T : IEntity, new()
+        {
+            string leftOperand = TranslateOperand(left);
+
+            EntityInfo info = helper.GetInfos.Where(x => x.ColumnName.Equals(leftOperand, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            if (info != null)
+            {
+                switch (info.Type)
+                {
+                    case System.Data.SqlDbType.Bit:
+                        if (string.IsNullOrWhiteSpace(helper.Where))
+                        {
+                            helper.Where = $"{leftOperand} = @{leftOperand}";
+                            if (info != null)
+                            {
+                                helper.WhereOptions.AddOrUpdate(leftOperand, true, (x, y) => true);
+                            }
+                        }
+                        else
+                        {
+                            StringBuilder builder = new StringBuilder(helper.Where);
+
+                            builder.Append($" {((string.IsNullOrWhiteSpace(operatorStr) ? "and" : operatorStr))} {leftOperand} = @{leftOperand}");
+                            helper.Where = builder.ToString();
+
+                            helper.WhereOptions.AddOrUpdate(leftOperand, true, (x, y) => true);
+                        }
+                        break;
+                    case System.Data.SqlDbType.VarChar:
+                    case System.Data.SqlDbType.Char:
+                    case System.Data.SqlDbType.NVarChar:
+                    case System.Data.SqlDbType.NChar:
+                    case System.Data.SqlDbType.Text:
+                    case System.Data.SqlDbType.NText:
+                        if (string.IsNullOrWhiteSpace(helper.Where))
+                        {
+                            helper.Where = $"{leftOperand} <> ''";
+                        }
+                        else
+                        {
+                            StringBuilder builder = new StringBuilder(helper.Where);
+
+                            builder.Append($" {((string.IsNullOrWhiteSpace(operatorStr) ? "and" : operatorStr))} {leftOperand} <> ''");
+                            helper.Where = builder.ToString();
+                        }
+                        break;
+                    case System.Data.SqlDbType.BigInt:
+                    case System.Data.SqlDbType.Int:
+                    case System.Data.SqlDbType.SmallInt:
+                    case System.Data.SqlDbType.TinyInt:
+                    case System.Data.SqlDbType.Money:
+                    case System.Data.SqlDbType.SmallMoney:
+                    case System.Data.SqlDbType.Float:
+                    case System.Data.SqlDbType.Real:
+                        if (string.IsNullOrWhiteSpace(helper.Where))
+                        {
+                            helper.Where = $"{leftOperand} > -1";
+                        }
+                        else
+                        {
+                            StringBuilder builder = new StringBuilder(helper.Where);
+
+                            builder.Append($" {((string.IsNullOrWhiteSpace(operatorStr) ? "and" : operatorStr))} {leftOperand} > -1");
+                            helper.Where = builder.ToString();
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return helper;
+        }
+
+
+        private static QueryHelper<T> TranslateBinaryExpression<T>(QueryHelper<T> helper, Expression left, ExpressionType nodeType, Expression right, string operatorStr = "") where T : IEntity, new()
+        {
+            string leftOperand = TranslateOperand(left);
+            string rightOperand = TranslateOperand(right);
+            string operatorString = TranslateBinaryExpressionType(nodeType);
+
+            EntityInfo info = helper.GetInfos.Where(x => x.ColumnName.Equals(leftOperand, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            if (info != null)
+            {
+                switch (info.Type)
+                {
+                    case System.Data.SqlDbType.Bit:
+                        if (string.IsNullOrWhiteSpace(helper.Where))
+                        {
+                            helper.Where = $"{leftOperand} {operatorString} @{leftOperand}";
+                            if (info != null)
+                            {
+                                helper.WhereOptions.AddOrUpdate(leftOperand, rightOperand, (x, y) => rightOperand);
+                            }
+                        }
+                        else
+                        {
+                            StringBuilder builder = new StringBuilder(helper.Where);
+
+                            builder.Append($" {((string.IsNullOrWhiteSpace(operatorStr) ? "and" : operatorStr))} {leftOperand} {operatorString} @{leftOperand}");
+                            helper.Where = builder.ToString();
+
+                            helper.WhereOptions.AddOrUpdate(leftOperand, rightOperand, (x, y) => rightOperand);
+                        }
+                        break;
+                    default:
+                        if (string.IsNullOrWhiteSpace(helper.Where))
+                        {
+                            helper.Where = $"{leftOperand} {operatorString} @{leftOperand}";
+                            if (info != null)
+                            {
+                                helper.WhereOptions.AddOrUpdate(leftOperand, rightOperand, (x, y) => rightOperand);
+                            }
+                        }
+                        else
+                        {
+                            StringBuilder builder = new StringBuilder(helper.Where);
+                            
+                            builder.Append($" {((string.IsNullOrWhiteSpace(operatorStr) ? "and" : operatorStr))} {leftOperand} {operatorString} @{leftOperand}");
+                            helper.Where = builder.ToString();
+
+                            helper.WhereOptions.AddOrUpdate(leftOperand, rightOperand, (x, y) => rightOperand);
+                        }
+                        break;
+                }
+            }
+
+            return helper;
+        }
+
+        private static string TranslateOperand(Expression operand)
+        {
+            if (operand is MemberExpression memberExpression)
+            {
+                // 멤버 표현식인 경우 해당 멤버의 이름을 반환
+                return memberExpression.Member.Name;
+            }
+            else if (operand is ConstantExpression constantExpression)
+            {
+                // 상수 표현식인 경우 상수의 문자열 표현 반환
+                return constantExpression.Value.ToString();
+            }
+            else if (operand is BinaryExpression binaryExpression)
+            {
+                // 이제 BinaryExpression에 대한 처리 추가
+                string left = TranslateOperand(binaryExpression.Left);
+                string right = TranslateOperand(binaryExpression.Right);
+
+                switch (binaryExpression.NodeType)
+                {
+                    case ExpressionType.Equal:
+                        return $"{left} = {right}";
+                    case ExpressionType.AndAlso:
+                        return $"({left} AND {right})";
+                    case ExpressionType.NotEqual:
+                        return $"({left} <> {right})";
+                    default:
+                        throw new NotSupportedException($"Unsupported binary expression type: {binaryExpression.NodeType}");
+                }
+            }
+            else
+            {
+                throw new NotSupportedException($"Unsupported binary expression type: {operand.NodeType}");
+            }
+        }
+
+        private static string TranslateBinaryExpressionType(ExpressionType nodeType)
+        {
+            switch (nodeType)
+            {
+                case ExpressionType.Equal:
+                    return "=";
+                case ExpressionType.NotEqual:
+                    return "!=";
+                case ExpressionType.LessThan:
+                    return "<";
+                case ExpressionType.LessThanOrEqual:
+                    return "<=";
+                case ExpressionType.GreaterThan:
+                    return ">";
+                case ExpressionType.GreaterThanOrEqual:
+                    return ">=";
+                // 더 많은 비교 연산자에 대한 처리 추가
+                default:
+                    return " and ";
+            }
+        }
+
+
+        public static QueryHelper<T> Where<T>(this QueryHelper<T> query, string ColumnName, object? ColumnValue) where T : IEntity, new()
         {
             query.WhereOptions.AddOrUpdate(ColumnName, ColumnValue, (x, y) => ColumnValue);
             return query;

@@ -32,7 +32,7 @@ namespace Woose.Core
                 aes.IV = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
                 var decrypt = aes.CreateDecryptor();
-                byte[] xBuff = null;
+                byte[]? xBuff = null;
                 using (var ms = new MemoryStream())
                 {
                     using (var cs = new CryptoStream(ms, decrypt, CryptoStreamMode.Write))
@@ -63,7 +63,7 @@ namespace Woose.Core
                 aes.IV = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
                 var encrypt = aes.CreateEncryptor(aes.Key, aes.IV);
-                byte[] xBuff = null;
+                byte[]? xBuff = null;
                 using (var ms = new MemoryStream())
                 {
                     using (var cs = new CryptoStream(ms, encrypt, CryptoStreamMode.Write))

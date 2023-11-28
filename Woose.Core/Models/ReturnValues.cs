@@ -1,15 +1,15 @@
 ﻿namespace Woose.Core
 {
-    public class ReturnValues<T> : ReturnValue, IFeedback
+    public class ReturnValues<T> : ReturnValue, IFeedback where T : new()
     {
-        public T Data { get; set; }
+        public T Data { get; set; } = default!;
         public ReturnValues() : base()
         {
-            this.Data = default(T);
+            this.Data = new T();
             this.Type = ResultType.OutputParameter;
         }
 
-        public BaseResult.ResultType GetResultType()
+        public override BaseResult.ResultType GetResultType()
         {
             return this.Type;
         }
