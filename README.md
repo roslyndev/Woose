@@ -18,6 +18,23 @@ Install-Package Woose.Data
 
 다음은 실제 사용 코드 예제입니다.
 
+
+### Select (single line)
+
+```csharp
+  using (var db = context.getConnection())
+  using (var handler = new SqlDbOperater(db))
+  {
+      var instance = Entity<TableEntity>.Query
+                                        .Select(1)
+                                        .Where(x => x.ColumnA == "Value1")
+                                        .And(x => x.ColumnB == "Value2")
+                                        .Execute(handler.Command)
+                                        .ToEntity();
+  }
+```
+
+
 ### Select (multi line)
 
 ```csharp
@@ -33,18 +50,35 @@ Install-Package Woose.Data
   }
 ```
 
-### Select (single line)
+
+### Paging (multi line)
 
 ```csharp
   using (var db = context.getConnection())
   using (var handler = new SqlDbOperater(db))
   {
-      var instance = Entity<TableEntity>.Query
-                                        .Select(1)
-                                        .Where(x => x.ColumnA == "Value1")
-                                        .And(x => x.ColumnB == "Value2")
-                                        .Execute(handler.Command)
-                                        .ToScalar();
+      var list = Entity<TableEntity>.Query
+                                    .Paging(10, 1)  // ({PageSize},{CurrentPage})
+                                    .Where(x => x.ColumnA == "Value1")
+                                    .And(x => x.ColumnB == "Value2")
+                                    .Execute(handler.Command)
+                                    .ToList();
+  }
+```
+
+
+### Count
+
+```csharp
+  using (var db = context.getConnection())
+  using (var handler = new SqlDbOperater(db))
+  {
+      int count = Entity<TableEntity>.Query
+                                     .Count()
+                                     .Where(x => x.ColumnA == "Value1")
+                                     .And(x => x.ColumnB == "Value2")
+                                     .Execute(handler.Command)
+                                     .ToCount();
   }
 ```
 
@@ -58,7 +92,7 @@ Install-Package Woose.Data
                                    .Insert(tableEntityInstance)
                                    .SetResult<ExecuteResult>()
                                    .Execute(handler.Command)
-                                   .ToResult() as ExecuteResult;
+                                   .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
   }
 ```
 
@@ -74,7 +108,7 @@ Install-Package Woose.Data
                                    .And(x => x.ColumnB == "Value2")
                                    .SetResult<ExecuteResult>()
                                    .Execute(handler.Command)
-                                   .ToResult() as ExecuteResult;
+                                   .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
   }
 ```
 
@@ -88,8 +122,8 @@ Install-Package Woose.Data
                                    .Delete()
                                    .Where(x => x.ColumnA == "Value1")
                                    .And(x => x.ColumnB == "Value2")
-                                   .SetResult<ExecuteResult>()
+                                   .SetResult<ReturnValue>()
                                    .Execute(handler.Command)
-                                   .ToResult() as ExecuteResult;
+                                   .ToResult() as ReturnValue;   //ReturnValue : IFeedback
   }
 ```

@@ -18,6 +18,27 @@ namespace Woose.Data
             return result;
         }
 
+        public static QueryHelper<T> Select<T>(this T target, int count) where T : IEntity, new()
+        {
+            var result = new QueryHelper<T>();
+            result.Select<T>(count);
+            return result;
+        }
+
+        public static QueryHelper<T> Paging<T>(this T target, int pagesize, int curpage) where T : IEntity, new()
+        {
+            var result = new QueryHelper<T>();
+            result.Paging<T>(pagesize, curpage);
+            return result;
+        }
+
+        public static QueryHelper<T> Count<T>(this T target) where T : IEntity, new()
+        {
+            var result = new QueryHelper<T>();
+            result.Count<T>();
+            return result;
+        }
+
         public static QueryHelper<T> Insert<T>(this T target, T paramData) where T : IEntity, new()
         {
             var result = new QueryHelper<T>();

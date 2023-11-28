@@ -21,14 +21,12 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                var rst = Entity<GlobalCode>.Query
-                                            .Select()
+                codeList = Entity<GlobalCode>.Query
+                                            .Select(1)
                                             .Where(x => x.MajorCode == "Member")
                                             .And(x => x.MinorCode == "Status")
                                             .Execute(handler.Command)
-                                            .ToResult() as ReturnValues<List<GlobalCode>>;
-                
-                codeList = (rst != null) ? rst.Data as List<GlobalCode> : new List<GlobalCode>();
+                                            .ToList();
             }
 
             Assert.IsNotNull(codeList);
@@ -93,6 +91,48 @@ namespace Woose.Tests
         }
 
         [Test, Order(4)]
+        public void ContextAndQueryHelper_TestCase_Count()
+        {
+            IContext context = new DbContext(this.connStr);
+            int cnt = 0;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                cnt = Entity<GlobalCode>.Query
+                                        .Count()
+                                        .Where(x => x.MajorCode == "Member")
+                                        .And(x => x.MinorCode == "Status")
+                                        .SetResult<ExecuteResult>()
+                                        .Execute(handler.Command)
+                                        .ToCount();
+            }
+
+            Assert.That(cnt, Is.EqualTo(1));
+        }
+
+        [Test, Order(5)]
+        public void ContextAndQueryHelper_TestCase_Paging()
+        {
+            IContext context = new DbContext(this.connStr);
+            var rst = new List<GlobalCode>();
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                rst = Entity<GlobalCode>.Query
+                                        .Paging(10, 1)
+                                        .Where(x => x.MajorCode == "Member")
+                                        .And(x => x.MinorCode == "Status")
+                                        .SetResult<ExecuteResult>()
+                                        .Execute(handler.Command)
+                                        .ToList();
+            }
+
+            Assert.That(rst.Count(), Is.EqualTo(1));
+        }
+
+        [Test, Order(6)]
         public void ContextAndQueryHelper_TestCase_Delete()
         {
             IContext context = new DbContext(this.connStr);
@@ -113,7 +153,7 @@ namespace Woose.Tests
             Assert.IsTrue(rst!.IsSuccess);
         }
 
-        [Test, Order(5)]
+        [Test]
         public void Entity_Test_Select_Case1()
         {
             IContext context = new DbContext(this.connStr);
@@ -129,7 +169,7 @@ namespace Woose.Tests
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
                                             .Execute(handler.Command)
-                                            .ToResult() as ReturnValues<List<GlobalCode>>;
+                                            .ToList();
                 
                 paramCount = handler.Command!.Parameters.Count;
                 paramValue = handler.Command!.Parameters[0].Value;
@@ -139,7 +179,7 @@ namespace Woose.Tests
             Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
         }
 
-        [Test, Order(5)]
+        [Test]
         public void Entity_Test_Select_Case2()
         {
             IContext context = new DbContext(this.connStr);
@@ -156,7 +196,7 @@ namespace Woose.Tests
                                             .Where(x => x.KeyCode == "test")
                                             .And(x => x.IsEnabled)
                                             .Execute(handler.Command)
-                                            .ToResult() as ReturnValues<List<GlobalCode>>;
+                                            .ToList();
 
                 paramCount = handler.Command!.Parameters.Count;
                 paramValue = handler.Command!.Parameters[0].Value;
