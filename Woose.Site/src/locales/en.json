@@ -1,0 +1,17 @@
+{
+    "global" : {
+        "serviceName" : "MerryTokTok"
+    },
+    "db" : {
+        "save" : "Saved"
+    },
+    "system" : {
+        "confirm_remove" : "정말로 삭제하시겠습니까?",
+        "RequiredCurrentPassword" : "현재 비밀번호를 입력해 주세요.",
+        "RequiredNewPassword" : "새 비밀번호를 입력해 주세요.",
+        "RequiredConfirmPassword" : "비밀번호 확인을 입력해 주세요.",
+        "MismatchPassword" : "새 비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+        "NoSelect" : "선택안함",
+        "is_logout_confirm" : "정말로 로그아웃하시겠습니까?"
+    }
+}
