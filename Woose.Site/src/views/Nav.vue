@@ -1,9 +1,9 @@
 <template>
 <nav class="navbar navbar-expand-lg fixed-top navbar-custom " id="navbar">
     <div class="container">
-        <a class="navbar-brand logo" href="index-1.html">
-            <img src="/images/logo-dark.png" alt="" class="logo-dark" height="28" />
-            <img src="/images/logo-light.png" alt="" class="logo-light" height="28" />
+        <a class="navbar-brand logo" href="#">
+            <div class="logo-dark rounded-full"><img src="/images/logo/roslyn.png" alt="" height="28" /></div><div class="logo-dark logo-text">Rolsyn</div>
+            <div class="logo-light rounded-full"><img src="/images/logo/roslyn.png" alt="" height="28" /></div><div class="logo-light logo-text">Rolsyn</div>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <i class="" data-feather="menu"></i>
@@ -32,7 +32,7 @@
                     <a href="#contact" class="nav-link">Contact Us</a>
                 </li>
             </ul>
-            <a href="" class="btn btn-sm rounded-pill nav-btn ms-lg-3">Buy Now</a>
+            <a href="https://github.com/roslyndev" target="_blank" class="btn btn-sm rounded-pill nav-btn ms-lg-3">GITHUB</a>
         </div>
     </div>
 </nav>
