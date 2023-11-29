@@ -5,3 +5,4 @@
 .logo-dark.logo-text { color:#000;margin-left:5px; }
 .logo-light.logo-text { color:#FFF;margin-left:5px ; }
 .logo { display:flex; }
+.language { padding:5px 20px;margin-left:8px;display:flex;justify-items: center;margin-top:1px;border-radius: 5px; }

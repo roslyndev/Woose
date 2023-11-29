@@ -65,6 +65,12 @@ namespace Woose.Data
             return helper;
         }
 
+        public static QueryHelper<T> Void<T>(this QueryHelper<T> helper) where T : IEntity, new()
+        {
+            helper.Command.ExecuteNonQuery();
+            return helper;
+        }
+
 
         public static QueryHelper<T> NotExists<T>(this QueryHelper<T> query) where T : IEntity, new()
         {

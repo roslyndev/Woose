@@ -33,7 +33,27 @@
                 </li>
             </ul>
             <a href="https://github.com/roslyndev" target="_blank" class="btn btn-sm rounded-pill nav-btn ms-lg-3">GITHUB</a>
+            <select class="language" v-model="selectedLanguage">
+                <option v-for="language in languages" :key="language.value" :value="language.value">{{ language.label }}</option>
+            </select>
         </div>
     </div>
 </nav>
 </template>
+
+<script setup lang="ts">
+import { reactive,onMounted,ref,watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
+var selectedLanguage = ref(localStorage.getItem('selectedLanguage') || 'ko');
+const languages = [
+    { value: 'en', label: 'English' },
+    { value: 'ko', label: '한국어' },
+];
+
+watch(selectedLanguage, () => {
+  locale.value = selectedLanguage.value;
+  localStorage.setItem('selectedLanguage', selectedLanguage.value);
+});
+</script>

@@ -1,17 +1,30 @@
 {
     "global" : {
-        "serviceName" : "MerryTokTok"
+        "serviceName" : "Roslyn"
     },
     "db" : {
-        "save" : "Saved"
+        "save" : "Saved."
     },
     "system" : {
-        "confirm_remove" : "정말로 삭제하시겠습니까?",
-        "RequiredCurrentPassword" : "현재 비밀번호를 입력해 주세요.",
-        "RequiredNewPassword" : "새 비밀번호를 입력해 주세요.",
-        "RequiredConfirmPassword" : "비밀번호 확인을 입력해 주세요.",
-        "MismatchPassword" : "새 비밀번호와 비밀번호 확인이 일치하지 않습니다.",
-        "NoSelect" : "선택안함",
-        "is_logout_confirm" : "정말로 로그아웃하시겠습니까?"
+
+    },
+    "content" : {
+        "services" : {
+            "title" : "Our Services",
+            "bio" : "Our development team exceeds customer expectations with excellent UI/UX design and cutting-edge system construction capabilities. We offer creative solutions to difficult problems and optimize our clients businesses through consulting. We take on technological challenges confidently and work together to ensure our customers' success by providing innovative and user-friendly solutions.",
+            "section" : [
+                { "title" : "Website", "description" : "Create an optimized website based on templates.", "icon" : "fa-solid fa-earth-americas" },
+                { "title" : "MobileApp", "description" : "Create optimized mobile apps with high versatility.", "icon" : "fa-solid fa-mobile-screen" },
+                { "title" : "WindowApp", "description" : "Create a variety of applications that fit your situation.", "icon" : "fa-regular fa-window-maximize" }
+            ]
+        },
+        "feathrues" : {
+            "title" : "Our Features",
+            "bio" : "It strikes a balance between more popular and generalized technologies and specialized and superior technologies.",
+             "section" : [
+                { "title" : "Windows server that can be managed directly", "description" : "Manage web services on a Windows server that allows you to manage the server as if you were managing your own computer. With the introduction of ASP.NET, you can experience Microsoft's latest technology. there is." },
+                { "title" : "General-purpose technology", "description" : "You can easily change the operating entity at any time by introducing trendy technologies such as React.js, Vue.js, and Node.js." }
+             ]
+        }
     }
 }
