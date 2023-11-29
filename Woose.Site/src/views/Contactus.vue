@@ -153,7 +153,7 @@ const fnSave = async () => {
         let jsonData:Partnership = Object.assign({}, partnership.value);
         let rst:any = await ApiHelper.Post("https://api.merrytoktok.com/api/Customer/Partnership/Save", jsonData);
         if (rst.check) {
-            MessageBox.Success(t(DbMsg('Save')), () => {
+            MessageBox.Success(t(DbMsg('save')), () => {
                 document.location.reload();
             });
         } else {
