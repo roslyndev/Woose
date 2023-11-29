@@ -25,6 +25,20 @@
                 { "title" : "Windows server that can be managed directly", "description" : "Manage web services on a Windows server that allows you to manage the server as if you were managing your own computer. With the introduction of ASP.NET, you can experience Microsoft's latest technology. there is." },
                 { "title" : "General-purpose technology", "description" : "You can easily change the operating entity at any time by introducing trendy technologies such as React.js, Vue.js, and Node.js." }
              ]
+        },
+        "team" : {
+            "title" : "Join the team",
+            "bio" : "Join our team. We're looking for a fully autonomous professional community. Anyone can join at any time.",
+            "button" : "Inquiry about joining the team"
+        },
+        "member" : {
+            "title" : "Our Team Members",
+            "bio" : "Introduce members from various fields."
+        },
+        "job" : {
+            "developer" : "Developer",
+            "designer" : "Designer",
+            "planner" : "Planner"
         }
     }
 }

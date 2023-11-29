@@ -5,12 +5,17 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="text-center">
-                    <h1 class="text-white mb-4">Build your dream website today</h1>
-                    <p class="text-white mb-5 font-size-16">Sed perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totamrem aperiam eaque inventore veritatis quasi.</p>
-                    <a href="#" class="btn btn-lg btn-light">Ask for Demonstration</a>
+                    <h1 class="text-white mb-4">{{ t("content.team.title") }}</h1>
+                    <p class="text-white mb-5 font-size-16">{{ t("content.team.bio") }}</p>
+                    <a href="https://www.facebook.com/rosylndev" target="_blank" class="btn btn-lg btn-light">{{ t("content.team.button") }}</a>
                 </div>
             </div>
         </div>
     </div>
 </section>
 </template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+const { t, locale } = useI18n();
+</script>
