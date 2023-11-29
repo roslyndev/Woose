@@ -9,9 +9,9 @@
                         <div class="row justify-content-center">
                             <div class="col-lg-10">
                                 <div class="p-3">
-                                    <h2 class="text-white mb-4">Join our Growing Community</h2>
-                                    <p class="text-white-70 font-size-16 mb-4 pb-3">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
-                                    <a href="#" class="btn btn-light rounded-pill">Sign Up for free</a>
+                                    <h2 class="text-white mb-4">{{ t("content.banner.title") }}</h2>
+                                    <p class="text-white-70 font-size-16 mb-4 pb-3">{{ t("content.banner.bio") }}</p>
+                                    <a href="https://www.merrytoktok.com" target="_blank" class="btn btn-light rounded-pill">{{ t("content.banner.button") }}</a>
                                 </div>
                             </div>
                         </div>
@@ -22,3 +22,8 @@
     </div>
 </section>
 </template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+const { t, locale } = useI18n();
+</script>

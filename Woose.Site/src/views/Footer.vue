@@ -4,17 +4,17 @@
         <div class="row">
             <div class="col-lg-4">
                 <div class="mb-4">
-                    <a href="#"><img src="/images/logo/roslyn.png" alt="" class="rounded-full" height="30" /></a>
-                    <p class="text-white-50 my-4">At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.</p>
+                    <a href="/"><img src="/images/logo/roslyn.png" alt="" class="rounded-full" height="30" /></a>
+                    <p class="text-white-50 my-4">{{ t("global.bio") }}</p>
                 </div>
             </div>
             <div class="col-lg-7 ms-lg-auto">
                 <div class="row">
                     <div class="col-lg-3 col-6">
                         <div class="mt-4 mt-lg-0">
-                            <h4 class="text-white font-size-18 mb-3">Customer</h4>
+                            <h4 class="text-white font-size-18 mb-3">Github</h4>
                             <ul class="list-unstyled footer-sub-menu">
-                                <li><a href="#" class="footer-link">Works</a></li>
+                                <li><a href="https://github.com/roslyndev" target="_blank" class="footer-link">Repository</a></li>
                             </ul>
                         </div>
                     </div>
@@ -22,15 +22,18 @@
                         <div class="mt-4 mt-lg-0">
                             <h4 class="text-white font-size-18 mb-3">Product</h4>
                             <ul class="list-unstyled footer-sub-menu">
-                                <li><a href="#" class="footer-link">Trending</a></li>
+                                <li><a href="https://www.nuget.org/packages/Woose.Data" target="_blank" class="footer-link">Woose</a></li>
+                                <li><a href="https://www.merrytoktok.com" target="_blank" class="footer-link">Merrytoktok</a></li>
                             </ul>
                         </div>
                     </div>
                     <div class="col-lg-3 col-6">
                         <div class="mt-4 mt-lg-0">
-                            <h4 class="text-white font-size-18 mb-3">Information</h4>
+                            <h4 class="text-white font-size-18 mb-3">Blog</h4>
                             <ul class="list-unstyled footer-sub-menu">
-                                <li><a href="#" class="footer-link">Developers</a></li>
+                                <li><a href="https://parkheesung.tistory.com" class="footer-link">{{ t("content.footer.blog[0].title") }}</a></li>
+                                <li><a href="https://roslyndev.tistory.com" class="footer-link">{{ t("content.footer.blog[1].title") }}</a></li>
+                                <li><a href="https://earningalone.tistory.com" class="footer-link">{{ t("content.footer.blog[2].title") }}</a></li>
                             </ul>
                         </div>
                     </div>
@@ -38,9 +41,8 @@
                         <div class="mt-4 mt-lg-0">
                             <h4 class="text-white font-size-18 mb-3">Support</h4>
                             <ul class="list-unstyled footer-sub-menu">
-                                <li><a href="#" class="footer-link">FAQ</a></li>
-                                <li><a href="#" class="footer-link">Contact</a></li>
-                                <li><a href="#" class="footer-link">Disscusion</a></li>
+                                <li><a :href="`mailto:${config.info.email}`" class="footer-link">Email</a></li>
+                                <li><a href="#contact" class="footer-link">Contact</a></li>
                             </ul>
                         </div>
                     </div>
@@ -58,3 +60,9 @@
     </div>
 </footer>
 </template>
+
+<script setup lang="ts">
+import config from '@/Config';
+import { useI18n } from 'vue-i18n';
+const { t, locale } = useI18n();
+</script>

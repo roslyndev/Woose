@@ -5,7 +5,7 @@
     <Services />
     <Features />
     <ContentBannerTop />
-    <Members />
+    <Product />
     <Blog />
     <ContentBannerBottom />
     <Contactus />
@@ -14,7 +14,8 @@
 
 <script setup lang="ts">
     import { ref, onMounted } from 'vue';
-    import { NavView,MainTop,Services,Features,ContentBannerTop,Members,Blog,ContentBannerBottom,Contactus,Footer,Loading } from '.';
+    import { NavView,MainTop,Services,Features,ContentBannerTop,Product,Blog,ContentBannerBottom,Contactus,Footer,Loading } from '.';
+    import config from '@/Config';
 
     var pageinfo = ref({
         key:0,
@@ -26,4 +27,5 @@
             pageinfo.value.isloaded = true;
         }, 1500);
     });
+
 </script>

@@ -2,8 +2,8 @@
 <nav class="navbar navbar-expand-lg fixed-top navbar-custom " id="navbar">
     <div class="container">
         <a class="navbar-brand logo" href="#">
-            <div class="logo-dark rounded-full"><img src="/images/logo/roslyn.png" alt="" height="28" /></div><div class="logo-dark logo-text">Rolsyn</div>
-            <div class="logo-light rounded-full"><img src="/images/logo/roslyn.png" alt="" height="28" /></div><div class="logo-light logo-text">Rolsyn</div>
+            <div class="logo-dark rounded-full" style="width:28px;height:28px;"><img src="/images/logo/roslyn.png" alt="" height="28" /></div><div class="logo-dark logo-text">Rolsyn</div>
+            <div class="logo-light rounded-full" style="width:28px;height:28px;"><img src="/images/logo/roslyn.png" alt="" height="28" /></div><div class="logo-light logo-text">Rolsyn</div>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <i class="" data-feather="menu"></i>
@@ -20,10 +20,7 @@
                     <a href="#features" class="nav-link">Features</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#pricing" class="nav-link">Pricing</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#team" class="nav-link">Team</a>
+                    <a href="#product" class="nav-link">Product</a>
                 </li>
                 <li class="nav-item">
                     <a href="#blog" class="nav-link">Blog</a>

@@ -14,7 +14,7 @@ const ApiHelper = {
     let result:any = {};
 
     try {
-      const response = await axios.post(config.api + url, jsonData, { headers: UploadHeader });
+      const response = await axios.post(url, jsonData, { headers: UploadHeader });
       if (response.status === 200) {
         result = response.data;
       } else {
@@ -32,7 +32,7 @@ const ApiHelper = {
 
     try {
       console.log("Post : ", url, jsonData);
-      const response = await axios.post(config.api + url, jsonData, { headers: header });
+      const response = await axios.post(url, jsonData, { headers: header });
       if (response.status === 200) {
         result = response.data;
       } else {
@@ -49,7 +49,7 @@ const ApiHelper = {
     let result:any = {};
   
     try {
-      const response = await axios.put(config.api + url, jsonData, { headers: header });
+      const response = await axios.put(url, jsonData, { headers: header });
       if (response.status === 200) {
         result = response.data;
       } else {
@@ -67,7 +67,7 @@ const ApiHelper = {
     let result:any = {};
   
     try {
-      const response = await axios.delete(config.api + url, { data:jsonData, headers: header });
+      const response = await axios.delete(url, { data:jsonData, headers: header });
       if (response.status === 200) {
         result = response.data;
       } else {
@@ -101,7 +101,7 @@ const ApiHelper = {
     let result:any = {};
 
     try {
-      axios.post(config.api + url, jsonData, { headers: header }).then((rst:AxiosResponse<any,any>) =>{
+      axios.post(url, jsonData, { headers: header }).then((rst:AxiosResponse<any,any>) =>{
         if (callback !== null && typeof callback === "function") {
             result.Success(1);
             result.data = rst.data;
@@ -120,7 +120,7 @@ const ApiHelper = {
     let result:any = {};
 
     try {
-      axios.get(config.api + url, { headers: header }).then((rst:AxiosResponse<any,any>) => {
+      axios.get(url, { headers: header }).then((rst:AxiosResponse<any,any>) => {
         if (callback !== null && typeof callback === "function") {
             result.Success(1);
             result.data = rst.data;
@@ -139,7 +139,7 @@ const ApiHelper = {
     let result:any = {};
 
     try {
-      axios.put(config.api + url, jsonData, { headers: header }).then((rst:AxiosResponse<any,any>) =>{
+      axios.put(url, jsonData, { headers: header }).then((rst:AxiosResponse<any,any>) =>{
         if (callback !== null && typeof callback === "function") {
             result.Success(1);
             result.data = rst.data;
@@ -158,7 +158,7 @@ const ApiHelper = {
     let result:any = {};
 
     try {
-      axios.delete(config.api + url, { data:jsonData, headers: header }).then((rst:AxiosResponse<any,any>) =>{
+      axios.delete(url, { data:jsonData, headers: header }).then((rst:AxiosResponse<any,any>) =>{
         if (callback !== null && typeof callback === "function") {
             result.Success(1);
             result.data = rst.data;

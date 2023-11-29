@@ -1,6 +1,7 @@
 {
     "global" : {
-        "serviceName" : "Roslyn"
+        "serviceName" : "Roslyn",
+        "bio" : "This is a space where the results of dreaming developers are gathered one by one."
     },
     "db" : {
         "save" : "Saved."
@@ -9,6 +10,11 @@
 
     },
     "content" : {
+        "main" : {
+            "title" : "Happy Community MerryTokTok",
+            "bio" : "Full of fun, new stories unfold every day. Check out the latest news and trendy stories in one place.",
+            "button" : "Get Start"
+        },
         "services" : {
             "title" : "Our Services",
             "bio" : "Our development team exceeds customer expectations with excellent UI/UX design and cutting-edge system construction capabilities. We offer creative solutions to difficult problems and optimize our clients businesses through consulting. We take on technological challenges confidently and work together to ensure our customers' success by providing innovative and user-friendly solutions.",
@@ -31,14 +37,44 @@
             "bio" : "Join our team. We're looking for a fully autonomous professional community. Anyone can join at any time.",
             "button" : "Inquiry about joining the team"
         },
-        "member" : {
-            "title" : "Our Team Members",
-            "bio" : "Introduce members from various fields."
+        "product" : {
+            "title" : "Product Introduction",
+            "bio" : "We are trying a variety of products."
         },
         "job" : {
             "developer" : "Developer",
             "designer" : "Designer",
             "planner" : "Planner"
+        },
+        "blog" : {
+            "title" : "Our Blog",
+            "bio" : "We'll share everything we know with you."
+        },
+        "banner" : {
+            "title" : "MerryTokTok is full of interesting stories.",
+            "bio" : "Interesting conversation - Merry Talk Talk is a community web service where you can quickly access various interesting stories and news.",
+            "button" : "View now"
+        },
+        "contact" : {
+            "title" : "Get in Touch",
+            "bio" : "We are always waiting for your contact. Become a partner in growing your dreams together.",
+            "forms" : {
+                "name" : "Name",
+                "email" : "email",
+                "company" : "Company",
+                "phone" : "Mobile",
+                "subject" : "Subject",
+                "content" : "Message",
+                "button" : "Send"
+            }
+        },
+        "footer" : {
+            "blog" : [
+                { "title" : "Daily Blog" },
+                { "title" : "Development Log" },
+                { "title" : "Business Story" }
+            ]
         }
     }
+
 }

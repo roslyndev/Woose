@@ -1,8 +1,16 @@
+* { outline: none !important; }
+textarea { resize:none !important;min-height: 200px !important;overflow-y: scroll; }
 .rounded-full { border-radius: 50%;overflow:hidden; }
-.rounded-full img { object-fit: cover;margin-top:-5px; }
+.rounded-full img { object-fit: cover;margin-top:-18px; }
 .logo-dark.rounded-full { border:1px solid #000; }
 .logo-light.rounded-full { border:1px solid #FFF; }
 .logo-dark.logo-text { color:#000;margin-left:5px; }
 .logo-light.logo-text { color:#FFF;margin-left:5px ; }
 .logo { display:flex; }
 .language { padding:5px 20px;margin-left:8px;display:flex;justify-items: center;margin-top:1px;border-radius: 5px; }
+.empty-card { height:255px;background-color:#EFEFEF;box-sizing: border-box;padding:25%;font-size:5rem;color:#919191; }
+.img-card { height:255px;background-color:#FFF;box-sizing: border-box; }
+.img-card img { max-width:100%;height:auto;}
+.img-card img.whiteline { padding:20px }
+.s800x600 { max-width:800px;max-height:600px;overflow:hidden;box-sizing: border-box;padding:20px;background-color:#CECECE; }
+.s800x600 img { width:100%;height:auto; }
