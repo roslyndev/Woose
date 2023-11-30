@@ -278,7 +278,7 @@ namespace Woose.Tests
             {
                 var dt = Entity.Run.On(handler)
                                    .StoredProcedure("sp_server_info")
-                                   .SetParameter("@name", SqlDbType.VarChar, "test", 50)
+                                   //.SetParameter("@name", SqlDbType.VarChar, "test", 50)
                                    .Set()
                                    .ToList();
 
