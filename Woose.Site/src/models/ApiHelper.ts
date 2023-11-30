@@ -36,10 +36,10 @@ const ApiHelper = {
       if (response.status === 200) {
         result = response.data;
       } else {
-        result.Error('Api Send Fail');
+        result.message = 'Api Send Fail';
       }
     } catch (e:any) {
-        result.Error(e.message);
+        result.message = e.message;
     }
 
     return result;
