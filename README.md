@@ -22,108 +22,179 @@ Install-Package Woose.Data
 ### Select (single line)
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      var instance = Entity<TableEntity>.Query
-                                        .Select(1)
-                                        .Where(x => x.ColumnA == "Value1")
-                                        .And(x => x.ColumnB == "Value2")
-                                        .Execute(handler.Command)
-                                        .ToEntity();
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var instance = Entity<TableEntity>.Run.On(handler)
+                                          .Select(1)
+                                          .Where(x => x.ColumnA == "Value1")
+                                          .And(x => x.ColumnB == "Value2")
+                                          .Set()
+                                          .ToEntity();
+    }
 ```
 
 
 ### Select (multi line)
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      var list = Entity<TableEntity>.Query
-                                    .Select()
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .Execute(handler.Command)
-                                    .ToList();
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var list = Entity<TableEntity>.Run.On(handler)
+                                      .Select()
+                                      .Where(x => x.ColumnA == "Value1")
+                                      .And(x => x.ColumnB == "Value2")
+                                      .Set()
+                                      .ToList();
+    }
 ```
 
 
 ### Paging (multi line)
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      var list = Entity<TableEntity>.Query
-                                    .Paging(10, 1)  // ({PageSize},{CurrentPage})
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .Execute(handler.Command)
-                                    .ToList();
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var list = Entity<TableEntity>.Run.On(handler)
+                                      .Paging(10, 1)  // ({PageSize},{CurrentPage})
+                                      .Where(x => x.ColumnA == "Value1")
+                                      .And(x => x.ColumnB == "Value2")
+                                      .Set()
+                                      .ToList();
+    }
 ```
 
 
 ### Count
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      int count = Entity<TableEntity>.Query
-                                     .Count()
-                                     .Where(x => x.ColumnA == "Value1")
-                                     .And(x => x.ColumnB == "Value2")
-                                     .Execute(handler.Command)
-                                     .ToCount();
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        int count = Entity<TableEntity>.Run.On(handler)
+                                       .Count()
+                                       .Where(x => x.ColumnA == "Value1")
+                                       .And(x => x.ColumnB == "Value2")
+                                       .Set()
+                                       .ToCount();
+    }
 ```
 
 ### Insert
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      var rst = Entity<TableEntity>.Query
-                                   .Insert(tableEntityInstance)
-                                   .SetResult<ExecuteResult>()
-                                   .Execute(handler.Command)
-                                   .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var rst = Entity<TableEntity>.Run.On(handler)
+                                     .Insert(tableEntityInstance)
+                                     .SetResult<ExecuteResult>()
+                                     .Set()
+                                     .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
+    }
 ```
 
 ### Update
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      var rst = Entity<TableEntity>.Query
-                                   .Update(tableEntityInstance)
-                                   .Where(x => x.ColumnA == "Value1")
-                                   .And(x => x.ColumnB == "Value2")
-                                   .SetResult<ExecuteResult>()
-                                   .Execute(handler.Command)
-                                   .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var rst = Entity<TableEntity>.Run.On(handler)
+                                     .Update(tableEntityInstance)
+                                     .Where(x => x.ColumnA == "Value1")
+                                     .And(x => x.ColumnB == "Value2")
+                                     .SetResult<ExecuteResult>()
+                                     .Set()
+                                     .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
+    }
 ```
 
 ### Delete
 
 ```csharp
-  using (var db = context.getConnection())
-  using (var handler = new SqlDbOperater(db))
-  {
-      var rst = Entity<TableEntity>.Query
-                                   .Delete()
-                                   .Where(x => x.ColumnA == "Value1")
-                                   .And(x => x.ColumnB == "Value2")
-                                   .SetResult<ReturnValue>()
-                                   .Execute(handler.Command)
-                                   .ToResult() as ReturnValue;   //ReturnValue : IFeedback
-  }
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var rst = Entity<TableEntity>.Run.On(handler)
+                                     .Delete()
+                                     .Where(x => x.ColumnA == "Value1")
+                                     .And(x => x.ColumnB == "Value2")
+                                     .SetResult<ReturnValue>()
+                                     .Set()
+                                     .ToResult() as ReturnValue;   //ReturnValue : IFeedback
+    }
+```
+
+
+다음은 Entity가 규정되지 않은 경우입니다.
+
+### Select (multi line)
+
+```csharp
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var dt = Entity.Run.On(handler)
+                                .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
+                                .Set()
+                                .ToList();
+
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            cnt = dt.Rows.Count;
+            foreach(DataRow row in dt.Rows)
+            {
+                strValue = row["title"].ToString();
+                break;
+            }
+        }
+    }
+```
+
+
+### Select (single line)
+
+```csharp
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var recode = Entity.Run.On(handler)
+                               .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
+                               .Set()
+                               .ToEntity();
+
+        if (recode != null)
+        {
+            idx = Convert.ToInt32(recode["idx"]);
+            strValue = Convert.ToString(recode["title"]);
+        }
+    }
+```
+
+
+### Stored Procedure
+
+```csharp
+    using (var db = context.getConnection())
+    using (var handler = new SqlDbOperater(db))
+    {
+        var dt = Entity.Run.On(handler)
+                            .StoredProcedure("sp_server_info")
+                            //.SetParameter("@name", SqlDbType.VarChar, "test", 50)
+                            .Set()
+                            .ToList();
+
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            cnt = dt.Rows.Count;
+            foreach (DataRow row in dt.Rows)
+            {
+                strValue = row[1].ToString();
+                break;
+            }
+        }
+    }
 ```

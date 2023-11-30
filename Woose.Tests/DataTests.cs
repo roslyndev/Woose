@@ -1,3 +1,4 @@
+using System.Data;
 using Woose.Data;
 
 namespace Woose.Tests
@@ -21,12 +22,12 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                codeList = Entity<GlobalCode>.Query
-                                            .Select(1)
-                                            .Where(x => x.MajorCode == "Member")
-                                            .And(x => x.MinorCode == "Status")
-                                            .Execute(handler.Command)
-                                            .ToList();
+                codeList = Entity<GlobalCode>.Run.On(handler)
+                                             .Select(1)
+                                             .Where(x => x.MajorCode == "Member")
+                                             .And(x => x.MinorCode == "Status")
+                                             .Set()
+                                             .ToList();
             }
 
             Assert.IsNotNull(codeList);
@@ -51,10 +52,10 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                rst = Entity<GlobalCode>.Query
+                rst = Entity<GlobalCode>.Run.On(handler)
                                         .Insert(paramData)
                                         .SetResult<ExecuteResult>()
-                                        .Execute(handler.Command)
+                                        .Set()
                                         .ToResult() as ExecuteResult;
             }
 
@@ -78,12 +79,12 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                rst = Entity<GlobalCode>.Query
+                rst = Entity<GlobalCode>.Run.On(handler)
                                         .Update(paramData)
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
                                         .SetResult<ExecuteResult>()
-                                        .Execute(handler.Command)
+                                        .Set()
                                         .ToResult() as ExecuteResult;
             }
 
@@ -99,12 +100,12 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                cnt = Entity<GlobalCode>.Query
+                cnt = Entity<GlobalCode>.Run.On(handler)
                                         .Count()
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
                                         .SetResult<ExecuteResult>()
-                                        .Execute(handler.Command)
+                                        .Set()
                                         .ToCount();
             }
 
@@ -120,12 +121,12 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                rst = Entity<GlobalCode>.Query
+                rst = Entity<GlobalCode>.Run.On(handler)
                                         .Paging(10, 1)
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
                                         .SetResult<ExecuteResult>()
-                                        .Execute(handler.Command)
+                                        .Set()
                                         .ToList();
             }
 
@@ -141,12 +142,12 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                rst = Entity<GlobalCode>.Query
+                rst = Entity<GlobalCode>.Run.On(handler)
                                         .Delete()
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
                                         .SetResult<ExecuteResult>()
-                                        .Execute(handler.Command)
+                                        .Set()
                                         .ToResult() as ExecuteResult;
             }
 
@@ -165,10 +166,10 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                var rst = Entity<GlobalCode>.Query
+                var rst = Entity<GlobalCode>.Run.On(handler)
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
-                                            .Execute(handler.Command)
+                                            .Set()
                                             .ToList();
                 
                 paramCount = handler.Command!.Parameters.Count;
@@ -191,11 +192,11 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                var rst = Entity<GlobalCode>.Query
+                var rst = Entity<GlobalCode>.Run.On(handler)
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
                                             .And(x => x.IsEnabled)
-                                            .Execute(handler.Command)
+                                            .Set()
                                             .ToList();
 
                 paramCount = handler.Command!.Parameters.Count;
@@ -206,6 +207,94 @@ namespace Woose.Tests
             Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
         }
 
+        [Test]
+        public void Entity_Test_Select_Case3()
+        {
+            IContext context = new DbContext(this.connStr);
 
+            int cnt = 0;
+            string strValue = string.Empty;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var dt = Entity.Run.On(handler)
+                                     .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
+                                     .Set()
+                                     .ToList();
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    cnt = dt.Rows.Count;
+                    foreach(DataRow row in dt.Rows)
+                    {
+                        strValue = row["title"].ToString();
+                        break;
+                    }
+                }
+            }
+
+            Assert.That(cnt, Is.EqualTo(2));
+            Assert.That(Convert.ToString(strValue), Is.EqualTo("Test"));
+        }
+
+        [Test]
+        public void Entity_Test_Select_Case4()
+        {
+            IContext context = new DbContext(this.connStr);
+
+            int idx = 0;
+            string strValue = string.Empty;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var recode = Entity.Run.On(handler)
+                                       .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
+                                       .Set()
+                                       .ToEntity();
+
+                if (recode != null)
+                {
+                    idx = Convert.ToInt32(recode["idx"]);
+                    strValue = Convert.ToString(recode["title"]);
+                }
+            }
+
+            Assert.That(idx, Is.EqualTo(1));
+            Assert.That(Convert.ToString(strValue), Is.EqualTo("Test"));
+        }
+
+        [Test]
+        public void Entity_Test_Select_Case5()
+        {
+            IContext context = new DbContext(this.connStr);
+
+            int cnt = 0;
+            string strValue = string.Empty;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var dt = Entity.Run.On(handler)
+                                   .StoredProcedure("sp_server_info")
+                                   //.SetParameter("@name", SqlDbType.VarChar, "test", 50)
+                                   .Set()
+                                   .ToList();
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    cnt = dt.Rows.Count;
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        strValue = row[1].ToString();
+                        break;
+                    }
+                }
+            }
+
+            Assert.That(cnt, Is.EqualTo(29));
+            Assert.That(Convert.ToString(strValue), Is.EqualTo("DBMS_NAME"));
+        }
     }
 }

@@ -65,6 +65,60 @@ namespace Woose.Data
             return helper;
         }
 
+        public static QueryHelper<T> Set<T>(this QueryHelper<T> helper) where T : IEntity, new()
+        {
+            if (helper.Command != null)
+            {
+                helper.Command.CommandText = helper.ToQuery();
+                helper.Command.CommandType = System.Data.CommandType.Text;
+                switch (helper.Method.ToUpper().Trim())
+                {
+                    case "UPDATE":
+                        foreach (var property in helper.target.GetInfo())
+                        {
+                            var option = (from a in helper.Options where a.Value.Column.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (option != null)
+                            {
+                                helper.Command.Parameters.Set($"@{property.ColumnName.Trim()}Value", property.Type, option.Value, property.Size);
+                            }
+                            object whereValue = (from a in helper.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (whereValue != null)
+                            {
+                                helper.Command.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
+                            }
+                        }
+                        break;
+                    case "INSERT":
+                        foreach (var property in helper.target.GetInfo())
+                        {
+                            var option = (from a in helper.Options where a.Value.Column.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (option != null)
+                            {
+                                helper.Command.Parameters.Set($"@{property.ColumnName.Trim()}", property.Type, option.Value, property.Size);
+                            }
+                            object whereValue = (from a in helper.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (whereValue != null)
+                            {
+                                helper.Command.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
+                            }
+                        }
+                        break;
+                    default:
+                        foreach (var property in helper.target.GetInfo())
+                        {
+                            object whereValue = (from a in helper.WhereOptions where a.Key.Trim().ToUpper() == property.ColumnName.Trim().ToUpper() select a.Value).FirstOrDefault();
+                            if (whereValue != null)
+                            {
+                                helper.Command.Parameters.Set($"@{property.ColumnName}", property.Type, whereValue, property.Size);
+                            }
+                        }
+                        break;
+                }
+            }
+
+            return helper;
+        }
+
         public static QueryHelper<T> Void<T>(this QueryHelper<T> helper) where T : IEntity, new()
         {
             helper.Command.ExecuteNonQuery();
@@ -154,6 +208,38 @@ namespace Woose.Data
             query.Options.AddOrUpdate(column.ToUpper().Trim(), option, (x, y) => option);
             return query;
         }
+
+        public static QueryHelper<T> Insert<T>(this QueryHelper<T> query, T paramData) where T : IEntity, new()
+        {
+            query.Method = "Insert";
+            StringBuilder columns = new StringBuilder(200);
+            StringBuilder values = new StringBuilder(200);
+            int num = 0;
+            foreach (var info in query.GetInfos)
+            {
+                if (!info.IsKey)
+                {
+                    if (num > 0)
+                    {
+                        columns.Append(",");
+                        values.Append(",");
+                    }
+                    columns.Append($"[{info.ColumnName}]");
+                    values.Append($"@{info.ColumnName}");
+                    num++;
+                }
+            }
+            query.Insert<T>(columns.ToString(), values.ToString());
+            foreach (var info in query.GetInfos)
+            {
+                if (!info.IsKey)
+                {
+                    query.WhereOptions.AddOrUpdate(info.ColumnName, paramData.GetValue(info.ColumnName), (x, y) => paramData.GetValue(info.ColumnName));
+                }
+            }
+            return query;
+        }
+
 
         public static QueryHelper<T> UpdateAll<T>(this QueryHelper<T> query, T target) where T : IEntity, new()
         {

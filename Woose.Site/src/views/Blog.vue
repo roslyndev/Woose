@@ -10,6 +10,7 @@
         <div class="row">
             <div class="col-lg-4" v-for="(item, index) in blogposts">
                 <div class="card mt-4 border-0 shadow">
+                    <a :href="item.url" target="_blank">
                     <div class="card-body p-4">
                         <span class="badge badge-soft-primary">{{ item.tag }}</span>
                         <h4 class="font-size-22 my-4"><a href="javascript: void(0);">{{ item.title }}</a></h4>
@@ -22,6 +23,7 @@
                             </div>
                         </div>
                     </div>
+                    </a>
                 </div>
             </div>
 
@@ -59,5 +61,4 @@ const blogposts = [
         thumbnail : "https://i1.daumcdn.net/thumb/S160x108/?scode=mtistory2&fname=https://blog.kakaocdn.net/dn/bDDeth/btrZKwMzLC5/cjRMyoBstFNm0JRRmihQbK/img.jpg" 
     }
 ];
-
 </script>

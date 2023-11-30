@@ -151,14 +151,17 @@ const fnSave = async () => {
     validateForm();
 	if (isFormValid()) {
         let jsonData:Partnership = Object.assign({}, partnership.value);
-        let rst:any = await ApiHelper.Post("https://api.merrytoktok.com/api/Customer/Partnership/Save", jsonData);
-        if (rst.check) {
-            MessageBox.Success(t(DbMsg('save')), () => {
-                document.location.reload();
-            });
-        } else {
-            MessageBox.Alert(t(DbMsg(rst.message)));
-        }
+        await ApiHelper.Post("https://api.merrytoktok.com/api/Customer/Partnership/Save", jsonData);
+        MessageBox.Success(t(DbMsg('save')));
+        fnClear();
     }
-}
+};
+
+const fnClear  = () => {
+    partnership.value.name = "";
+    partnership.value.company = "";
+    partnership.value.phone = "";
+    partnership.value.email = "";
+    partnership.value.content = "";
+};
 </script>

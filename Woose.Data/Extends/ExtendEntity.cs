@@ -10,6 +10,13 @@ namespace Woose.Data
 {
     public static class ExtendEntity
     {
+        public static QueryHelper<T> On<T>(this T target, SqlDbOperater handler) where T : IEntity, new()
+        {
+            var result = new QueryHelper<T>();
+            result.Command = handler.Command;
+            return result;
+        }
+
 
         public static QueryHelper<T> Select<T>(this T target) where T : IEntity, new()
         {
