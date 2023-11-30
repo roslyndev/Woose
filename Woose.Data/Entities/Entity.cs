@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 using Woose.Core;
@@ -36,6 +37,8 @@ namespace Woose.Data
 
         protected SqlCommand Command { get; set; } = default!;
 
+        protected CommandType ExecuteType { get; set; } = default!;
+
         public Entity()
         {
         }
@@ -43,18 +46,39 @@ namespace Woose.Data
         public Entity Set(string _query)
         {
             this.query = new StringBuilder(_query);
+            this.ExecuteType = CommandType.Text;
             return this;
         }
 
-        public Entity Execute(SqlCommand cmd)
+        public Entity Execute(SqlCommand? cmd)
         {
             this.Command = cmd;
+            this.Command.CommandType = this.ExecuteType;
+            this.Command.CommandText = this.query.ToString();
             return this;
         }
 
         public int Void()
         {
             return this.Command.ExecuteNonQuery();
+        }
+
+        public DataTable ToList()
+        {
+            return this.Command.ExecuteTable();
+        }
+
+        public DataRow? ToEntity()
+        {
+            var dt = this.Command.ExecuteTable();
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                return dt.Rows[0];
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

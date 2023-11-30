@@ -1,3 +1,4 @@
+using System.Data;
 using Woose.Data;
 
 namespace Woose.Tests
@@ -206,6 +207,60 @@ namespace Woose.Tests
             Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
         }
 
+        [Test]
+        public void Entity_Test_Select_Case3()
+        {
+            IContext context = new DbContext(this.connStr);
 
+            int cnt = 0;
+            string strValue = string.Empty;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var dt = Entity.Query.Set("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
+                                     .Execute(handler.Command)
+                                     .ToList();
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    cnt = dt.Rows.Count;
+                    foreach(DataRow row in dt.Rows)
+                    {
+                        strValue = row["title"].ToString();
+                        break;
+                    }
+                }
+            }
+
+            Assert.That(cnt, Is.EqualTo(2));
+            Assert.That(Convert.ToString(strValue), Is.EqualTo("Test"));
+        }
+
+        [Test]
+        public void Entity_Test_Select_Case4()
+        {
+            IContext context = new DbContext(this.connStr);
+
+            int idx = 0;
+            string strValue = string.Empty;
+
+            using (var db = context.getConnection())
+            using (var handler = new SqlDbOperater(db))
+            {
+                var recode = Entity.Query.Set("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
+                                         .Execute(handler.Command)
+                                         .ToEntity();
+
+                if (recode != null)
+                {
+                    idx = Convert.ToInt32(recode["idx"]);
+                    strValue = Convert.ToString(recode["title"]);
+                }
+            }
+
+            Assert.That(idx, Is.EqualTo(1));
+            Assert.That(Convert.ToString(strValue), Is.EqualTo("Test"));
+        }
     }
 }
