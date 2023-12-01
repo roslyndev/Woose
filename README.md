@@ -16,6 +16,49 @@ Install-Package Woose.Data
 
 ## 예제코드
 
+다음은 엔티티 정의 예제입니다.
+
+```csharp
+public class GlobalCode : BaseEntity, IEntity
+{
+    [Entity("CodeIDX", System.Data.SqlDbType.BigInt, 8, true)]
+    public long CodeIDX { get; set; } = -1;
+
+    [Entity("MajorCode", System.Data.SqlDbType.VarChar, 50)]
+    public string MajorCode { get; set; } = string.Empty;
+
+    [Entity("MinorCode", System.Data.SqlDbType.VarChar, 50)]
+    public string MinorCode { get; set; } = string.Empty;
+
+    [Entity("KeyCode", System.Data.SqlDbType.VarChar, 50)]
+    public string KeyCode { get; set; } = string.Empty;
+
+    [Entity("MajorName", System.Data.SqlDbType.NVarChar, 30)]
+    public string MajorName { get; set; } = string.Empty;
+
+    [Entity("MinorName", System.Data.SqlDbType.NVarChar, 30)]
+    public string MinorName { get; set; } = string.Empty;
+
+    [Entity("KeyName", System.Data.SqlDbType.NVarChar, 30)]
+    public string KeyName { get; set; } = string.Empty;
+
+    [Entity("MappingKey", System.Data.SqlDbType.BigInt, 8)]
+    public long MappingKey { get; set; } = -1;
+
+    [Entity("IsEnabled", System.Data.SqlDbType.Bit, 1)]
+    public bool IsEnabled { get; set; } = true;
+
+
+    public GlobalCode()
+    {
+        this.TableName = "GlobalCode";
+        this.PrimaryColumn = "CodeIDX";
+    }
+
+}
+```
+
+
 다음은 실제 사용 코드 예제입니다.
 
 
@@ -174,7 +217,7 @@ Install-Package Woose.Data
     {
         var dt = Entity.Run.On(handler)
                             .StoredProcedure("sp_server_info")
-                            //.SetParameter("@name", SqlDbType.VarChar, "test", 50)
+                            //.AddParameter("@name", SqlDbType.VarChar, "test", 50)
                             .ToList();
 
         if (dt != null && dt.Rows.Count > 0)
