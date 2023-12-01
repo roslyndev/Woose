@@ -31,6 +31,10 @@ namespace Woose.Data
         {
             this.cmd = new SqlCommand();
             this.cmd.Connection = db.GetSqlServer();
+            if (this.cmd.Connection != null && this.cmd.Connection.State != System.Data.ConnectionState.Open)
+            {
+                this.cmd.Connection.Open();
+            }
         }
 
         public SqlCommand? Command

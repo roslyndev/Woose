@@ -5,8 +5,108 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Woose.Builder"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Woose.Builder" Height="450" Width="800">
+    <Window.Style>
+        <Style TargetType="Window">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Window">
+                        <Border Background="White" CornerRadius="6">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Style>
+    <Window.DataContext>
+        <local:MainViewModel />
+    </Window.DataContext>
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <Grid Grid.Row="0" Background="{StaticResource PastelBeige}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Woose Builder" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10" Style="{StaticResource Title}"/>
+            <ComboBox x:Name="DatabaseComboBox"
+                Grid.Column="1" Margin="5" Width="200"
+                ItemsSource="{Binding Databases}"
+                DisplayMemberPath="DatabaseName"
+                SelectedItem="{Binding SelectedDatabase, Mode=TwoWay}">
+            </ComboBox>
+
+
+            <Button x:Name="Btn_Connection" Grid.Column="2" Content="연결" Margin="5" Width="80" Style="{StaticResource MintButton}" Click="Btn_Connection_Click"/>
+            <Button x:Name="Btn_NewConn" Grid.Column="3" Content="신규" Margin="5" Width="80" Style="{StaticResource OrangeButton}" Click="Btn_NewConn_Click"/>
+            <Button x:Name="Btn_EditConn" Grid.Column="4" Content="수정" Margin="5" Width="80" Style="{StaticResource OrangeButton}" Click="Btn_EditConn_Click"/>
+            <Button x:Name="Btn_Delete" Grid.Column="5" Content="삭제" Margin="5" Width="60" Style="{StaticResource PinkButton}" Click="Btn_Delete_Click"/>
+        </Grid>
+
+        <Grid Grid.Row="1" Background="{StaticResource PastelBeige}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="194"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TabControl Grid.Column="0" Grid.ColumnSpan="3">
+                <TabItem Header="Table" Margin="5,0,0,0" Width="60">
+                    <ListView Name="TableListView" ItemsSource="{Binding entities}" BorderThickness="0" SelectionChanged="TableListView_SelectionChanged">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding name}" Width="194" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </TabItem>
+                <TabItem Header="SP" Width="60">
+                    <ListView Name="SpListView" ItemsSource="{Binding sps}" BorderThickness="0" SelectionChanged="SPListView_SelectionChanged">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding name}" Width="194" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </TabItem>
+            </TabControl>
+
+            <TabControl Grid.Column="3">
+                <TabItem Header="ASP.NET" Margin="5,0,-5,0" Width="80">
+                </TabItem>
+                <TabItem Header="Database" Width="80" Height="20">
+                </TabItem>
+                <TabItem Header="Node.js" Width="80" Height="20">
+                </TabItem>
+                <TabItem Header="Vue.js" Width="80" Height="20">
+                </TabItem>
+                <TabItem Header="React.js" Width="80" Height="20">
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <Grid Grid.Row="2">
+        </Grid>
+        <Grid Grid.Row="3">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button x:Name="Btn_Import" Content="가져오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Import_Click"/>
+                <Button x:Name="Btn_Export" Content="내보내기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Export_Click"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="다시 불러오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5"/>
+                <Button Content="개체명 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5"/>
+                <Button Content="코드 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

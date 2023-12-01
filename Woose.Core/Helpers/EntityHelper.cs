@@ -30,10 +30,16 @@ namespace Woose.Core
                     DataColumn? column;
                     foreach (var property in properties)
                     {
-                        column = columns.FirstOrDefault(x => x.ColumnName == property.Name);
-                        if (column != null && row[property.Name] != null && row[property.Name] != DBNull.Value)
+                        try
                         {
-                            property.SetValue(item, row[property.Name]);
+                            column = columns.FirstOrDefault(x => x.ColumnName == property.Name);
+                            if (column != null && row[property.Name] != null && row[property.Name] != DBNull.Value)
+                            {
+                                property.SetValue(item, row[property.Name]);
+                            }
+                        }
+                        catch
+                        {
                         }
                     }
 
@@ -56,10 +62,16 @@ namespace Woose.Core
             {
                 foreach (var property in properties)
                 {
-                    column = columns.FirstOrDefault(x => x.ColumnName == property.Name);
-                    if (column != null && row[property.Name] != null && row[property.Name] != DBNull.Value)
+                    try
+                    { 
+                        column = columns.FirstOrDefault(x => x.ColumnName == property.Name);
+                        if (column != null && row[property.Name] != null && row[property.Name] != DBNull.Value)
+                        {
+                            property.SetValue(result, row[property.Name]);
+                        }
+                    }
+                    catch
                     {
-                        property.SetValue(result, row[property.Name]);
                     }
                 }
             }
