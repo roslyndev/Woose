@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
+using System.Threading.Tasks;
 using Woose.Core;
 
 namespace Woose.Data
@@ -87,6 +88,11 @@ namespace Woose.Data
             return this.Command.ExecuteNonQuery();
         }
 
+        public Task<int> VoidAsync()
+        {
+            return Task.Factory.StartNew(() => this.Void());
+        }
+
         public DataTable ToList()
         {
             if (!this.isSet)
@@ -94,6 +100,11 @@ namespace Woose.Data
                 this.Set();
             }
             return this.Command.ExecuteTable();
+        }
+
+        public Task<DataTable> ToListAsync()
+        {
+            return Task.Factory.StartNew(() => this.ToList());
         }
 
         public DataRow? ToEntity()
@@ -114,6 +125,11 @@ namespace Woose.Data
             }
         }
 
+        public Task<DataRow?> ToEntityAsync()
+        {
+            return Task.Factory.StartNew(() => this.ToEntity());
+        }
+
         public object ToScalar()
         {
             if (!this.isSet)
@@ -130,6 +146,11 @@ namespace Woose.Data
             {
                 return null;
             }
+        }
+
+        public Task<object> ToScalarAsync()
+        {
+            return Task.Factory.StartNew(() => this.ToScalar());
         }
 
         public Entity AddParameter(string fieldName, SqlDbType type, object fieldValue, int size = -1)

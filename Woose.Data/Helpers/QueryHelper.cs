@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Woose.Core;
 
 namespace Woose.Data
@@ -13,6 +14,7 @@ namespace Woose.Data
         protected StringBuilder query = new StringBuilder(200);
 
         public T target { get; set; }
+
 
         public bool isSet { get; set; } = false;
 
@@ -357,6 +359,15 @@ namespace Woose.Data
             return this.Command.ExecuteEntities<T>();
         }
 
+        public Task<List<T>> ToListAsync()
+        {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
+            return Task.Factory.StartNew(() => this.Command.ExecuteEntities<T>());
+        }
+
         public T ToEntity()
         {
             if (!this.isSet)
@@ -366,6 +377,11 @@ namespace Woose.Data
             return this.Command.ExecuteEntity<T>();
         }
 
+        public Task<T> ToEntityAsync()
+        {
+            return Task.Factory.StartNew(() => ToEntity());
+        }
+
         public int ToCount()
         {
             if (!this.isSet)
@@ -373,6 +389,11 @@ namespace Woose.Data
                 this.Set();
             }
             return Convert.ToInt32(this.Command.ExecuteScalar() ?? 0);
+        }
+
+        public Task<int> ToCountAsync()
+        {
+            return Task.Factory.StartNew(() => this.ToCount());
         }
 
         public IFeedback? ToResult()
@@ -396,6 +417,11 @@ namespace Woose.Data
             }
 
             return this.Result;
+        }
+
+        public Task<IFeedback?> ToResultAsync()
+        {
+            return Task.Factory.StartNew(() => this.ToResult());
         }
 
     }

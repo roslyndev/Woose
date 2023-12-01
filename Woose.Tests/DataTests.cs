@@ -14,7 +14,7 @@ namespace Woose.Tests
         }
 
         [Test, Order(2)]
-        public void ContextAndQueryHelper_TestCase_Create()
+        public async Task ContextAndQueryHelper_TestCase_Create()
         {
             IContext context = new DbContext(this.connStr);
             List<GlobalCode> codeList = new List<GlobalCode>();
@@ -22,11 +22,11 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var handler = new SqlDbOperater(db))
             {
-                codeList = Entity<GlobalCode>.Run.On(handler)
-                                             .Select(1)
-                                             .Where(x => x.MajorCode == "Member")
-                                             .And(x => x.MinorCode == "Status")
-                                             .ToList();
+                codeList = await Entity<GlobalCode>.Run.On(handler)
+                                                   .Select(1)
+                                                   .Where(x => x.MajorCode == "Member")
+                                                   .And(x => x.MinorCode == "Status")
+                                                   .ToListAsync();
             }
 
             Assert.IsNotNull(codeList);

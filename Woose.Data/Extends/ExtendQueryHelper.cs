@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 using Woose.Core;
 
 namespace Woose.Data
@@ -536,13 +537,13 @@ namespace Woose.Data
             return helper;
         }
 
-        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate, QueryOption.Sequence order) where T : IEntity, new()
+        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> helper, Expression<Func<T, object>> predicate, QueryOption.Sequence order) where T : IEntity, new()
         {
             if (predicate != null)
             {
-                query = TranslateExpressionToOrderBy(query, predicate, order);
+                helper = TranslateExpressionToOrderBy(helper, predicate, order);
             }
-            return query;
+            return helper;
         }
 
         private static QueryHelper<T> TranslateExpressionToOrderBy<T>(QueryHelper<T> helper, Expression<Func<T, object>> predicate, QueryOption.Sequence order) where T : IEntity, new()
@@ -576,13 +577,13 @@ namespace Woose.Data
             return helper;
         }
 
-        public static QueryHelper<T> GroupBy<T>(this QueryHelper<T> query, params string[] columns) where T : IEntity, new()
+        public static QueryHelper<T> GroupBy<T>(this QueryHelper<T> helper, params string[] columns) where T : IEntity, new()
         {
-            query.Method = "Select";
+            helper.Method = "Select";
 
             if (columns != null && columns.Length > 0)
             {
-                query.Method = "Group";
+                helper.Method = "Group";
 
                 int num = 0;
                 StringBuilder builder = new StringBuilder(200);
@@ -593,10 +594,11 @@ namespace Woose.Data
                     num++;
                 }
 
-                query.Columns = builder.ToString();
+                helper.Columns = builder.ToString();
             }
 
-            return query;
+            return helper;
         }
+
     }
 }
