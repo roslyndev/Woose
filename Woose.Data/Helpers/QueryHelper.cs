@@ -14,6 +14,8 @@ namespace Woose.Data
 
         public T target { get; set; }
 
+        public bool isSet { get; set; } = false;
+
         public string Method { get; set; } = string.Empty;
 
         public string Columns { get; set; } = string.Empty;
@@ -42,6 +44,7 @@ namespace Woose.Data
 
         public SqlCommand Command { get; set; }
 
+        public string OrderByString { get; set; } = string.Empty;
 
         public QueryHelper() 
         {
@@ -92,6 +95,10 @@ namespace Woose.Data
         {
             this.IsWrap = true;
             this.Result = new U();
+            if (!this.isSet)
+            {
+                this.Set();
+            }
             return this;
         }
 
@@ -145,9 +152,9 @@ namespace Woose.Data
                         result.Append($"Where {this.Where} ");
                         IsWhere = true;
                     }
-                    if (!string.IsNullOrWhiteSpace(this.OrderColumn))
+                    if (!string.IsNullOrWhiteSpace(this.OrderByString))
                     {
-                        result.Append($"Order by {this.OrderColumn} {this.OrderType.ToString()}");
+                        result.Append($"Order by {OrderByString}");
                     }
                     else
                     {
@@ -168,9 +175,9 @@ namespace Woose.Data
                     {
                         result.Append($"And {this.Where} ");
                     }
-                    if (!string.IsNullOrWhiteSpace(this.OrderColumn))
+                    if (!string.IsNullOrWhiteSpace(this.OrderByString))
                     {
-                        result.Append($"Order by {this.OrderColumn} {this.OrderType.ToString()}");
+                        result.Append($"Order by {this.OrderByString}");
                     }
                     else
                     {
@@ -343,21 +350,38 @@ namespace Woose.Data
 
         public List<T> ToList()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
             return this.Command.ExecuteEntities<T>();
         }
 
         public T ToEntity()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
             return this.Command.ExecuteEntity<T>();
         }
 
         public int ToCount()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
             return Convert.ToInt32(this.Command.ExecuteScalar() ?? 0);
         }
 
         public IFeedback? ToResult()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
+
             if (this.Result != null)
             {
                 switch (this.Result.GetResultType())

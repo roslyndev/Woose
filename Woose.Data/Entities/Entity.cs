@@ -39,6 +39,8 @@ namespace Woose.Data
 
         protected CommandType ExecuteType { get; set; } = default!;
 
+        public bool isSet { get; set; } = false;
+
         public Entity()
         {
         }
@@ -53,17 +55,7 @@ namespace Woose.Data
         {
             this.query = new StringBuilder(_query);
             this.ExecuteType = CommandType.Text;
-            return this;
-        }
-
-        public Entity Execute(SqlCommand? cmd)
-        {
-            if (cmd != null)
-            {
-                this.Command = cmd;
-                this.Command.CommandType = this.ExecuteType;
-                this.Command.CommandText = this.query.ToString();
-            }
+            this.isSet = false;
             return this;
         }
 
@@ -73,6 +65,7 @@ namespace Woose.Data
             {
                 this.Command.CommandType = this.ExecuteType;
                 this.Command.CommandText = this.query.ToString();
+                this.isSet = true;
             }
             return this;
         }
@@ -81,21 +74,35 @@ namespace Woose.Data
         {
             this.query = new StringBuilder(spname);
             this.ExecuteType = CommandType.StoredProcedure;
+            this.Set();
             return this;
         }
 
         public int Void()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
             return this.Command.ExecuteNonQuery();
         }
 
         public DataTable ToList()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
             return this.Command.ExecuteTable();
         }
 
         public DataRow? ToEntity()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
+
             var dt = this.Command.ExecuteTable();
             if (dt != null && dt.Rows.Count > 0)
             {
@@ -109,6 +116,11 @@ namespace Woose.Data
 
         public object ToScalar()
         {
+            if (!this.isSet)
+            {
+                this.Set();
+            }
+
             var dt = this.Command.ExecuteTable();
             if (dt != null && dt.Rows.Count > 0)
             {
@@ -120,7 +132,7 @@ namespace Woose.Data
             }
         }
 
-        public Entity SetParameter(string fieldName, SqlDbType type, object fieldValue, int size = -1)
+        public Entity AddParameter(string fieldName, SqlDbType type, object fieldValue, int size = -1)
         {
             if (this.Command != null)
             {

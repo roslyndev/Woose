@@ -7,5 +7,5 @@
 /Woose.Test/obj
 *.nupkg
 /Woose.Tests/obj
-/Woose.Builder/bin/Debug/net7.0-windows
+/Woose.Builder/bin
 /Woose.Builder/obj

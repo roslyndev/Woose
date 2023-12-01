@@ -38,6 +38,5 @@ namespace Woose.Tests
             this.PrimaryColumn = "CodeIDX";
         }
 
-
     }
 }

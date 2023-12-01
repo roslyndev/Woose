@@ -29,7 +29,6 @@ Install-Package Woose.Data
                                           .Select(1)
                                           .Where(x => x.ColumnA == "Value1")
                                           .And(x => x.ColumnB == "Value2")
-                                          .Set()
                                           .ToEntity();
     }
 ```
@@ -45,7 +44,6 @@ Install-Package Woose.Data
                                       .Select()
                                       .Where(x => x.ColumnA == "Value1")
                                       .And(x => x.ColumnB == "Value2")
-                                      .Set()
                                       .ToList();
     }
 ```
@@ -61,7 +59,6 @@ Install-Package Woose.Data
                                       .Paging(10, 1)  // ({PageSize},{CurrentPage})
                                       .Where(x => x.ColumnA == "Value1")
                                       .And(x => x.ColumnB == "Value2")
-                                      .Set()
                                       .ToList();
     }
 ```
@@ -77,7 +74,6 @@ Install-Package Woose.Data
                                        .Count()
                                        .Where(x => x.ColumnA == "Value1")
                                        .And(x => x.ColumnB == "Value2")
-                                       .Set()
                                        .ToCount();
     }
 ```
@@ -91,7 +87,6 @@ Install-Package Woose.Data
         var rst = Entity<TableEntity>.Run.On(handler)
                                      .Insert(tableEntityInstance)
                                      .SetResult<ExecuteResult>()
-                                     .Set()
                                      .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
     }
 ```
@@ -107,7 +102,6 @@ Install-Package Woose.Data
                                      .Where(x => x.ColumnA == "Value1")
                                      .And(x => x.ColumnB == "Value2")
                                      .SetResult<ExecuteResult>()
-                                     .Set()
                                      .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
     }
 ```
@@ -123,7 +117,6 @@ Install-Package Woose.Data
                                      .Where(x => x.ColumnA == "Value1")
                                      .And(x => x.ColumnB == "Value2")
                                      .SetResult<ReturnValue>()
-                                     .Set()
                                      .ToResult() as ReturnValue;   //ReturnValue : IFeedback
     }
 ```
@@ -139,7 +132,6 @@ Install-Package Woose.Data
     {
         var dt = Entity.Run.On(handler)
                                 .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                                .Set()
                                 .ToList();
 
         if (dt != null && dt.Rows.Count > 0)
@@ -163,7 +155,6 @@ Install-Package Woose.Data
     {
         var recode = Entity.Run.On(handler)
                                .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                               .Set()
                                .ToEntity();
 
         if (recode != null)
@@ -184,7 +175,6 @@ Install-Package Woose.Data
         var dt = Entity.Run.On(handler)
                             .StoredProcedure("sp_server_info")
                             //.SetParameter("@name", SqlDbType.VarChar, "test", 50)
-                            .Set()
                             .ToList();
 
         if (dt != null && dt.Rows.Count > 0)

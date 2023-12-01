@@ -26,7 +26,6 @@ namespace Woose.Tests
                                              .Select(1)
                                              .Where(x => x.MajorCode == "Member")
                                              .And(x => x.MinorCode == "Status")
-                                             .Set()
                                              .ToList();
             }
 
@@ -55,7 +54,6 @@ namespace Woose.Tests
                 rst = Entity<GlobalCode>.Run.On(handler)
                                         .Insert(paramData)
                                         .SetResult<ExecuteResult>()
-                                        .Set()
                                         .ToResult() as ExecuteResult;
             }
 
@@ -84,7 +82,6 @@ namespace Woose.Tests
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
                                         .SetResult<ExecuteResult>()
-                                        .Set()
                                         .ToResult() as ExecuteResult;
             }
 
@@ -104,8 +101,6 @@ namespace Woose.Tests
                                         .Count()
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
-                                        .SetResult<ExecuteResult>()
-                                        .Set()
                                         .ToCount();
             }
 
@@ -125,8 +120,7 @@ namespace Woose.Tests
                                         .Paging(10, 1)
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
-                                        .SetResult<ExecuteResult>()
-                                        .Set()
+                                        .OrderBy(x => x.CodeIDX, QueryOption.Sequence.DESC)
                                         .ToList();
             }
 
@@ -147,7 +141,6 @@ namespace Woose.Tests
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
                                         .SetResult<ExecuteResult>()
-                                        .Set()
                                         .ToResult() as ExecuteResult;
             }
 
@@ -169,7 +162,6 @@ namespace Woose.Tests
                 var rst = Entity<GlobalCode>.Run.On(handler)
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
-                                            .Set()
                                             .ToList();
                 
                 paramCount = handler.Command!.Parameters.Count;
@@ -196,7 +188,6 @@ namespace Woose.Tests
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
                                             .And(x => x.IsEnabled)
-                                            .Set()
                                             .ToList();
 
                 paramCount = handler.Command!.Parameters.Count;
@@ -220,7 +211,6 @@ namespace Woose.Tests
             {
                 var dt = Entity.Run.On(handler)
                                      .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                                     .Set()
                                      .ToList();
 
                 if (dt != null && dt.Rows.Count > 0)
@@ -251,7 +241,6 @@ namespace Woose.Tests
             {
                 var recode = Entity.Run.On(handler)
                                        .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                                       .Set()
                                        .ToEntity();
 
                 if (recode != null)
@@ -278,8 +267,7 @@ namespace Woose.Tests
             {
                 var dt = Entity.Run.On(handler)
                                    .StoredProcedure("sp_server_info")
-                                   //.SetParameter("@name", SqlDbType.VarChar, "test", 50)
-                                   .Set()
+                                   //.AddParameter("@name", SqlDbType.VarChar, "test", 50)
                                    .ToList();
 
                 if (dt != null && dt.Rows.Count > 0)

@@ -114,6 +114,8 @@ namespace Woose.Data
                         }
                         break;
                 }
+
+                helper.isSet = true;
             }
 
             return helper;
@@ -125,97 +127,84 @@ namespace Woose.Data
             return helper;
         }
 
-
-        public static QueryHelper<T> NotExists<T>(this QueryHelper<T> query) where T : IEntity, new()
+        public static QueryHelper<T> NotExists<T>(this QueryHelper<T> helper) where T : IEntity, new()
         {
-            query.IsExists = true;
-            return query;
+            helper.IsExists = true;
+            return helper;
         }
 
-        public static QueryHelper<T> NotExists<T>(this QueryHelper<T> query, long primaryKeyValue) where T : IEntity, new()
+        public static QueryHelper<T> NotExists<T>(this QueryHelper<T> helper, long primaryKeyValue) where T : IEntity, new()
         {
-            query.IsExists = true;
-            query.PrimaryKeyValue = primaryKeyValue;
-            return query;
+            helper.IsExists = true;
+            helper.PrimaryKeyValue = primaryKeyValue;
+            return helper;
         }
 
-        public static QueryHelper<T> CreateQuery<T>(this SqlCommand cmd, bool IsDynamicEntity = false) where T : IEntity, new()
+        public static QueryHelper<T> Create<T>(this QueryHelper<T> helper) where T : IEntity, new()
         {
-            var query = new QueryHelper<T>();
-            if (IsDynamicEntity)
-            {
-                query.Create().NotExists().Execute(cmd);
-                cmd.ExecuteNonQuery();
-                cmd.Parameters.Clear();
-            }
-            return query;
+            helper.Method = "Create";
+            return helper;
         }
 
-        public static QueryHelper<T> Create<T>(this QueryHelper<T> query) where T : IEntity, new()
+        public static QueryHelper<T> Select<T>(this QueryHelper<T> helper) where T : IEntity, new()
         {
-            query.Method = "Create";
-            return query;
+            helper.Method = "Select";
+            helper.Columns = "*";
+            return helper;
         }
 
-        public static QueryHelper<T> Select<T>(this QueryHelper<T> query) where T : IEntity, new()
+        public static QueryHelper<T> Paging<T>(this QueryHelper<T> helper, int pagesize, int curpage) where T : IEntity, new()
         {
-            query.Method = "Select";
-            query.Columns = "*";
-            return query;
+            helper.Method = "Paging";
+            helper.Columns = "*";
+            helper.CurPage = curpage;
+            helper.TopCount = pagesize;
+            return helper;
         }
 
-        public static QueryHelper<T> Paging<T>(this QueryHelper<T> query, int pagesize, int curpage) where T : IEntity, new()
+        public static QueryHelper<T> Select<T>(this QueryHelper<T> helper, int Count) where T : IEntity, new()
         {
-            query.Method = "Paging";
-            query.Columns = "*";
-            query.CurPage = curpage;
-            query.TopCount = pagesize;
-            return query;
+            helper.Method = "Select";
+            helper.Columns = "*";
+            helper.TopCount = Count;
+            return helper;
         }
 
-        public static QueryHelper<T> Select<T>(this QueryHelper<T> query, int Count) where T : IEntity, new()
+        public static QueryHelper<T> Update<T>(this QueryHelper<T> helper, T paramData) where T : IEntity, new()
         {
-            query.Method = "Select";
-            query.Columns = "*";
-            query.TopCount = Count;
-            return query;
-        }
-
-        public static QueryHelper<T> Update<T>(this QueryHelper<T> query, T paramData) where T : IEntity, new()
-        {
-            query.Method = "Update";
+            helper.Method = "Update";
 
             QueryOption option = new QueryOption();
-            foreach (var info in query.GetInfos)
+            foreach (var info in helper.GetInfos)
             {
                 if (info != null && !string.IsNullOrWhiteSpace(info.ColumnName))
                 {
                     if (!info.IsKey)
                     {
                         option = new QueryOption(info.ColumnName, paramData.GetValue(info.ColumnName));
-                        query.Options.AddOrUpdate(info.ColumnName.ToUpper().Trim(), option, (x, y) => option);
+                        helper.Options.AddOrUpdate(info.ColumnName.ToUpper().Trim(), option, (x, y) => option);
                     }
                 }
             }
 
-            return query;
+            return helper;
         }
 
-        public static QueryHelper<T> Insert<T>(this QueryHelper<T> query, string column, object value) where T : IEntity, new()
+        public static QueryHelper<T> Insert<T>(this QueryHelper<T> helper, string column, object value) where T : IEntity, new()
         {
-            query.Method = "Insert";
+            helper.Method = "Insert";
             var option = new QueryOption(column, value);
-            query.Options.AddOrUpdate(column.ToUpper().Trim(), option, (x, y) => option);
-            return query;
+            helper.Options.AddOrUpdate(column.ToUpper().Trim(), option, (x, y) => option);
+            return helper;
         }
 
-        public static QueryHelper<T> Insert<T>(this QueryHelper<T> query, T paramData) where T : IEntity, new()
+        public static QueryHelper<T> Insert<T>(this QueryHelper<T> helper, T paramData) where T : IEntity, new()
         {
-            query.Method = "Insert";
+            helper.Method = "Insert";
             StringBuilder columns = new StringBuilder(200);
             StringBuilder values = new StringBuilder(200);
             int num = 0;
-            foreach (var info in query.GetInfos)
+            foreach (var info in helper.GetInfos)
             {
                 if (!info.IsKey)
                 {
@@ -229,55 +218,24 @@ namespace Woose.Data
                     num++;
                 }
             }
-            query.Insert<T>(columns.ToString(), values.ToString());
-            foreach (var info in query.GetInfos)
+            helper.Insert<T>(columns.ToString(), values.ToString());
+            foreach (var info in helper.GetInfos)
             {
                 if (!info.IsKey)
                 {
-                    query.WhereOptions.AddOrUpdate(info.ColumnName, paramData.GetValue(info.ColumnName), (x, y) => paramData.GetValue(info.ColumnName));
+                    helper.WhereOptions.AddOrUpdate(info.ColumnName, paramData.GetValue(info.ColumnName), (x, y) => paramData.GetValue(info.ColumnName));
                 }
             }
-            return query;
+            return helper;
         }
 
-
-        public static QueryHelper<T> UpdateAll<T>(this QueryHelper<T> query, T target) where T : IEntity, new()
+        public static QueryHelper<T> Delete<T>(this QueryHelper<T> helper) where T : IEntity, new()
         {
-            query.Method = "Update";
-            query.SetTarget(target);
-            foreach (var item in query.GetInfos.Where(x => !x.IsKey))
-            {
-                var option = new QueryOption(item.ColumnName, query.GetValue(item.ColumnName));
-                query.Options.AddOrUpdate(item.ColumnName.ToUpper().Trim(), option, (x, y) => option);
-            }
-            foreach (var item in query.GetInfos.Where(x => x.IsKey))
-            {
-                var option = new QueryOption(item.ColumnName, query.GetValue(item.ColumnName));
-                query.Where(item.ColumnName, query.GetValue(item.ColumnName));
-            }
-            return query;
+            helper.Method = "Delete";
+            return helper;
         }
 
-
-        public static QueryHelper<T> InsertAll<T>(this QueryHelper<T> query, T target) where T : IEntity, new()
-        {
-            query.Method = "Insert";
-            query.SetTarget(target);
-            foreach (var item in query.GetInfos.Where(x => !x.IsKey))
-            {
-                var option = new QueryOption(item.ColumnName, query.GetValue(item.ColumnName));
-                query.Options.AddOrUpdate(item.ColumnName.ToUpper().Trim(), option, (x, y) => option);
-            }
-            return query;
-        }
-
-        public static QueryHelper<T> Delete<T>(this QueryHelper<T> query) where T : IEntity, new()
-        {
-            query.Method = "Delete";
-            return query;
-        }
-
-        public static QueryHelper<T> Where<T>(this QueryHelper<T> query, params string[] wherestring) where T : IEntity, new()
+        public static QueryHelper<T> Where<T>(this QueryHelper<T> helper, params string[] wherestring) where T : IEntity, new()
         {
             if (wherestring != null && wherestring.Length > 0)
             {
@@ -289,38 +247,37 @@ namespace Woose.Data
                     builder.Append(s);
                     num++;
                 }
-                query.Where += (string.IsNullOrWhiteSpace(query.Where)) ? builder.ToString() : $" and {builder.ToString()}";
+                helper.Where += (string.IsNullOrWhiteSpace(helper.Where)) ? builder.ToString() : $" and {builder.ToString()}";
             }
-            return query;
+            return helper;
         }
 
-        public static QueryHelper<T> Where<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate) where T : IEntity, new()
+        public static QueryHelper<T> Where<T>(this QueryHelper<T> helper, Expression<Func<T, object>> predicate) where T : IEntity, new()
         {
             if (predicate != null)
             {
-                query = TranslateExpressionToQuery(query, predicate);
+                helper = TranslateExpressionToQuery(helper, predicate);
             }
-            return query;
+            return helper;
         }
 
-        public static QueryHelper<T> And<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate) where T : IEntity, new()
+        public static QueryHelper<T> And<T>(this QueryHelper<T> helper, Expression<Func<T, object>> predicate) where T : IEntity, new()
         {
             if (predicate != null)
             {
-                query = TranslateExpressionToQuery(query, predicate, "and");
+                helper = TranslateExpressionToQuery(helper, predicate, "and");
             }
-            return query;
+            return helper;
         }
 
-        public static QueryHelper<T> Or<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate) where T : IEntity, new()
+        public static QueryHelper<T> Or<T>(this QueryHelper<T> helper, Expression<Func<T, object>> predicate) where T : IEntity, new()
         {
             if (predicate != null)
             {
-                query = TranslateExpressionToQuery(query, predicate, "or");
+                helper = TranslateExpressionToQuery(helper, predicate, "or");
             }
-            return query;
+            return helper;
         }
-
 
         private static QueryHelper<T> TranslateExpressionToQuery<T>(QueryHelper<T> helper, Expression<Func<T, object>> predicate, string operatorStr = "") where T : IEntity, new()
         {
@@ -415,7 +372,6 @@ namespace Woose.Data
 
             return helper;
         }
-
 
         private static QueryHelper<T> TranslateBinaryExpression<T>(QueryHelper<T> helper, Expression left, ExpressionType nodeType, Expression right, string operatorStr = "") where T : IEntity, new()
         {
@@ -530,31 +486,94 @@ namespace Woose.Data
             }
         }
 
-
-        public static QueryHelper<T> Where<T>(this QueryHelper<T> query, string ColumnName, object? ColumnValue) where T : IEntity, new()
+        public static QueryHelper<T> Where<T>(this QueryHelper<T> helper, string ColumnName, object? ColumnValue) where T : IEntity, new()
         {
-            query.WhereOptions.AddOrUpdate(ColumnName, ColumnValue, (x, y) => ColumnValue);
+            helper.WhereOptions.AddOrUpdate(ColumnName, ColumnValue, (x, y) => ColumnValue);
+            return helper;
+        }
+
+        public static QueryHelper<T> Count<T>(this QueryHelper<T> helper) where T : IEntity, new()
+        {
+            helper.Method = "Count";
+            return helper;
+        }
+
+        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> helper, QueryOption.Sequence order) where T : IEntity, new()
+        {
+            helper.OrderColumn = helper.PrimaryColumn;
+            helper.OrderType = order;
+
+            if (string.IsNullOrWhiteSpace(helper.OrderByString))
+            {
+                helper.OrderByString = $"{helper.PrimaryColumn} {order.ToString()}";
+            }
+            else
+            {
+                StringBuilder builder = new StringBuilder(helper.OrderByString);
+                builder.Append($" {helper.PrimaryColumn} {order.ToString()}");
+                helper.OrderByString = builder.ToString();
+            }
+
+            return helper;
+        }
+
+        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> helper, string Column, QueryOption.Sequence order) where T : IEntity, new()
+        {
+            helper.OrderColumn = Column;
+            helper.OrderType = order;
+
+            if (string.IsNullOrWhiteSpace(helper.OrderByString))
+            {
+                helper.OrderByString = $"{Column} {order.ToString()}";
+            }
+            else
+            {
+                StringBuilder builder = new StringBuilder(helper.OrderByString);
+                builder.Append($" {Column} {order.ToString()}");
+                helper.OrderByString = builder.ToString();
+            }
+
+            return helper;
+        }
+
+        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> query, Expression<Func<T, object>> predicate, QueryOption.Sequence order) where T : IEntity, new()
+        {
+            if (predicate != null)
+            {
+                query = TranslateExpressionToOrderBy(query, predicate, order);
+            }
             return query;
         }
 
-        public static QueryHelper<T> Count<T>(this QueryHelper<T> query) where T : IEntity, new()
+        private static QueryHelper<T> TranslateExpressionToOrderBy<T>(QueryHelper<T> helper, Expression<Func<T, object>> predicate, QueryOption.Sequence order) where T : IEntity, new()
         {
-            query.Method = "Count";
-            return query;
+            Expression body = predicate.Body;
+
+            // UnaryExpression 언랩
+            if (body is UnaryExpression unaryExpression)
+            {
+                body = unaryExpression.Operand;
+            }
+
+            return TranslateBinaryExpression(helper, body, order);
         }
 
-        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> query, QueryOption.Sequence order) where T : IEntity, new()
+        private static QueryHelper<T> TranslateBinaryExpression<T>(QueryHelper<T> helper, Expression left, QueryOption.Sequence order) where T : IEntity, new()
         {
-            query.OrderColumn = query.PrimaryColumn;
-            query.OrderType = order;
-            return query;
-        }
+            string leftOperand = TranslateOperand(left);
 
-        public static QueryHelper<T> OrderBy<T>(this QueryHelper<T> query, string Column, QueryOption.Sequence order) where T : IEntity, new()
-        {
-            query.OrderColumn = Column;
-            query.OrderType = order;
-            return query;
+            if (string.IsNullOrWhiteSpace(helper.OrderByString))
+            {
+                helper.OrderByString = $"{leftOperand} {order.ToString()}";
+            }
+            else
+            {
+                StringBuilder builder = new StringBuilder(helper.OrderByString);
+                builder.Append($" {leftOperand} {order.ToString()}");
+                helper.OrderByString = builder.ToString();
+            }
+
+            return helper;
         }
 
         public static QueryHelper<T> GroupBy<T>(this QueryHelper<T> query, params string[] columns) where T : IEntity, new()
