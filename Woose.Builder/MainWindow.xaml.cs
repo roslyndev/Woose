@@ -20,10 +20,6 @@ namespace Woose.Builder
 
         protected DbContext context { get; set; }
 
-        public ObservableCollection<DbEntity> entities { get; set; } = new ObservableCollection<DbEntity>();
-
-        public ObservableCollection<DbEntity> sps { get; set; } = new ObservableCollection<DbEntity>();
-
 
         public MainWindow()
         {
@@ -239,7 +235,7 @@ namespace Woose.Builder
             Database? selectedDatabase = viewModel.SelectedDatabase;
             if (selectedDatabase == null)
             {
-                MessageBox.Show("삭제할 대상을 선택해 주세요.", "Alert", MessageBoxButton.OK);
+                MessageBox.Show("대상을 선택해 주세요.", "Alert", MessageBoxButton.OK);
             }
             else
             {
@@ -250,17 +246,17 @@ namespace Woose.Builder
 
         protected void onLoad()
         {
+            viewModel.entities.Clear();
+            viewModel.sps.Clear();
+            
             using (var rep = new SqlServerRepository(this.context))
             {
-                entities.Clear();
-                sps.Clear();
-
                 var tmp = rep.GetTableEntities();
                 if (tmp != null && tmp.Count > 0)
                 {
                     foreach (var item in tmp)
                     {
-                        entities.Add(item);
+                        viewModel.entities.Add(item);
                     }
                 }
                 var tmp2 = rep.GetSpEntities();
@@ -268,7 +264,7 @@ namespace Woose.Builder
                 {
                     foreach (var item in tmp2)
                     {
-                        sps.Add(item);
+                        viewModel.sps.Add(item);
                     }
                 }
             }
