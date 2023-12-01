@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using Woose.Builder.Popup;
 using Woose.Data;
 
@@ -20,6 +21,7 @@ namespace Woose.Builder
 
         protected DbContext context { get; set; }
 
+        protected BindOption option { get; set; } = new BindOption();
 
         public MainWindow()
         {
@@ -70,16 +72,18 @@ namespace Woose.Builder
         #endregion [ Database Changed ]
 
         #region [ Table Changed ]
-        private DbEntity selectedEntity = new DbEntity();
+
+        private DbEntity selectedEntityName;
 
         public DbEntity SelectedEntityName
         {
-            get { return selectedEntity; }
+
+            get { return selectedEntityName; }
             set
             {
-                if (selectedEntity != value)
+                if (selectedEntityName != value)
                 {
-                    selectedEntity = value;
+                    selectedEntityName = value;
                     OnPropertyChanged(nameof(SelectedEntityName));
 
                     if (SelectedEntityName != null && !string.IsNullOrWhiteSpace(SelectedEntityName.name))
@@ -94,16 +98,17 @@ namespace Woose.Builder
 
         #region [ SP Changed ]
 
-        private DbEntity selectedSP = new DbEntity();
+        private DbEntity selectedSPName;
 
         public DbEntity SelectedSPName
         {
-            get { return selectedSP; }
+            get { return selectedSPName; }
             set
             {
-                if (selectedSP != value)
+                if (selectedSPName != value)
                 {
-                    selectedSP = value;
+                    selectedSPName = value;
+
                     OnPropertyChanged(nameof(SelectedSPName));
 
                     if (SelectedSPName != null && !string.IsNullOrWhiteSpace(SelectedSPName.name))
@@ -275,6 +280,8 @@ namespace Woose.Builder
             if (TableListView.SelectedItem != null)
             {
                 SelectedEntityName = (DbEntity)TableListView.SelectedItem;
+                option.target = SelectedEntityName;
+                option.targetType = "TABLE";
             }
         }
 
@@ -283,9 +290,32 @@ namespace Woose.Builder
             if (SpListView.SelectedItem != null)
             {
                 SelectedSPName = (DbEntity)SpListView.SelectedItem;
-
-
+                option.target = SelectedSPName;
+                option.targetType = "SP";
             }
+        }
+
+        private void Btn_Apply_Click(object sender, RoutedEventArgs e)
+        {
+            TabItem languageTab = Languages.SelectedItem as TabItem;
+            if (languageTab != null)
+            {
+                option.Language = languageTab.Header.ToString();
+            }
+            TabItem selectedTab = AspNetOptions.SelectedItem as TabItem;
+            if (selectedTab != null)
+            {
+                option.Category = selectedTab.Header.ToString();
+            }
+
+            string text = option.Binder.Serialize(this.context);
+
+            AspNetEntity.Document = CreateRichText(text);
+        }
+
+        private FlowDocument CreateRichText(string text)
+        {
+            return new FlowDocument(new Paragraph(new Run(text)));
         }
     }
 }

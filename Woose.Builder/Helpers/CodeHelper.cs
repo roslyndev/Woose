@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using Woose.Data;
 
 namespace Woose.Builder
 {
@@ -27,6 +29,67 @@ namespace Woose.Builder
 
         private static readonly Lazy<HTMLCreater> html = new Lazy<HTMLCreater>(() => new HTMLCreater());
         public static HTMLCreater HTML { get { return html.Value; } }
+
+        public CodeHelper()
+        {
+        }
+
+        protected BindOption option { get; set; }
+
+        public CodeHelper(BindOption _option)
+        {
+            this.option = _option;
+        }
+
+        public string Serialize(DbContext context)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            if (this.option != null && this.option.target != null)
+            {
+                if (!string.IsNullOrWhiteSpace(this.option.target.name))
+                {
+                    switch (this.option.Language.Trim().ToUpper())
+                    {
+                        case "ASP.NET":
+                            switch (this.option.Category.Trim().ToUpper())
+                            {
+                                case "ENTITY":
+                                    switch (this.option.targetType)
+                                    {
+                                        case "TABLE":
+                                            using(var rep = new SqlServerRepository(context))
+                                            {
+                                                var list = rep.GetTableProperties(this.option.target.name);
+                                                builder.Append(CSharpCreater.CreateEntity(this.option, list));
+                                            }
+                                            break;
+                                        case "SP":
+                                            builder.Append(this.option.target.name);
+                                            break;
+                                        default:
+                                            builder.Append("대상을 선택해 주세요.");
+                                            break;
+                                    }
+                                    break;
+                                default:
+                                    builder.Append("분류 탭을 선택해 주세요.");
+                                    break;
+                            }
+                            break;
+                        default:
+                            builder.Append("언어탭을 선택해 주세요.");
+                            break;
+                    }
+                }
+                else
+                {
+                    builder.Append("대상을 선택해 주세요.");
+                }
+            }
+
+            return builder.ToString();
+        }
     }
 
     public static class ExtendCodeHelper

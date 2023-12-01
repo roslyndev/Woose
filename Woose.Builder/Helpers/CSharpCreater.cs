@@ -708,5 +708,69 @@ namespace Woose.Builder
 
             return builder.ToString();
         }
+
+        public static string CreateEntity(BindOption options, List<DbTableInfo> properties)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            if (properties != null && properties.Count > 0)
+            {
+                DbTableInfo paimaryKey = properties.Where(x => x.is_identity).FirstOrDefault();
+                if (paimaryKey == null)
+                {
+                    paimaryKey = properties.OrderBy(x => x.column_id).FirstOrDefault();
+                }
+
+                string tableName = properties[0].TableName;
+
+                builder.AppendLine($"public class {tableName} : BaseEntity, IEntity");
+                builder.AppendLine("{");
+
+                foreach (var item in properties)
+                {
+                    builder.AppendTabString(1, $"[Entity(\"{item.Name}\", System.Data.SqlDbType.{item.CsType}");
+                    if (item.IsSize)
+                    {
+                        builder.Append($", {item.max_length}");
+                    }
+                    if (item.is_identity)
+                    {
+                        builder.Append(", true");
+                    }
+                    builder.AppendLine(")]");
+                    builder.AppendTabString(1, $"public {item.ObjectType} {item.Name}");
+                    builder.Append(" { get; set; }");
+                    switch (item.ObjectType)
+                    {
+                        case "int":
+                        case "double":
+                            builder.AppendLine(" = 0;");
+                            break;
+                        case "long":
+                            builder.AppendLine(" = -1;");
+                            break;
+                        case "DateTime":
+                            builder.AppendLine(" = new DateTime();");
+                            break;
+                        case "bool":
+                            builder.AppendLine(" = false;");
+                            break;
+                        case "string":
+                            builder.AppendLine(" = string.Empty;");
+                            break;
+                    }
+                    builder.AppendEmptyLine();
+                }
+                builder.AppendTabStringLine(1, $"public {tableName}()");
+                builder.AppendTabStringLine(1, "{");
+                builder.AppendTabStringLine(2, $"this.TableName = \"{tableName}\";");
+                builder.AppendTabStringLine(2, $"this.PrimaryColumn = \"{paimaryKey.Name}\";");
+                builder.AppendTabStringLine(1, "}");
+                builder.AppendEmptyLine();
+                builder.AppendLine("}");
+            }
+
+            return builder.ToString();
+        }
     }
 }
