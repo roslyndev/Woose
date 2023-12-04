@@ -9,3 +9,5 @@
 /Woose.Tests/obj
 /Woose.Builder/bin
 /Woose.Builder/obj
+/Woose.API/bin/Debug/net8.0
+/Woose.API/obj
