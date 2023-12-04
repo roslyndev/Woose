@@ -60,7 +60,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <TabControl Grid.Column="0" Grid.ColumnSpan="3">
+            <TabControl x:Name="Tabs_Db" Grid.Column="0" Grid.ColumnSpan="3">
                 <TabItem Header="Table" Margin="5,0,0,0" Width="60">
                     <ListView Name="TableListView" ItemsSource="{Binding entities}" BorderThickness="0" SelectionChanged="TableListView_SelectionChanged">
                         <ListView.View>
@@ -91,6 +91,7 @@
                         <Grid Grid.Row="0">
                             <StackPanel Orientation="Horizontal" Height="40" Margin="5">
                                 <Button x:Name="Btn_Apply" Content="Apply" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click"></Button>
+                                <Button x:Name="Btn_AlterProject" Content="Alter Project" Width="90" Style="{StaticResource OrangeButton}" Margin="5,0,0,0" Click="Btn_AlterProject_Click"></Button>
                             </StackPanel>
                         </Grid>
                         <Grid Grid.Row="1">

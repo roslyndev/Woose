@@ -70,7 +70,7 @@ namespace Woose.Data
         public void Dispose()
         {
             Dispose(disposing: true);
-            //System.GC.SuppressFinalize(this);
+            System.GC.SuppressFinalize(this);
         }
     }
 }

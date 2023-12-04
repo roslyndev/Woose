@@ -13,6 +13,14 @@ namespace Woose.Data
             this.ConnectionString = connectionString;
         }
 
+        public string GetConnectionString
+        {
+            get
+            {
+                return this.ConnectionString;
+            }
+        }
+
         public DatabaseConnection getConnection()
         {
             return new DatabaseConnection(ConnectionString);

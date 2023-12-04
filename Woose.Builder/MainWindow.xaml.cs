@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 using Newtonsoft.Json;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.IO;
@@ -15,6 +15,8 @@ namespace Woose.Builder
 {
     public partial class MainWindow : Window
     {
+        private bool IsConnection = false;
+
         protected SqliteRepository db { get; set; }
 
         public MainViewModel viewModel { get; set; }
@@ -32,6 +34,8 @@ namespace Woose.Builder
             viewModel = new MainViewModel();
 
             DataContext = viewModel;
+
+            Enables(false);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -272,6 +276,8 @@ namespace Woose.Builder
                         viewModel.sps.Add(item);
                     }
                 }
+
+                Enables(true);
             }
         }
 
@@ -351,12 +357,206 @@ namespace Woose.Builder
 
         private void Btn_NameCopy_Click(object sender, RoutedEventArgs e)
         {
-
+            if (option != null && option.target != null && !string.IsNullOrWhiteSpace(option.target.name))
+            {
+                Clipboard.SetText(option.target.name);
+                MessageBox.Show("복사했습니다.", "Success", MessageBoxButton.OK);
+            }
         }
 
         private void Btn_Reload_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void Btn_AlterProject_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.IsConnection)
+            {
+                string selectedFolderPath = ShowFolderDialog();
+
+                if (!string.IsNullOrEmpty(selectedFolderPath))
+                {
+                    if (!Directory.Exists(selectedFolderPath) || !File.Exists(selectedFolderPath + "\\appsettings.json"))
+                    {
+                        MessageBox.Show($"프로젝트 설정파일을 찾을 수 없습니다.");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            option.ProjectName = GetProjectName(selectedFolderPath);
+                            option.MethodName = GetMethodName(selectedFolderPath);
+                            string jsonConfig = File.ReadAllText($"{selectedFolderPath}\\appsettings.json");
+                            AppSettings app = new AppSettings();
+                            if (!string.IsNullOrWhiteSpace(jsonConfig))
+                            {
+                                app = JsonConvert.DeserializeObject<AppSettings>(jsonConfig);
+                                if (app == null)
+                                {
+                                    app = new AppSettings();
+                                }
+                            }
+
+                            app.AppName = option.ProjectName;
+                            SqlConnectionStringBuilder sql = new SqlConnectionStringBuilder(this.context.GetConnectionString);
+                            sql.ApplicationName = option.ProjectName;
+                            app.Database.ConnectionString = sql.ConnectionString;
+                            app.Config.AppID = option.ProjectName;
+                            app.Config.CookieVar = $"{option.ProjectName}Token";
+                            File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app));
+                            CSharpCreater creater = new CSharpCreater();
+
+                            if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
+                            {
+                                Directory.CreateDirectory($"{selectedFolderPath}\\Entities");
+                            }
+
+                            if (!Directory.Exists($"{selectedFolderPath}\\Controllers"))
+                            {
+                                Directory.CreateDirectory($"{selectedFolderPath}\\Controllers");
+                            }
+
+                            if (!Directory.Exists($"{selectedFolderPath}\\Repositories"))
+                            {
+                                Directory.CreateDirectory($"{selectedFolderPath}\\Repositories");
+                            }
+
+                            if (!Directory.Exists($"{selectedFolderPath}\\Abstracts"))
+                            {
+                                Directory.CreateDirectory($"{selectedFolderPath}\\Abstracts");
+                            }
+
+                            if (File.Exists($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs"))
+                            {
+                                File.Delete($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs");
+                            }
+
+                            if (File.Exists($"{selectedFolderPath}\\WeatherForecast.cs"))
+                            {
+                                File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
+                            }
+
+                            foreach (var entity in this.viewModel.entities)
+                            {
+                                using (var rep = new SqlServerRepository(context))
+                                {
+                                    var list = rep.GetTableProperties(entity.name);
+                                    foreach(var item in list)
+                                    {
+                                        if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
+                                        {
+                                            File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
+                                        }
+                                        File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, list, true));
+
+                                        if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
+                                        {
+                                            File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
+                                        }
+                                        File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, list, true));
+                                    }
+                                }
+                            }
+
+                            if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateAbstract(option, this.context, this.viewModel.sps.ToList(), true));
+
+                            if (!File.Exists($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateRepository(option, this.context, this.viewModel.sps.ToList(), true));
+
+
+                            MessageBox.Show($"프로젝트가 수정되었습니다.");
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message.ToString());
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
+        }
+
+        private string ShowFolderDialog()
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Select Folder",
+                FileName = "FolderSelection", // Default file name
+                Filter = "Folders|*.thisDoesNotExist", // Forces the dialog to open in folder selection mode
+                CheckFileExists = false,
+                CheckPathExists = true,
+                RestoreDirectory = true,
+            };
+
+            bool? result = dialog.ShowDialog();
+
+            if (result == true)
+            {
+                return System.IO.Path.GetDirectoryName(dialog.FileName);
+            }
+
+            return string.Empty;
+        }
+        
+        public void Enables(bool enable)
+        {
+            Tabs_Db.IsEnabled = enable;
+            Languages.IsEnabled = enable;
+            this.IsConnection = enable;
+
+            if (this.IsConnection)
+            {
+                Btn_Apply.Style = (Style)FindResource("MintButton");
+                Btn_AlterProject.Style = (Style)FindResource("OrangeButton");
+            }
+            else
+            {
+                Btn_Apply.Style = (Style)FindResource("GrayButton");
+                Btn_AlterProject.Style = (Style)FindResource("GrayButton");
+            }
+        }
+
+        public string GetProjectName(string folderPath)
+        {
+            string result = folderPath;
+
+            if (!string.IsNullOrWhiteSpace(folderPath))
+            {
+                if (folderPath.IndexOf('\\') > -1)
+                {
+                    string[] arr = folderPath.Trim().Split('\\');
+                    result = arr[arr.Length - 1].Trim();
+                }
+            }
+
+            return result;
+        }
+
+        public string GetMethodName(string folderPath)
+        {
+            string result = this.GetProjectName(folderPath);
+
+            if (!string.IsNullOrWhiteSpace(folderPath))
+            {
+                if (folderPath.IndexOf('.') > -1)
+                {
+                    string[] arr = folderPath.Trim().Split('.');
+                    result = arr[arr.Length - 1].Trim();
+                }
+            }
+
+            return result;
         }
     }
 }
