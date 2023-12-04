@@ -126,9 +126,9 @@
                 <Button x:Name="Btn_Export" Content="내보내기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Export_Click"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="다시 불러오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5"/>
-                <Button Content="개체명 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5"/>
-                <Button Content="코드 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5"/>
+                <Button x:Name="Btn_Reload" Content="다시 불러오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Reload_Click"/>
+                <Button x:Name="Btn_NameCopy" Content="개체명 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5" Click="Btn_NameCopy_Click"/>
+                <Button x:Name="Btn_CodeCopy" Content="코드 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5" Click="Btn_CodeCopy_Click"/>
             </StackPanel>
         </Grid>
     </Grid>

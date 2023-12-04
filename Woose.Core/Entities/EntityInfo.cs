@@ -9,6 +9,11 @@ namespace Woose.Core
         public SqlDbType Type { get; set; }
         public int Size { get; set; } = -1;
 
+        public enum SizeType
+        {
+            MaxSize = -1
+        }
+
         public string TypeString
         {
             get

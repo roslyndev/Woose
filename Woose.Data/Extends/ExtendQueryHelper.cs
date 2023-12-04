@@ -271,6 +271,22 @@ namespace Woose.Data
             return helper;
         }
 
+        public static QueryHelper<T> And<T>(this QueryHelper<T> helper, string whereString) where T : IEntity, new()
+        {
+            if (!string.IsNullOrWhiteSpace(whereString))
+            {
+                if (!string.IsNullOrWhiteSpace(helper.Where))
+                {
+                    helper.Where = $" and {whereString}";
+                }
+                else
+                {
+                    helper.Where = $"{whereString}";
+                }
+            }
+            return helper;
+        }
+
         public static QueryHelper<T> Or<T>(this QueryHelper<T> helper, Expression<Func<T, object>> predicate) where T : IEntity, new()
         {
             if (predicate != null)

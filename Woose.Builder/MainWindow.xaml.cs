@@ -317,5 +317,46 @@ namespace Woose.Builder
         {
             return new FlowDocument(new Paragraph(new Run(text)));
         }
+
+        private void Btn_CodeCopy_Click(object sender, RoutedEventArgs e)
+        {
+            TabItem languageTab = Languages.SelectedItem as TabItem; // 현재 선택된 탭을 가져옵니다.
+
+            if (languageTab != null)
+            {
+                switch (languageTab.Header.ToString())
+                {
+                    case "ASP.NET":
+                        TabItem selectedTab = AspNetOptions.SelectedItem as TabItem;
+                        if (selectedTab != null)
+                        {
+                            RichTextBox selectedEditor = selectedTab.Content as RichTextBox; // 선택한 탭의 RichTextBox를 가져옵니다.
+
+                            if (selectedEditor != null)
+                            {
+                                // RichTextBox의 내용을 클립보드에 복사합니다.
+                                Clipboard.SetText(new TextRange(selectedEditor.Document.ContentStart, selectedEditor.Document.ContentEnd).Text);
+                                MessageBox.Show("복사했습니다.", "Success", MessageBoxButton.OK);
+                            }
+                        }
+                        break;
+                    default:
+                        MessageBox.Show("대상을 선택해 주세요.", "Warning", MessageBoxButton.OK);
+                        break;
+                }
+            }
+
+
+        }
+
+        private void Btn_NameCopy_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Btn_Reload_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

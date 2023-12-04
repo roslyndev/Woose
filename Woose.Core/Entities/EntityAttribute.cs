@@ -16,6 +16,33 @@ namespace Woose.Core
             this.info.Size = size;
             this.info.IsKey = isKey;
         }
+
+
+        public EntityAttribute(string columnName, SqlDbType dbType, bool isKey = false)
+        {
+            this.info.ColumnName = columnName;
+            this.info.Type = dbType;
+            this.info.Size = -1;
+            switch (dbType)
+            {
+                case SqlDbType.BigInt:
+                    this.info.Size = 8;
+                    break;
+                case SqlDbType.Money:
+                case SqlDbType.Int:
+                    this.info.Size = 4;
+                    break;
+                case SqlDbType.SmallMoney:
+                case SqlDbType.SmallInt:
+                    this.info.Size = 2;
+                    break;
+                case SqlDbType.Bit:
+                case SqlDbType.TinyInt:
+                    this.info.Size = 1;
+                    break;
+            }
+            this.info.IsKey = isKey;
+        }
     }
 
     public static class ExtendEntity

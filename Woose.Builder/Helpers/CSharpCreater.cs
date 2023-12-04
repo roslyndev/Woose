@@ -728,11 +728,46 @@ namespace Woose.Builder
 
                 foreach (var item in properties)
                 {
-                    builder.AppendTabString(1, $"[Entity(\"{item.Name}\", System.Data.SqlDbType.{item.CsType}");
-                    if (item.IsSize)
+                    if (item.Name.Equals("IsEnabled", StringComparison.OrdinalIgnoreCase))
                     {
-                        builder.Append($", {item.max_length}");
+                        builder.AppendTabStringLine(1, $"[JsonIgnore]");
                     }
+                    builder.AppendTabString(1, $"[Entity(\"{item.Name}\", System.Data.SqlDbType.{item.CsType}");
+                    switch (item.ColumnType)
+                    {
+                        case "int":
+                        case "money":
+                            builder.Append(", 4");
+                            break;
+                        case "smallint":
+                        case "smallmoney":
+                            builder.Append(", 2");
+                            break;
+                        case "bit":
+                        case "tinyint":
+                            builder.Append(", 1");
+                            break;
+                        case "bigint":
+                            builder.Append(", 8");
+                            break;
+                        case "datetime2":
+                        case "datetime":
+                        case "date":
+                        case "time":
+                            builder.Append(", 8");
+                            break;
+                        default:
+                            if (item.IsSize && item.max_length == 0)
+                            {
+                                builder.Append($", -1");
+                            }
+                            else
+                            {
+                                builder.Append($", {item.max_length}");
+                            }
+                            break;
+                    }
+
                     if (item.is_identity)
                     {
                         builder.Append(", true");

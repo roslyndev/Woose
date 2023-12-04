@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -14,6 +15,13 @@ namespace Woose.Data
         {
             var result = new QueryHelper<T>();
             result.Command = handler.Command;
+            return result;
+        }
+
+        public static QueryHelper<T> On<T>(this T target, SqlCommand command) where T : IEntity, new()
+        {
+            var result = new QueryHelper<T>();
+            result.Command = command;
             return result;
         }
 
