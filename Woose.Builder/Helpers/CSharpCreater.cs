@@ -122,7 +122,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateSP(OptionData options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
+        public string CreateSP(BindOption options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -142,7 +142,7 @@ namespace Woose.Builder
             {
                 spName = tables[0].name;
                 mainTable = tables[0].TableName;
-                funcName = spName.Replace("USP_", "").Replace("_", "").Trim();
+                funcName = GetNameFromSP(spName);
             }
             else
             {
@@ -150,26 +150,8 @@ namespace Woose.Builder
                 funcName = "CustomSp";
             }
 
-            if (options.UsingCustomModel && outputs != null && outputs.Count > 0)
+            if (outputs != null && outputs.Count > 0)
             {
-                builder.AppendLine($"//반환 파라미터 모델");
-                builder.AppendLine($"public class {funcName}Item");
-                builder.AppendLine("{");
-                
-                foreach (var item in outputs)
-                {
-                    typeObj = DbTypeHelper.MSSQL.ParseColumnType(item.system_type_name);
-                    builder.AppendTabString(1, $"public {DbTypeHelper.MSSQL.GetObjectTypeByCsharp(typeObj.Name)} {item.name}");
-                    builder.Append(" { get; set; }");
-                    builder.AppendLine($" = {DbTypeHelper.MSSQL.GetObjectDefaultValueByCsharp(typeObj.Name)};");
-                }
-                builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, $"public {funcName}Item()");
-                builder.AppendTabStringLine(1, "{");
-                builder.AppendTabStringLine(1, "}");
-                builder.AppendLine("}");
-                builder.AppendEmptyLine();
-
                 switch (options.ReturnType)
                 {
                     case "Void":
@@ -197,123 +179,122 @@ namespace Woose.Builder
                         returnModel = options.BindModel;
                         break;
                     case "Entity T Bind":
-                        returnModel = (string.IsNullOrWhiteSpace(options.ReturnModel)) ? "dynamic" : options.ReturnModel;
+                        returnModel = (string.IsNullOrWhiteSpace(funcName)) ? "dynamic" : funcName;
                         break;
                     case "Entities List Bind":
-                        returnModel = (string.IsNullOrWhiteSpace(options.ReturnModel)) ? "List<dynamic>" : $"List<{options.ReturnModel}>";
+                        returnModel = (string.IsNullOrWhiteSpace(funcName)) ? "List<dynamic>" : $"List<{funcName}>";
                         break;
                 }
             }
 
-            if (options.UsingCustomModel && properties != null && properties.Count > 0)
+            if (options.IsNoModel)
             {
-                mainTable = $"Input{funcName}";
-
-                builder.AppendLine($"//입력 파라미터 모델");
-                builder.AppendLine($"public class Input{funcName}");
-                builder.AppendLine("{");
-                foreach (var item in properties.Where(x => !x.is_output))
+                builder.Append($"public {returnModel} {funcName}(");
+                if (properties != null && properties.Count > 0)
                 {
-                    builder.AppendTabString(1, $"public {DbTypeHelper.MSSQL.GetObjectTypeByCsharp(item.type)} {item.name.Replace("@","")}");
-                    builder.Append(" { get; set; }");
-                    builder.AppendLine($" = {DbTypeHelper.MSSQL.GetObjectDefaultValueByCsharp(item.type)};");
+                    int c = 0;
+                    foreach (var item in properties.Where(x => x.is_output == false))
+                    {
+                        if (c > 0)
+                        {
+                            builder.Append(",");
+                        }
+                        builder.Append($"{DbTypeHelper.MSSQL.GetObjectTypeByCsharp(item.type)} {item.name.Replace("@", "")}");
+                        c++;
+                    }
                 }
-                builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, $"public Input{funcName}()");
-                builder.AppendTabStringLine(1, "{");
-                builder.AppendTabStringLine(1, "}");
-                builder.AppendLine("}");
-                builder.AppendEmptyLine();
+                builder.AppendLine(")");
             }
-
-            if (!options.IsInLine)
+            else
             {
+                builder.AppendLine($"public {returnModel} {funcName}(Input{funcName} {mainTable.ToLower()})");
+            }
+            builder.AppendLine("{");
+            if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
+            {
+                builder.AppendTabStringLine(1, $"var result = new {returnModel}();");
+            }
+            builder.AppendEmptyLine();
+            builder.AppendTabStringLine(1, "using (var db = context.getConnection())");
+            builder.AppendTabStringLine(1, $"using (var handler = new SqlDbOperater(db))");
+            builder.AppendTabStringLine(1, "{");
+            builder.AppendTabStringLine(2, "var tmp = Entity.Run.On(handler)");
+            builder.AppendTabStringLine(5, $".StoredProcedure(\"{spName}\")");
+            foreach (var input in properties)
+            {
+                builder.AppendTabString(5, $".AddParameter(\"{input.name}\", SqlDbType.{input.CsType}, ");
                 if (options.IsNoModel)
                 {
-                    builder.Append($"public {returnModel} {funcName}(");
-                    if (properties != null && properties.Count > 0)
-                    {
-                        int c = 0;
-                        foreach (var item in properties.Where(x => x.is_output == false))
-                        {
-                            if (c > 0)
-                            {
-                                builder.Append(",");
-                            }
-                            builder.Append($"{DbTypeHelper.MSSQL.GetObjectTypeByCsharp(item.type)} {item.name.Replace("@", "")}");
-                            c++;
-                        }
-                    }
-                    builder.AppendLine(")");
+                    builder.Append(input.name.FirstCharToLower());
                 }
                 else
                 {
-                    builder.AppendLine($"public {returnModel} {funcName}(Input{funcName} {mainTable.ToLower()})");
+                    builder.Append($"input{GetNameFromSP(input.name)}.{input.name.Replace("@", "")}");
                 }
-                builder.AppendLine("{");
-            }
-            builder.AppendTabStringLine(1, $"var result = new {returnModel}();");
-            builder.AppendEmptyLine();
-            builder.AppendTabStringLine(1, "using (var db = new DbHelper(context.GetConnection()))");
-            builder.AppendTabStringLine(1, $"using (var cmd = db.CreateSP(\"{spName}\"))");
-            builder.AppendTabStringLine(1, "{");
-            if (properties != null && properties.Count > 0)
-            {
-                foreach (var item in properties)
+                if (input.IsSize)
                 {
-                    if (!item.is_output)
+                    if (input.CsType.Equals("NVarChar", StringComparison.OrdinalIgnoreCase) || input.CsType.Equals("VarChar", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (options.IsNoModel)
+                        if (input.max_length < 1)
                         {
-                            builder.AppendTabStringLine(2, $"cmd.Parameters.Set(\"{item.name}\", SqlDbType.{item.DbTypeString}, {item.name.Replace("@", "")}, {((item.DbTypeString.Substring(0, 1) == "N") ? item.max_length / 2 : item.max_length)});");
+                            builder.Append($", -1");
                         }
                         else
                         {
-                            builder.AppendTabStringLine(2, $"cmd.Parameters.Set(\"{item.name}\", SqlDbType.{item.DbTypeString}, {mainTable.ToLower()}.{item.name.Replace("@", "")}, {((item.DbTypeString.Substring(0, 1) == "N") ? item.max_length / 2 : item.max_length)});");
+                            builder.Append($", {input.max_length}");
                         }
                     }
+                    else
+                    {
+                        builder.Append($", {input.max_length}");
+                    }
+
                 }
+                builder.AppendLine(")");
             }
-            builder.AppendEmptyLine();
+
             switch (options.ReturnType)
             {
                 case "Void":
-                    builder.AppendTabStringLine(2, "var cnt = cmd.NoneExecuteResult();");
-                    builder.AppendTabStringLine(2, "if (cnt != null && cnt > 0)");
-                    builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, "result.Success(cnt)");
-                    builder.AppendTabStringLine(2, "}");
+                    builder.AppendTabStringLine(5, $".Void()");
                     break;
                 case "BindModel":
                     if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
                     {
-                        builder.AppendTabStringLine(2, "var dt = cmd.ExecuteTable();");
-                        builder.AppendTabStringLine(2, "if (dt != null && dt.Rows.Count > 0)");
+                        builder.AppendTabStringLine(5, $".ToResult<ExecuteResult>();");
+                        builder.AppendEmptyLine();
+                        builder.AppendTabStringLine(2, "if (tmp != null)");
                         builder.AppendTabStringLine(2, "{");
-                        builder.AppendTabStringLine(3, "result = EntityBinder.ColumnToEntity<ExecuteResult>(dt);");
+                        builder.AppendTabStringLine(3, "result.Success(tmp)");
                         builder.AppendTabStringLine(2, "}");
                     }
                     else
                     {
-                        builder.AppendTabStringLine(2, "result = cmd.ExecuteReturnValues();");
+                        builder.AppendTabStringLine(5, $".ToResult<ReturnValue>();");
+                        builder.AppendEmptyLine();
+                        builder.AppendTabStringLine(2, "if (tmp != null)");
+                        builder.AppendTabStringLine(2, "{");
+                        builder.AppendTabStringLine(3, "result = tmp as ReturnValue;");
+                        builder.AppendTabStringLine(2, "}");
                     }
                     break;
                 case "Entity T Bind":
-                    builder.AppendTabStringLine(2, $"var dt = cmd.ExecuteTable();");
-                    builder.AppendTabStringLine(2, "if (dt != null && dt.Rows.Count > 0)");
+                    builder.AppendTabStringLine(5, $".ToEntity();");
+                    builder.AppendEmptyLine();
+                    builder.AppendTabStringLine(2, "if (tmp != null)");
                     builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, $"result = EntityBinder.ColumnToEntity<{returnModel}>(dt);");
+                    builder.AppendTabStringLine(3, "result.Success(tmp)");
                     builder.AppendTabStringLine(2, "}");
                     break;
                 case "Entities List Bind":
-                    builder.AppendTabStringLine(2, $"var dt = cmd.ExecuteTable();");
-                    builder.AppendTabStringLine(2, "if (dt != null && dt.Rows.Count > 0)");
+                    builder.AppendTabStringLine(5, $".ToList();");
+                    builder.AppendTabStringLine(2, "if (tmp != null && tmp.Count > 0)");
                     builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, $"result = EntityBinder.ColumnToEntities<{returnModel.Replace("List<","").Replace(">", "")}>(dt);");
+                    builder.AppendTabStringLine(3, "result.Success(tmp)");
                     builder.AppendTabStringLine(2, "}");
                     break;
             }
-            if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
+            if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
             {
                 builder.AppendTabStringLine(2, "else");
                 builder.AppendTabStringLine(2, "{");
@@ -321,12 +302,166 @@ namespace Woose.Builder
                 builder.AppendTabStringLine(2, "}");
             }
             builder.AppendTabStringLine(1, "}");
-            builder.AppendEmptyLine();
-            builder.AppendTabStringLine(1, "return result;");
-            if (!options.IsInLine)
+            
+            if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
             {
-                builder.AppendLine("}");
+                builder.AppendEmptyLine();
+                builder.AppendTabStringLine(1, "return result;");
             }
+            builder.AppendLine("}");
+
+            return builder.ToString();
+        }
+
+        public string CreateSPInterface(BindOption options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            //options.ReturnType
+            //Void
+            //ExecuteResult
+            //Entity T Bind
+            //Entities List Bind
+
+            string spName = string.Empty;
+            string mainTable = string.Empty;
+            string returnModel = string.Empty;
+            string funcName = string.Empty;
+            DbTypeItem typeObj = null;
+
+            if (tables != null && tables.Count > 0)
+            {
+                spName = tables[0].name;
+                mainTable = tables[0].TableName;
+                funcName = GetNameFromSP(spName);
+            }
+            else
+            {
+                spName = "USP_Custom_StoredProcedure";
+                funcName = "CustomSp";
+            }
+
+            if (outputs != null && outputs.Count > 0)
+            {
+                switch (options.ReturnType)
+                {
+                    case "Void":
+                        returnModel = "void";
+                        break;
+                    case "BindModel":
+                        returnModel = options.BindModel;
+                        break;
+                    case "Entity T Bind":
+                        returnModel = $"{funcName}Item";
+                        break;
+                    case "Entities List Bind":
+                        returnModel = $"List<{funcName}Item>";
+                        break;
+                }
+            }
+            else
+            {
+                switch (options.ReturnType)
+                {
+                    case "Void":
+                        returnModel = "void";
+                        break;
+                    case "BindModel":
+                        returnModel = options.BindModel;
+                        break;
+                    case "Entity T Bind":
+                        returnModel = (string.IsNullOrWhiteSpace(funcName)) ? "dynamic" : funcName;
+                        break;
+                    case "Entities List Bind":
+                        returnModel = (string.IsNullOrWhiteSpace(funcName)) ? "List<dynamic>" : $"List<{funcName}>";
+                        break;
+                }
+            }
+
+            if (options.IsNoModel)
+            {
+                builder.Append($"{returnModel} {funcName}(");
+                if (properties != null && properties.Count > 0)
+                {
+                    int c = 0;
+                    foreach (var item in properties.Where(x => x.is_output == false))
+                    {
+                        if (c > 0)
+                        {
+                            builder.Append(",");
+                        }
+                        builder.Append($"{DbTypeHelper.MSSQL.GetObjectTypeByCsharp(item.type)} {item.name.Replace("@", "")}");
+                        c++;
+                    }
+                }
+                builder.AppendLine(");");
+            }
+            else
+            {
+                builder.AppendLine($"{returnModel} {funcName}(Input{funcName} {mainTable.ToLower()});");
+            }
+
+            return builder.ToString();
+        }
+
+        public string CreateSPEntity(BindOption options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            //options.ReturnType
+            //Void
+            //ExecuteResult
+            //Entity T Bind
+            //Entities List Bind
+
+            string spName = string.Empty;
+            string funcName = string.Empty;
+            DbTypeItem typeObj = null;
+
+            if (tables != null && tables.Count > 0)
+            {
+                spName = tables[0].name;
+                funcName = GetNameFromSP(spName);
+            }
+            else
+            {
+                spName = "USP_Custom_StoredProcedure";
+                funcName = "CustomSp";
+            }
+
+            builder.AppendLine($"//반환 파라미터 모델");
+            builder.AppendLine($"public class {funcName}Item");
+            builder.AppendLine("{");
+
+            foreach (var item in outputs)
+            {
+                typeObj = DbTypeHelper.MSSQL.ParseColumnType(item.system_type_name);
+                builder.AppendTabString(1, $"public {DbTypeHelper.MSSQL.GetObjectTypeByCsharp(typeObj.Name)} {item.name}");
+                builder.Append(" { get; set; }");
+                builder.AppendLine($" = {DbTypeHelper.MSSQL.GetObjectDefaultValueByCsharp(typeObj.Name)};");
+            }
+            builder.AppendEmptyLine();
+            builder.AppendTabStringLine(1, $"public {funcName}Item()");
+            builder.AppendTabStringLine(1, "{");
+            builder.AppendTabStringLine(1, "}");
+            builder.AppendLine("}");
+            builder.AppendEmptyLine();
+
+            builder.AppendLine($"//입력 파라미터 모델");
+            builder.AppendLine($"public class Input{funcName}");
+            builder.AppendLine("{");
+            foreach (var item in properties.Where(x => !x.is_output))
+            {
+                builder.AppendTabString(1, $"public {DbTypeHelper.MSSQL.GetObjectTypeByCsharp(item.type)} {item.name.Replace("@", "")}");
+                builder.Append(" { get; set; }");
+                builder.AppendLine($" = {DbTypeHelper.MSSQL.GetObjectDefaultValueByCsharp(item.type)};");
+            }
+            builder.AppendEmptyLine();
+            builder.AppendTabStringLine(1, $"public Input{funcName}()");
+            builder.AppendTabStringLine(1, "{");
+            builder.AppendTabStringLine(1, "}");
+            builder.AppendLine("}");
+
 
             return builder.ToString();
         }
@@ -334,12 +469,13 @@ namespace Woose.Builder
         public string CreateApiMethod(BindOption options, List<SPEntity> properties, List<SpTable> tables, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
+            int num = 0;
 
             if (properties != null && properties.Count > 0 && tables != null && tables.Count > 0)
             {
                 string spName = tables[0].name;
-                string mainTable = tables[0].TableName;
-                string method = spName.Replace("USP_", "").Replace("_", "").Trim();
+                string mainTable = $"{GetNameFromSP(spName)}Item";
+                string method = GetNameFromSP(spName);
 
                 string returnModel = string.Empty;
 
@@ -381,58 +517,105 @@ namespace Woose.Builder
                         break;
                 }
 
-                builder.AppendLine($"[HttpPost]");
+                builder.AppendLine((string.IsNullOrWhiteSpace(options.MethodType)) ? "[HttpPost]" : $"[{options.MethodType}]");
                 if (options.IsNoModel)
                 {
-                    builder.AppendLine($"public {returnModel} {method}([FromBody] {mainTable} {mainTable.ToLower()})");
+                    builder.Append($"public {returnModel} {method}(");
+                    num = 0;
+                    foreach(var property in properties)
+                    {
+                        if (num > 0) builder.Append(",");
+                        builder.Append($"[{GetFrom(options.MethodType)}] {property.ObjectType} {property.Name}");
+                        num++;
+                    }
+                    builder.AppendLine(")");
                 }
                 else
                 {
-                    builder.AppendLine($"public {returnModel} {method}([FromBody] {mainTable} {mainTable.ToLower()})");
+                    builder.AppendLine($"public {returnModel} {method}([{GetFrom(options.MethodType)}] {mainTable} {mainTable.ToLower()})");
                 }
                 builder.AppendLine("{");
-                builder.AppendTabStringLine(1, $"var result = new {returnModel}();");
-                builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, "var auth = this.GetAccessToken();");
-                builder.AppendTabStringLine(1, "if (!string.IsNullOrWhiteSpace(auth.UserID))");
-                builder.AppendTabStringLine(1, "{");
-                if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
-                { 
-                    builder.AppendTabStringLine(2, "var user = db.Single<Member>($\"Email='{auth.UserID}'\");");
-                    builder.AppendEmptyLine();
-                    builder.AppendTabStringLine(2, "if (user.MemberID > 0)");
-                    builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, $"result = db.{method}({mainTable.ToLower()});");
-                }
-                else
+                if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
                 {
-                    builder.AppendTabStringLine(2, "var user = db.GetMember(auth.UserID);");
-                    builder.AppendTabStringLine(2, "//var user = db.AuthCheck(auth.UserID);");
+                    builder.AppendTabStringLine(1, $"var result = new {returnModel}();");
                     builder.AppendEmptyLine();
-                    builder.AppendTabStringLine(2, "if (user.MemberIDX > 0)");
-                    builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, $"var tmp = db.{method}({mainTable.ToLower()});");
-                    builder.AppendTabStringLine(3, "if (tmp != null)");
-                    builder.AppendTabStringLine(3, "{");
-                    builder.AppendTabStringLine(3, "result = tmp.ToResult();");
-                    builder.AppendTabStringLine(3, "}");
-                    builder.AppendTabStringLine(3, "else");
-                    builder.AppendTabStringLine(3, "{");
-                    builder.AppendTabStringLine(3, "result.Error(\"Fail Data Save\");");
-                    builder.AppendTabStringLine(3, "}");
                 }
-                builder.AppendTabStringLine(2, "}");
-                builder.AppendTabStringLine(2, "else");
-                builder.AppendTabStringLine(2, "{");
-                builder.AppendTabStringLine(3, "result.Error(\"NotFound Account\");");
-                builder.AppendTabStringLine(2, "}");
-                builder.AppendTabStringLine(1, "}");
-                builder.AppendTabStringLine(1, "else");
+                builder.AppendTabStringLine(1, "var user = this.GetAccessToken();");
+                builder.AppendTabStringLine(1, "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
                 builder.AppendTabStringLine(1, "{");
-                builder.AppendTabStringLine(2, "result.Error(\"Authorization header not found\");");
+
+                switch (options.ReturnType)
+                {
+                    case "Void":
+                        builder.AppendTabStringLine(2, $"db.{method}({mainTable.ToLower()});");
+                        break;
+                    case "BindModel":
+                        if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
+                        {
+                            returnModel = $"ReturnValue";
+                        }
+                        else
+                        {
+                            returnModel = "ApiResult<ExecuteResult>";
+                        }
+                        break;
+                    case "Entity T Bind":
+                        if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
+                        {
+                            builder.AppendTabStringLine(2, $"var tmp = db.{method}({mainTable.ToLower()});");
+                            builder.AppendTabStringLine(2, "if (tmp != null)");
+                            builder.AppendTabStringLine(2, "{");
+                            builder.AppendTabStringLine(3, "result.Success(1, tmp);");
+                            builder.AppendTabStringLine(2, "}");
+                        }
+                        else
+                        {
+                            builder.AppendTabStringLine(2, $"var tmp = db.{method}({mainTable.ToLower()});");
+                            builder.AppendTabStringLine(2, "if (tmp != null)");
+                            builder.AppendTabStringLine(2, "{");
+                            builder.AppendTabStringLine(3, "result = tmp.ToResult();");
+                            builder.AppendTabStringLine(2, "}");
+                        }
+                        break;
+                    case "Entities List Bind":
+                        if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
+                        {
+                            builder.AppendTabStringLine(2, $"var tmp = db.{method}({mainTable.ToLower()});");
+                            builder.AppendTabStringLine(2, "if (tmp != null)");
+                            builder.AppendTabStringLine(2, "{");
+                            builder.AppendTabStringLine(3, "result.Success(tmp.Count, tmp);");
+                            builder.AppendTabStringLine(2, "}");
+                        }
+                        else
+                        {
+                            builder.AppendTabStringLine(2, $"var tmp = db.{method}({mainTable.ToLower()});");
+                            builder.AppendTabStringLine(2, "if (tmp != null)");
+                            builder.AppendTabStringLine(2, "{");
+                            builder.AppendTabStringLine(3, "result.Success(tmp);");
+                            builder.AppendTabStringLine(3, "result.Count = tmp.Count;");
+                            builder.AppendTabStringLine(2, "}");
+                        }
+                        break;
+                }
+
+                if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
+                {
+                    builder.AppendTabStringLine(2, "else");
+                    builder.AppendTabStringLine(2, "{");
+                    builder.AppendTabStringLine(3, "result.Error(\"Fail Data Save\");");
+                    builder.AppendTabStringLine(2, "}");
+                }
+
                 builder.AppendTabStringLine(1, "}");
-                builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, "return result;");
+                if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
+                {
+                    builder.AppendTabStringLine(1, "else");
+                    builder.AppendTabStringLine(1, "{");
+                    builder.AppendTabStringLine(2, "result.Error(\"Authorization header not found\");");
+                    builder.AppendTabStringLine(1, "}");
+                    builder.AppendEmptyLine();
+                    builder.AppendTabStringLine(1, "return result;");
+                }
                 builder.AppendLine("}");
             }
 
@@ -1315,7 +1498,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public static string CreateEntity(BindOption options, List<DbTableInfo> properties)
+        public string CreateEntity(BindOption options, List<DbTableInfo> properties)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1540,6 +1723,21 @@ namespace Woose.Builder
             builder.AppendLine("app.Run();");
 
             return builder.ToString();
+        }
+
+        public string GetFrom(string methodType)
+        {
+            switch (methodType.Trim().ToUpper())
+            {
+                case "HTTPGET":
+                    return "FromQuery";
+                case "HTTPPUT":
+                    return "FromBody";
+                case "HTTPDELETE":
+                    return "FromBody";
+                default:
+                    return "FromBody";
+            }
         }
     }
 }

@@ -89,9 +89,31 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
-                            <StackPanel Orientation="Horizontal" Height="40" Margin="5">
-                                <Button x:Name="Btn_Apply" Content="Apply" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click"></Button>
-                                <Button x:Name="Btn_AlterProject" Content="Alter Project" Width="90" Style="{StaticResource OrangeButton}" Margin="5,0,0,0" Click="Btn_AlterProject_Click"></Button>
+                            <StackPanel Orientation="Horizontal" Height="40" Margin="5" VerticalAlignment="Center">
+                                <CheckBox Name="CheckUseCustomModel" Content="Using Custom Model" Checked="CheckUseCustomModel_Checked" Unchecked="CheckUseCustomModel_Unchecked" Margin="15,5,5,5" VerticalAlignment="Center" />
+                                <CheckBox Name="CheckNoModel" Content="No Model" Checked="CheckNoModel_Checked" Unchecked="CheckNoModel_Unchecked" Margin="15,5,20,5" VerticalAlignment="Center" />
+
+                                <ComboBox Name="ReturnType" SelectedIndex="0" SelectionChanged="ReturnType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="Void" />
+                                    <ComboBoxItem Content="BindModel" />
+                                    <ComboBoxItem Content="Entity T Bind" />
+                                    <ComboBoxItem Content="Entities List Bind" />
+                                </ComboBox>
+
+                                <ComboBox Name="BindModel" SelectedIndex="0" SelectionChanged="BindModel_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="ExecuteResult" />
+                                    <ComboBoxItem Content="ReturnValue" />
+                                </ComboBox>
+
+                                <ComboBox Name="MethodType" SelectedIndex="0" SelectionChanged="MethodType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="HttpPost" />
+                                    <ComboBoxItem Content="HttpGet" />
+                                    <ComboBoxItem Content="HttpPut" />
+                                    <ComboBoxItem Content="HttpDelete" />
+                                </ComboBox>
+
+                                <Button x:Name="Btn_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center"></Button>
+                                <Button x:Name="Btn_AlterProject" Content="Project에 Woose 통합" Width="150" Style="{StaticResource OrangeButton}" Margin="5,0,0,0" Click="Btn_AlterProject_Click" VerticalAlignment="Center"></Button>
                             </StackPanel>
                         </Grid>
                         <Grid Grid.Row="1">
@@ -104,13 +126,161 @@
                                     <RichTextBox Name="AspNetController" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
                                     </RichTextBox>
                                 </TabItem>
+                                <TabItem Header="Abstract" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="AspNetAbstract" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Repository" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="AspNetRepository" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
                             </TabControl>
                         </Grid>
                     </Grid>
                 </TabItem>
                 <TabItem Header="Database" Width="80" Height="20" Margin="5,0,-5,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <StackPanel Orientation="Horizontal" Height="40" Margin="5" VerticalAlignment="Center">
+                                <ComboBox Name="BindModelDb" SelectedIndex="0" SelectionChanged="BindModel_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="ExecuteResult" />
+                                    <ComboBoxItem Content="ReturnValue" />
+                                </ComboBox>
+                                
+                                <Button x:Name="Btn_Db_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center"></Button>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <TabControl x:Name="SQL">
+                                <TabItem Header="MSSQL" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="MsSqlQuery" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="MySQL" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="MySqlQuery" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="MongoDB" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="MongoDbQuery" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="TypeScript" Width="80" Height="20" Margin="5,0,-5,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <StackPanel Orientation="Horizontal" Height="40" Margin="5" VerticalAlignment="Center">
+                                <CheckBox Name="TsCheckUseCustomModel" Content="Using Custom Model" Checked="CheckUseCustomModel_Checked" Unchecked="CheckUseCustomModel_Unchecked" Margin="15,5,5,5" VerticalAlignment="Center" />
+                                <CheckBox Name="TsCheckNoModel" Content="No Model" Checked="CheckNoModel_Checked" Unchecked="CheckNoModel_Unchecked" Margin="15,5,20,5" VerticalAlignment="Center" />
+
+                                <ComboBox Name="TsReturnType" SelectedIndex="0" SelectionChanged="ReturnType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="Void" />
+                                    <ComboBoxItem Content="BindModel" />
+                                    <ComboBoxItem Content="Entity T Bind" />
+                                    <ComboBoxItem Content="Entities List Bind" />
+                                </ComboBox>
+
+                                <ComboBox Name="TsBindModel" SelectedIndex="0" SelectionChanged="BindModel_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="ExecuteResult" />
+                                    <ComboBoxItem Content="ReturnValue" />
+                                </ComboBox>
+
+                                <ComboBox Name="TsMethodType" SelectedIndex="0" SelectionChanged="MethodType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="HttpPost" />
+                                    <ComboBoxItem Content="HttpGet" />
+                                    <ComboBoxItem Content="HttpPut" />
+                                    <ComboBoxItem Content="HttpDelete" />
+                                </ComboBox>
+
+                                <Button x:Name="Btn_Ts_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center"></Button>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <TabControl x:Name="TypeOptions">
+                                <TabItem Header="Entity" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="TsEntity" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Controller" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="TsController" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Abstract" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="TsAbstract" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Repository" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="TsRepository" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+                    </Grid>
                 </TabItem>
                 <TabItem Header="Node.js" Width="80" Height="20" Margin="5,0,-5,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <StackPanel Orientation="Horizontal" Height="40" Margin="5" VerticalAlignment="Center">
+                                <CheckBox Name="JsCheckUseCustomModel" Content="Using Custom Model" Checked="CheckUseCustomModel_Checked" Unchecked="CheckUseCustomModel_Unchecked" Margin="15,5,5,5" VerticalAlignment="Center" />
+                                <CheckBox Name="JsCheckNoModel" Content="No Model" Checked="CheckNoModel_Checked" Unchecked="CheckNoModel_Unchecked" Margin="15,5,20,5" VerticalAlignment="Center" />
+
+                                <ComboBox Name="JsReturnType" SelectedIndex="0" SelectionChanged="ReturnType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="Void" />
+                                    <ComboBoxItem Content="BindModel" />
+                                    <ComboBoxItem Content="Entity T Bind" />
+                                    <ComboBoxItem Content="Entities List Bind" />
+                                </ComboBox>
+
+                                <ComboBox Name="JsBindModel" SelectedIndex="0" SelectionChanged="BindModel_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="ExecuteResult" />
+                                    <ComboBoxItem Content="ReturnValue" />
+                                </ComboBox>
+
+                                <ComboBox Name="JsMethodType" SelectedIndex="0" SelectionChanged="MethodType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
+                                    <ComboBoxItem Content="HttpPost" />
+                                    <ComboBoxItem Content="HttpGet" />
+                                    <ComboBoxItem Content="HttpPut" />
+                                    <ComboBoxItem Content="HttpDelete" />
+                                </ComboBox>
+
+                                <Button x:Name="Btn_Js_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center"></Button>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <TabControl x:Name="NodeOptions">
+                                <TabItem Header="Entity" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="JsEntity" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Controller" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="JsController" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Abstract" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="JsAbstract" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                                <TabItem Header="Repository" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="JsRepository" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                    </RichTextBox>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+                    </Grid>
                 </TabItem>
                 <TabItem Header="Vue.js" Width="80" Height="20" Margin="5,0,-5,0">
                 </TabItem>

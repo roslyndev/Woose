@@ -11,7 +11,7 @@ namespace Woose.Builder
         {
         }
 
-        public string NodeControllerMethodCreate(OptionData options, List<SPEntity> info, List<SpTable> tables)
+        public string NodeControllerMethodCreate(BindOption options, List<SPEntity> info, List<SpTable> tables)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -75,7 +75,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string NodeSequelizeEntitiyCreate(OptionData options, List<DbTableInfo> info)
+        public string NodeSequelizeEntitiyCreate(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -184,7 +184,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string NodeSequelizeEntitiySaveMethod(OptionData options, List<DbTableInfo> info)
+        public string NodeSequelizeEntitiySaveMethod(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 

@@ -10,7 +10,7 @@ namespace Woose.Builder
         {
         }
 
-        public string CreateEntity(OptionData options, List<DbTableInfo> info)
+        public string CreateEntity(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -69,7 +69,7 @@ namespace Woose.Builder
 
             if (tables != null && tables.Count > 0)
             {
-                funcName = tables[0].name.Replace("USP_", "").Replace("_", "").Trim();
+                funcName = CodeHelper.GetNameFromSP(tables[0].name);
             }
             else
             {

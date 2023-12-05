@@ -12,7 +12,7 @@ namespace Woose.Builder
         {
         }
 
-        public string CreateSaveSP(OptionData options, List<DbTableInfo> info)
+        public string CreateSaveSP(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 

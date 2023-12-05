@@ -21,7 +21,14 @@
         public string BindModel { get; set; } = string.Empty;
         public bool IsNoModel { get; set; } = false;
 
+        public bool UsingCustomModel { get; set; } = false;
+
+        public string ReturnModel { get; set; } = string.Empty;
+
         public bool IsAsync { get; set; } = false;
+
+        public string MethodType { get; set; } = "HttpPost";
+
 
         public BindOption()
         {

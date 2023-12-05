@@ -309,15 +309,108 @@ namespace Woose.Builder
             {
                 option.Language = languageTab.Header.ToString();
             }
-            TabItem selectedTab = AspNetOptions.SelectedItem as TabItem;
-            if (selectedTab != null)
+
+            TabItem selectedTab;
+            string text = string.Empty;
+
+            
+
+            switch ((this.option?.Language ?? "").Trim().ToUpper())
             {
-                option.Category = selectedTab.Header.ToString();
+                case "ASP.NET":
+                    selectedTab = AspNetOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            AspNetEntity.Document = CreateRichText(text);
+                            break;
+                        case "CONTROLLER":
+                            AspNetController.Document = CreateRichText(text);
+                            break;
+                        case "ABSTRACT":
+                            AspNetAbstract.Document = CreateRichText(text);
+                            break;
+                        case "REPOSITORY":
+                            AspNetRepository.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "DATABASE":
+                    selectedTab = SQL.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "MSSQL":
+                            MsSqlQuery.Document = CreateRichText(text);
+                            break;
+                        case "MYSQL":
+                            MySqlQuery.Document = CreateRichText(text);
+                            break;
+                        case "MONGODB":
+                            MongoDbQuery.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "TYPESCRIPT":
+                    selectedTab = TypeOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            TsEntity.Document = CreateRichText(text);
+                            break;
+                        case "CONTROLLER":
+                            TsController.Document = CreateRichText(text);
+                            break;
+                        case "ABSTRACT":
+                            TsController.Document = CreateRichText(text);
+                            break;
+                        case "REPOSITORY":
+                            TsRepository.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "NODE.JS":
+                    selectedTab = NodeOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            JsEntity.Document = CreateRichText(text);
+                            break;
+                        case "CONTROLLER":
+                            JsController.Document = CreateRichText(text);
+                            break;
+                        case "ABSTRACT":
+                            JsController.Document = CreateRichText(text);
+                            break;
+                        case "REPOSITORY":
+                            JsRepository.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
             }
-
-            string text = option.Binder.Serialize(this.context);
-
-            AspNetEntity.Document = CreateRichText(text);
         }
 
         private FlowDocument CreateRichText(string text)
@@ -627,6 +720,56 @@ namespace Woose.Builder
             }
 
             return result;
+        }
+
+        private void CheckNoModel_Checked(object sender, RoutedEventArgs e)
+        {
+            option.IsNoModel = true;
+        }
+
+        private void CheckNoModel_Unchecked(object sender, RoutedEventArgs e)
+        {
+            option.IsNoModel = false;
+        }
+
+        private void ReturnType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox comboBox = (ComboBox)sender;
+            if (comboBox.SelectedItem != null)
+            {
+                ComboBoxItem selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+                option.ReturnType = (selectedItem != null && selectedItem.Content != null) ? selectedItem.Content.ToString() : "";
+            }
+        }
+
+        private void BindModel_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox comboBox = (ComboBox)sender;
+            if (comboBox.SelectedItem != null)
+            {
+                ComboBoxItem selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+                option.BindModel = (selectedItem != null && selectedItem.Content != null) ? selectedItem.Content.ToString() : "";
+            }
+        }
+
+        private void CheckUseCustomModel_Checked(object sender, RoutedEventArgs e)
+        {
+            option.UsingCustomModel = true;
+        }
+
+        private void CheckUseCustomModel_Unchecked(object sender, RoutedEventArgs e)
+        {
+            option.UsingCustomModel = false;
+        }
+
+        private void MethodType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox comboBox = (ComboBox)sender;
+            if (comboBox.SelectedItem != null)
+            {
+                ComboBoxItem selectedItem = (ComboBoxItem)comboBox.SelectedItem;
+                option.MethodType = (selectedItem != null && selectedItem.Content != null) ? selectedItem.Content.ToString() : "";
+            }
         }
     }
 }
