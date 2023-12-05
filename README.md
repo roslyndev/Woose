@@ -15,6 +15,7 @@ NuGet 패키지 관리자 콘솔에서 다음 명령어를 사용하여 Woose를
 ```bash
 Install-Package Woose.Core
 Install-Package Woose.Data
+Install-Package Woose.API
 ```
 
 ## 예제코드
