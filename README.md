@@ -146,8 +146,7 @@ using (var handler = new SqlDbOperater(db))
 {
     var rst = Entity<TableEntity>.Run.On(handler)
                                     .Insert(tableEntityInstance)
-                                    .SetResult<ExecuteResult>()
-                                    .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
+                                    .ToResult<ExecuteResult>() as ExecuteResult;   //ExecuteResult : IFeedback
 }
 ```
 
@@ -161,8 +160,7 @@ using (var handler = new SqlDbOperater(db))
                                     .Update(tableEntityInstance)
                                     .Where(x => x.ColumnA == "Value1")
                                     .And(x => x.ColumnB == "Value2")
-                                    .SetResult<ExecuteResult>()
-                                    .ToResult() as ExecuteResult;   //ExecuteResult : IFeedback
+                                    .ToResult<ExecuteResult>() as ExecuteResult;   //ExecuteResult : IFeedback
 }
 ```
 
@@ -176,8 +174,7 @@ using (var handler = new SqlDbOperater(db))
                                     .Delete()
                                     .Where(x => x.ColumnA == "Value1")
                                     .And(x => x.ColumnB == "Value2")
-                                    .SetResult<ReturnValue>()
-                                    .ToResult() as ReturnValue;   //ReturnValue : IFeedback
+                                    .ToResult<ReturnValue>() as ReturnValue;   //ReturnValue : IFeedback
 }
 ```
 
