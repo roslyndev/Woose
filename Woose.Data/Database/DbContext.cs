@@ -25,5 +25,11 @@ namespace Woose.Data
         {
             return new DatabaseConnection(ConnectionString);
         }
+
+        public static DatabaseConnection CreateConnection(string connectionstring)
+        {
+            return new DatabaseConnection(connectionstring);
+        }
+
     }
 }

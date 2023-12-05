@@ -33,6 +33,7 @@ namespace Woose.Data
             }
         }
 
+
         public SqlConnection? GetSqlServer()
         {
             return this.SqlConn;

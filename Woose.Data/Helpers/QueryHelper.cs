@@ -93,18 +93,6 @@ namespace Woose.Data
         }
 
 
-        public QueryHelper<T> SetResult<U>() where U : IFeedback, new()
-        {
-            this.IsWrap = true;
-            this.Result = new U();
-            if (!this.isSet)
-            {
-                this.Set();
-            }
-            return this;
-        }
-
-
         public string ToQuery()
         {
             StringBuilder result = new StringBuilder(200);
@@ -396,8 +384,11 @@ namespace Woose.Data
             return Task.Factory.StartNew(() => this.ToCount());
         }
 
-        public IFeedback? ToResult()
+
+        public IFeedback? ToResult<U>() where U : IFeedback, new()
         {
+            this.IsWrap = true;
+            this.Result = new U();
             if (!this.isSet)
             {
                 this.Set();
@@ -419,9 +410,9 @@ namespace Woose.Data
             return this.Result;
         }
 
-        public Task<IFeedback?> ToResultAsync()
+        public Task<IFeedback?> ToResultAsync<U>() where U : IFeedback, new()
         {
-            return Task.Factory.StartNew(() => this.ToResult());
+            return Task.Factory.StartNew(() => this.ToResult<U>());
         }
 
     }

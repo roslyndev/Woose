@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using Woose.Builder.Popup;
 using Woose.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Woose.Builder
 {
@@ -400,12 +401,14 @@ namespace Woose.Builder
 
                             app.AppName = option.ProjectName;
                             SqlConnectionStringBuilder sql = new SqlConnectionStringBuilder(this.context.GetConnectionString);
-                            sql.ApplicationName = option.ProjectName;
+                            sql.ApplicationName = option.ProjectName.Replace(".", "");
                             app.Database.ConnectionString = sql.ConnectionString;
-                            app.Config.AppID = option.ProjectName;
+                            app.Config.AppID = option.ProjectName.Replace(".","");
                             app.Config.CookieVar = $"{option.ProjectName}Token";
                             File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app));
+                            
                             CSharpCreater creater = new CSharpCreater();
+                            File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option));
 
                             if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
                             {
@@ -427,6 +430,16 @@ namespace Woose.Builder
                                 Directory.CreateDirectory($"{selectedFolderPath}\\Abstracts");
                             }
 
+                            if (!Directory.Exists($"{selectedFolderPath}\\Models"))
+                            {
+                                Directory.CreateDirectory($"{selectedFolderPath}\\Models");
+                            }
+
+                            if (!Directory.Exists($"{selectedFolderPath}\\Models\\Parameters"))
+                            {
+                                Directory.CreateDirectory($"{selectedFolderPath}\\Models\\Parameters");
+                            }
+
                             if (File.Exists($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs"))
                             {
                                 File.Delete($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs");
@@ -437,24 +450,54 @@ namespace Woose.Builder
                                 File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
                             }
 
-                            foreach (var entity in this.viewModel.entities)
+                            using (var rep = new SqlServerRepository(context))
                             {
-                                using (var rep = new SqlServerRepository(context))
+                                foreach (var entity in this.viewModel.entities)
                                 {
                                     var list = rep.GetTableProperties(entity.name);
-                                    foreach(var item in list)
+                                    if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
                                     {
-                                        if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, list, true));
+                                        File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
 
-                                        if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
+                                    if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
+                                    {
+                                        File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, true));
+
+                                    if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs"))
+                                    {
+                                        File.Create($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs", creater.CreateAbstract(option, entity, list, true));
+
+                                    if (!File.Exists($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs"))
+                                    {
+                                        File.Create($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs", creater.CreateRepository(option, entity, list, true));
+                                }
+
+                                foreach (var sp in this.viewModel.sps)
+                                {
+                                    var inputs = rep.GetSpProperties(sp.name);
+
+                                    if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs"))
+                                    {
+                                        File.Create($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, inputs, true));
+
+                                    var outputs = rep.GetSpOutput(sp.name);
+                                    if (outputs != null && !(outputs.Where(x => x.name.Equals("IsError", StringComparison.OrdinalIgnoreCase)).Count() > 0))
+                                    {
+                                        if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs"))
                                         {
-                                            File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
+                                            File.Create($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs").Close();
                                         }
-                                        File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, list, true));
+                                        File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, outputs, true));
                                     }
                                 }
                             }
@@ -553,6 +596,33 @@ namespace Woose.Builder
                 {
                     string[] arr = folderPath.Trim().Split('.');
                     result = arr[arr.Length - 1].Trim();
+                }
+            }
+
+            return result;
+        }
+
+        private string GetNameFromSP(string spname)
+        {
+            string result = string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(spname))
+            {
+                if (spname.IndexOf("_") > -1)
+                {
+                    string[] arr = spname.Split('_');
+                    if (arr.Length > 1)
+                    {
+                        result = "";
+                        for (int i = 1; i < arr.Length; i++)
+                        {
+                            result += arr[i];
+                        }
+                    }
+                    else
+                    {
+                        result = spname.Replace("_", "");
+                    }
                 }
             }
 

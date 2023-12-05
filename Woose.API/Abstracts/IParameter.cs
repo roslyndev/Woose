@@ -1,6 +1,6 @@
 ﻿namespace Woose.API
 {
-    public interface IRepository
+    public interface IParameter
     {
     }
 }

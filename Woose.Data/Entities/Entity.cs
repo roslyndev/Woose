@@ -161,5 +161,38 @@ namespace Woose.Data
             }
             return this;
         }
+
+        public IFeedback ToResult<T>() where T : IFeedback, new()
+        {
+            IFeedback result = new T();
+
+            if (!this.isSet)
+            {
+                this.Set();
+            }
+
+            if (this.Command != null)
+            {
+                switch (result.GetResultType())
+                {
+                    case BaseResult.ResultType.DeclareSelect:
+                        result = this.Command.ExecuteResult();
+                        break;
+                    case BaseResult.ResultType.OutputParameter:
+                        this.Command.Parameters.SetReturnValue();
+                        result = this.Command.ExecuteReturnValue();
+                        break;
+                    default:
+                        var dt = this.Command.ExecuteTable();
+                        result = EntityHelper.ColumnToEntity<T>(dt);
+                        break;
+                }
+            }
+
+
+            return result;
+        }
+
+
     }
 }

@@ -52,8 +52,7 @@ namespace Woose.Tests
             {
                 rst = Entity<GlobalCode>.Run.On(handler)
                                         .Insert(paramData)
-                                        .SetResult<ExecuteResult>()
-                                        .ToResult() as ExecuteResult;
+                                        .ToResult<ExecuteResult>() as ExecuteResult;
             }
 
             Assert.IsTrue(rst!.IsSuccess);
@@ -80,8 +79,7 @@ namespace Woose.Tests
                                         .Update(paramData)
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
-                                        .SetResult<ExecuteResult>()
-                                        .ToResult() as ExecuteResult;
+                                        .ToResult<ExecuteResult>() as ExecuteResult;
             }
 
             Assert.IsTrue(rst!.IsSuccess);
@@ -139,8 +137,7 @@ namespace Woose.Tests
                                         .Delete()
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
-                                        .SetResult<ExecuteResult>()
-                                        .ToResult() as ExecuteResult;
+                                        .ToResult<ExecuteResult>() as ExecuteResult;
             }
 
             Assert.IsTrue(rst!.IsSuccess);
@@ -267,17 +264,17 @@ namespace Woose.Tests
                 var dt = Entity.Run.On(handler)
                                    .StoredProcedure("sp_server_info")
                                    //.AddParameter("@name", SqlDbType.VarChar, "test", 50)
-                                   .ToList();
+                                   .ToResult<ExecuteResult>() as ExecuteResult;
 
-                if (dt != null && dt.Rows.Count > 0)
-                {
-                    cnt = dt.Rows.Count;
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        strValue = row[1].ToString();
-                        break;
-                    }
-                }
+                //if (dt != null && dt.Rows.Count > 0)
+                //{
+                //    cnt = dt.Rows.Count;
+                //    foreach (DataRow row in dt.Rows)
+                //    {
+                //        strValue = row[1].ToString();
+                //        break;
+                //    }
+                //}
             }
 
             Assert.That(cnt, Is.EqualTo(29));
