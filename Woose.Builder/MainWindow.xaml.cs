@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Xml.Linq;
 using Woose.Builder.Popup;
 using Woose.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -313,8 +314,6 @@ namespace Woose.Builder
             TabItem selectedTab;
             string text = string.Empty;
 
-            
-
             switch ((this.option?.Language ?? "").Trim().ToUpper())
             {
                 case "ASP.NET":
@@ -338,6 +337,30 @@ namespace Woose.Builder
                             break;
                         case "REPOSITORY":
                             AspNetRepository.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "JAVA":
+                    selectedTab = JavaOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            JavaEntity.Document = CreateRichText(text);
+                            break;
+                        case "CONTROLLER":
+                            JavaController.Document = CreateRichText(text);
+                            break;
+                        case "ABSTRACT":
+                            JavaAbstract.Document = CreateRichText(text);
+                            break;
+                        case "REPOSITORY":
+                            JavaRepository.Document = CreateRichText(text);
                             break;
                     }
                     break;
@@ -407,6 +430,60 @@ namespace Woose.Builder
                             break;
                         case "REPOSITORY":
                             JsRepository.Document = CreateRichText(text);
+                            break;
+                        case "YAML":
+                            YAMLBox.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "VUE.JS":
+                    selectedTab = VueOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "FORM":
+                            VueForm.Document = CreateRichText(text);
+                            break;
+                        case "COMPONENT":
+                            VueComponent.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "REACT.JS":
+                    selectedTab = ReactOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "FORM":
+                            ReactForm.Document = CreateRichText(text);
+                            break;
+                        case "COMPONENT":
+                            ReactComponent.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
+                case "HTML":
+                    selectedTab = HtmlOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "TAILWINDCSSFORM":
+                            TailwindCssFormBox.Document = CreateRichText(text);
                             break;
                     }
                     break;
@@ -770,6 +847,26 @@ namespace Woose.Builder
                 ComboBoxItem selectedItem = (ComboBoxItem)comboBox.SelectedItem;
                 option.MethodType = (selectedItem != null && selectedItem.Content != null) ? selectedItem.Content.ToString() : "";
             }
+        }
+
+        private void CheckUsei18n_Checked(object sender, RoutedEventArgs e)
+        {
+            this.option.Usei18n = true;
+        }
+
+        private void CheckUsei18n_Unchecked(object sender, RoutedEventArgs e)
+        {
+            this.option.Usei18n = false;
+        }
+
+        private void CheckUseMultiApi_Checked(object sender, RoutedEventArgs e)
+        {
+            this.option.UseMultiApi = true;
+        }
+
+        private void CheckUseMultiApi_Unchecked(object sender, RoutedEventArgs e)
+        {
+            this.option.UseMultiApi = false;
         }
     }
 }

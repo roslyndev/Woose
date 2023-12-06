@@ -12,7 +12,7 @@ namespace Woose.Builder
         {
         }
 
-        public string CreateEntity(OptionData options, List<DbTableInfo> info)
+        public string CreateEntity(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 

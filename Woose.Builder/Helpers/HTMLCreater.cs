@@ -10,7 +10,7 @@ namespace Woose.Builder
         {
         }
 
-        public string CreateEntity(OptionData options, List<DbTableInfo> info)
+        public string CreateEntity(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -79,7 +79,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateSP(OptionData options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
+        public string CreateSP(BindOption options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
         {
             StringBuilder builder = new StringBuilder(200);
             string mainTable = string.Empty;

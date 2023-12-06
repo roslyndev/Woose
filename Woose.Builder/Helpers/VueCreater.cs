@@ -12,7 +12,7 @@ namespace Woose.Builder
         {
         }
 
-        public string CreateEntityForm(OptionData options, List<DbTableInfo> info)
+        public string CreateEntityForm(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -40,12 +40,14 @@ namespace Woose.Builder
                             builder.AppendTabStringLine(1, $"<div class=\"mb-4\">");
                             builder.AppendTabStringLine(2, $"<label for=\"{item.Name}\" class=\"block text-gray-700\">{(string.IsNullOrWhiteSpace(item.Description) ? item.Name : item.Description)}</label>");
                             builder.AppendTabStringLine(2, $"<input type=\"number\" id=\"{item.Name}\" v-model=\"{mainTable.FirstCharToLower()}.{item.Name.FirstCharToLower()}\" class=\"w-full border border-gray-300 rounded-md py-2 px-3\" {((item.is_nullable) ? "" : "required")} />");
+                            builder.AppendTabStringLine(2, "<p class=\"text-red-500 text-sm\">{{ errors." + item.Name.FirstCharToLower() + " }}</p>");
                             builder.AppendTabStringLine(1, $"</div>");
                             break;
                         case "Date":
                             builder.AppendTabStringLine(1, $"<div class=\"mb-4\">");
                             builder.AppendTabStringLine(2, $"<label for=\"{item.Name}\" class=\"block text-gray-700\">{(string.IsNullOrWhiteSpace(item.Description) ? item.Name : item.Description)}</label>");
                             builder.AppendTabStringLine(2, $"<input type=\"date\" id=\"{item.Name}\" v-model=\"{mainTable.FirstCharToLower()}.{item.Name.FirstCharToLower()}\" class=\"w-full border border-gray-300 rounded-md py-2 px-3\" {((item.is_nullable) ? "" : "required")} />");
+                            builder.AppendTabStringLine(2, "<p class=\"text-red-500 text-sm\">{{ errors." + item.Name.FirstCharToLower() + " }}</p>");
                             builder.AppendTabStringLine(1, $"</div>");
                             break;
                         case "string":
@@ -54,6 +56,7 @@ namespace Woose.Builder
                                 builder.AppendTabStringLine(1, $"<div class=\"mb-4\">");
                                 builder.AppendTabStringLine(2, $"<label for=\"{item.Name}\" class=\"block text-gray-700\">{(string.IsNullOrWhiteSpace(item.Description) ? item.Name : item.Description)}</label>");
                                 builder.AppendTabStringLine(2, $"<textarea id=\"{item.Name}\" v-model=\"{mainTable.FirstCharToLower()}.{item.Name.FirstCharToLower()}\" class=\"w-full border border-gray-300 rounded-md py-2 px-3\" {((item.is_nullable) ? "" : "required")}></textarea>");
+                                builder.AppendTabStringLine(2, "<p class=\"text-red-500 text-sm\">{{ errors." + item.Name.FirstCharToLower() + " }}</p>");
                                 builder.AppendTabStringLine(1, $"</div>");
                             }
                             else
@@ -61,6 +64,7 @@ namespace Woose.Builder
                                 builder.AppendTabStringLine(1, $"<div class=\"mb-4\">");
                                 builder.AppendTabStringLine(2, $"<label for=\"{item.Name}\" class=\"block text-gray-700\">{(string.IsNullOrWhiteSpace(item.Description) ? item.Name : item.Description)}</label>");
                                 builder.AppendTabStringLine(2, $"<input type=\"text\" id=\"{item.Name}\" v-model=\"{mainTable.FirstCharToLower()}.{item.Name.FirstCharToLower()}\" maxlength=\"{item.max_length}\" class=\"w-full border border-gray-300 rounded-md py-2 px-3\" {((item.is_nullable) ? "" : "required")} />");
+                                builder.AppendTabStringLine(2, "<p class=\"text-red-500 text-sm\">{{ errors." + item.Name.FirstCharToLower() + " }}</p>");
                                 builder.AppendTabStringLine(1, $"</div>");
                             }
                             break;
@@ -69,12 +73,14 @@ namespace Woose.Builder
                             builder.AppendTabStringLine(2, $"<label for=\"{item.Name}\" class=\"block text-gray-700\">");
                             builder.AppendTabStringLine(2, $"<input type=\"checkbox\" id=\"{item.Name}\" v-model=\"{mainTable.FirstCharToLower()}.{item.Name.FirstCharToLower()}\" class=\"border border-gray-300 rounded-md py-2 px-3\" />");
                             builder.AppendTabStringLine(2, $"{(string.IsNullOrWhiteSpace(item.Description) ? item.Name : item.Description)}</label>");
+                            builder.AppendTabStringLine(2, "<p class=\"text-red-500 text-sm\">{{ errors." + item.Name.FirstCharToLower() + " }}</p>");
                             builder.AppendTabStringLine(1, $"</div>");
                             break;
                         case "object":
                             builder.AppendTabStringLine(1, $"<div class=\"mb-4\">");
                             builder.AppendTabStringLine(2, $"<label for=\"{item.Name}\" class=\"block text-gray-700\">{(string.IsNullOrWhiteSpace(item.Description) ? item.Name : item.Description)}</label>");
                             builder.AppendTabStringLine(2, $"<input type=\"file\" id=\"{item.Name}\" value=\"\" class=\"w-full border border-gray-300 rounded-md py-2 px-3\" {((item.is_nullable) ? "" : "required")} />");
+                            builder.AppendTabStringLine(2, "<p class=\"text-red-500 text-sm\">{{ errors." + item.Name.FirstCharToLower() + " }}</p>");
                             builder.AppendTabStringLine(1, $"</div>");
                             break;
                     }
@@ -92,17 +98,27 @@ namespace Woose.Builder
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine(0, $"<script setup lang=\"ts\">");
                 builder.AppendLine("import { onMounted,ref,computed,reactive } from 'vue';");
-                builder.AppendLine("import { useI18n } from 'vue-i18n';");
-                builder.AppendLine("import { ApiHelper,MessageBox,DbMsg } from '../../models';");
-                builder.Append("import { " + ((options.BindModel == OptionData.BindModelType.ExecuteResult.ToString()) ? "ApiResult,MemberInfo" : "ReturnValues"));
+                if (options.Usei18n)
+                {
+                    builder.AppendLine("import { useI18n } from 'vue-i18n';");
+                    builder.AppendLine("import { ApiHelper,MessageBox,DbMsg } from '../../models';");
+                }
+                else
+                {
+                    builder.AppendLine("import { ApiHelper,MessageBox } from '../../models';");
+                }
+                builder.Append("import { " + ((options.BindModel == OptionData.BindModelType.ExecuteResult.ToString()) ? "ApiResult,Member" : "ReturnValues,Member"));
                 builder.AppendLine(((options.UsingCustomModel) ? "" : $",{mainTable}") + " } from '../../entities';");
                 builder.AppendLine("import { Layout } from '../../components';");
                 builder.AppendLine("import { useStore } from 'vuex';");
                 builder.AppendLine("import config from '../../Config';");
                 builder.AppendEmptyLine();
-                builder.AppendLine("const { t, locale } = useI18n();");
+                if (options.Usei18n)
+                {
+                    builder.AppendLine("const { t, locale } = useI18n();");
+                }
                 builder.AppendLine("const store = useStore();");
-                builder.AppendLine($"const userinfo = computed(() => store.getters.userinfo as {((options.BindModel == OptionData.BindModelType.ExecuteResult.ToString()) ? "MemberInfo" : "Member")});");
+                builder.AppendLine($"const userinfo = computed(() => store.getters.userinfo as Member);");
                 builder.AppendEmptyLine();
                 if (options.UsingCustomModel)
                 {
@@ -157,25 +173,32 @@ namespace Woose.Builder
                 builder.AppendEmptyLine();
 
                 builder.AppendLine("const isFormValid = () => {");
-                builder.AppendTabString(1, "return !Object.values(errors).some((error) => error !== '');");
+                builder.AppendTabStringLine(1, "return !Object.values(errors).some((error) => error !== '');");
                 builder.AppendLine("};");
                 builder.AppendEmptyLine();
 
                 builder.AppendLine("onMounted(async () => {");
                 if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
                 {
-                    builder.AppendTabStringLine(1, $"let rst:ApiResult = await ApiHelper.Get(config.apis.target + \"/api/{mainTable}/View\");");
+                    builder.AppendTabStringLine(1, $"let rst:ApiResult = await ApiHelper.Get({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/View\");");
                     builder.AppendTabStringLine(1, "if (rst.isSuccess) {");
                 }
                 else
                 {
-                    builder.AppendTabStringLine(1, $"let rst:ReturnValues = await ApiHelper.Get(\"/api/{mainTable}/View\");");
+                    builder.AppendTabStringLine(1, $"let rst:ReturnValues = await ApiHelper.Get({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/View\");");
                     builder.AppendTabStringLine(1, "if (rst.check) {");
                 }
                 
                 builder.AppendTabStringLine(2, $"{mainTable.FirstCharToLower()}.value = rst.data as {mainTable};");
                 builder.AppendTabStringLine(1, "} else {");
-                builder.AppendTabStringLine(2, "MessageBox.Alert(t(DbMsg(rst.message)));");
+                if (options.Usei18n)
+                {
+                    builder.AppendTabStringLine(2, "MessageBox.Alert(t(DbMsg(rst.message)));");
+                }
+                else
+                {
+                    builder.AppendTabStringLine(2, "MessageBox.Alert(t(DbMsg(rst.message)));");
+                }
                 builder.AppendTabStringLine(1, "}");
                 builder.AppendLine("});");
                 builder.AppendEmptyLine();
@@ -187,17 +210,26 @@ namespace Woose.Builder
                 builder.AppendTabStringLine(2, $"let jsonData:{mainTable} = " + "Object.assign({}, " + $"{mainTable.FirstCharToLower()}.value);");
                 if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
                 {
-                    builder.AppendTabStringLine(2, $"let rst:ApiResult = await ApiHelper.Post(config.apis.target + \"/api/{mainTable}/Save\", jsonData);");
+                    builder.AppendTabStringLine(2, $"let rst:ApiResult = await ApiHelper.Post({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/Save\", jsonData);");
                     builder.AppendTabStringLine(2, "if (rst.isSuccess) {");
                 }
                 else
                 {
-                    builder.AppendTabStringLine(2, $"let rst:ReturnValues = await ApiHelper.Post(\"/api/{mainTable}/Save\", jsonData);");
+                    builder.AppendTabStringLine(2, $"let rst:ReturnValues = await ApiHelper.Post({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/Save\", jsonData);");
                     builder.AppendTabStringLine(2, "if (rst.check) {");
                 }
-                builder.AppendTabStringLine(3, "MessageBox.Success(t(DbMsg('Save')));");
-                builder.AppendTabStringLine(2, "} else {");
-                builder.AppendTabStringLine(3, "MessageBox.Alert(t(DbMsg(rst.message)));");
+                if (options.Usei18n)
+                {
+                    builder.AppendTabStringLine(3, "MessageBox.Success(t(DbMsg('Save')));");
+                    builder.AppendTabStringLine(2, "} else {");
+                    builder.AppendTabStringLine(3, "MessageBox.Alert(t(DbMsg(rst.message)));");
+                }
+                else
+                {
+                    builder.AppendTabStringLine(3, "MessageBox.Success('저장했습니다.');");
+                    builder.AppendTabStringLine(2, "} else {");
+                    builder.AppendTabStringLine(3, "MessageBox.Alert(rst.message);");
+                }
                 builder.AppendTabStringLine(2, "}");
                 builder.AppendTabStringLine(1, "}");
                 builder.AppendLine("};");
@@ -207,12 +239,12 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string ComponentSP(OptionData options, List<SPEntity> sPEntities, List<SpTable> spTables, List<SpOutput> spOutputs)
+        public string ComponentSP(BindOption options, List<SPEntity> sPEntities, List<SpTable> spTables, List<SpOutput> spOutputs)
         {
             return "";
         }
 
-        public string CreateComponent(OptionData options, List<DbTableInfo> info)
+        public string CreateComponent(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -295,7 +327,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine(0, "}");
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine(0, "const fnDatabind = async () => {");
-                builder.AppendTabStringLine(1, $"let rst:{options.BindModelResult} = await ApiHelper.Get(`/api/{mainTable}/List`);");
+                builder.AppendTabStringLine(1, $"let rst:{options.BindModelResult} = await ApiHelper.Get({((options.UseMultiApi) ? "config.apis.url + " : "")}`/api/{mainTable}/List`);");
                 builder.AppendTabStringLine(1, $"if (rst.{options.BindModelIsBoolean})" + " {");
                 builder.AppendTabStringLine(2, $"data.value.items = rst.data as {mainTable}[];");
                 builder.AppendTabStringLine(2, $"data.value.count = rst.{options.BindModelCount};");
@@ -309,7 +341,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateSP(OptionData options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
+        public string CreateSP(BindOption options, List<SPEntity> properties, List<SpTable> tables, List<SpOutput> outputs)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -381,15 +413,25 @@ namespace Woose.Builder
             builder.AppendEmptyLine();
             builder.AppendTabStringLine(0, $"<script setup lang=\"ts\">");
             builder.AppendLine("import { onMounted,ref,computed,reactive } from 'vue';");
-            builder.AppendLine("import { useI18n } from 'vue-i18n';");
-            builder.AppendLine("import { ApiHelper,MessageBox,DbMsg } from '../../models';");
-            builder.Append("import { " + ((options.BindModel == OptionData.BindModelType.ExecuteResult.ToString()) ? "ApiResult,MemberInfo" : "ReturnValues"));
+            if (options.Usei18n)
+            { 
+                builder.AppendLine("import { useI18n } from 'vue-i18n';");
+                builder.AppendLine("import { ApiHelper,MessageBox,DbMsg } from '../../models';");
+            }
+            else
+            {
+                builder.AppendLine("import { ApiHelper,MessageBox } from '../../models';");
+            }
+            builder.Append("import { " + ((options.BindModel == OptionData.BindModelType.ExecuteResult.ToString()) ? "ApiResult,Member" : "ReturnValues,Member"));
             builder.AppendLine(((options.UsingCustomModel) ? "" : $",{mainTable}") + " } from '../../entities';");
             builder.AppendLine("import { Layout } from '../../components';");
             builder.AppendLine("import { useStore } from 'vuex';");
             builder.AppendLine("import config from '../../Config';");
             builder.AppendEmptyLine();
-            builder.AppendLine("const { t, locale } = useI18n();");
+            if (options.Usei18n)
+            {
+                builder.AppendLine("const { t, locale } = useI18n();");
+            }
             builder.AppendLine("const store = useStore();");
             builder.AppendLine($"const userinfo = computed(() => store.getters.userinfo as {((options.BindModel == OptionData.BindModelType.ExecuteResult.ToString()) ? "MemberInfo" : "Member")});");
             builder.AppendEmptyLine();
@@ -453,19 +495,26 @@ namespace Woose.Builder
             builder.AppendLine("onMounted(async () => {");
             if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
             {
-                builder.AppendTabStringLine(1, $"let rst:ApiResult = await ApiHelper.Get(config.apis.target + \"/api/{mainTable}/View\");");
+                builder.AppendTabStringLine(1, $"let rst:ApiResult = await ApiHelper.Get({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/View\");");
                 builder.AppendTabStringLine(1, "if (rst.isSuccess) {");
             }
             else
             {
-                builder.AppendTabStringLine(1, $"let rst:ReturnValues = await ApiHelper.Get(\"/api/{mainTable}/View\");");
+                builder.AppendTabStringLine(1, $"let rst:ReturnValues = await ApiHelper.Get({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/View\");");
                 builder.AppendTabStringLine(1, "if (rst.check) {");
             }
             
             
             builder.AppendTabStringLine(2, $"{mainTable.FirstCharToLower()}.value = rst.data as {mainTable};");
             builder.AppendTabStringLine(1, "} else {");
-            builder.AppendTabStringLine(2, "MessageBox.Alert(t(DbMsg(rst.message)));");
+            if (options.Usei18n)
+            {
+                builder.AppendTabStringLine(2, "MessageBox.Alert(t(DbMsg(rst.message)));");
+            }
+            else
+            {
+                builder.AppendTabStringLine(2, "MessageBox.Alert(rst.message);");
+            }
             builder.AppendTabStringLine(1, "}");
             builder.AppendLine("});");
             builder.AppendEmptyLine();
@@ -477,18 +526,26 @@ namespace Woose.Builder
             builder.AppendTabStringLine(2, $"let jsonData:{mainTable} = " + "Object.assign({}, " + $"{mainTable.FirstCharToLower()}.value);");
             if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
             {
-                builder.AppendTabStringLine(2, $"let rst:ApiResult = await ApiHelper.Post(config.apis.target + \"/api/{mainTable}/Save\", jsonData);");
+                builder.AppendTabStringLine(2, $"let rst:ApiResult = await ApiHelper.Post({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/Save\", jsonData);");
                 builder.AppendTabStringLine(2, "if (rst.isSuccess) {");
             }
             else
             {
-                builder.AppendTabStringLine(2, $"let rst:ReturnValues = await ApiHelper.Post(\"/api/{mainTable}/Save\", jsonData);");
+                builder.AppendTabStringLine(2, $"let rst:ReturnValues = await ApiHelper.Post({((options.UseMultiApi) ? "config.apis.url + " : "")}\"/api/{mainTable}/Save\", jsonData);");
                 builder.AppendTabStringLine(2, "if (rst.check) {");
             }
-            
-            builder.AppendTabStringLine(3, "MessageBox.Success(t(DbMsg('Save')));");
-            builder.AppendTabStringLine(2, "} else {");
-            builder.AppendTabStringLine(3, "MessageBox.Alert(t(DbMsg(rst.message)));");
+            if (options.Usei18n)
+            {
+                builder.AppendTabStringLine(3, "MessageBox.Success(t(DbMsg('Save')));");
+                builder.AppendTabStringLine(2, "} else {");
+                builder.AppendTabStringLine(3, "MessageBox.Alert(t(DbMsg(rst.message)));");
+            }
+            else
+            {
+                builder.AppendTabStringLine(3, "MessageBox.Success('저장했습니다.');");
+                builder.AppendTabStringLine(2, "} else {");
+                builder.AppendTabStringLine(3, "MessageBox.Alert(rst.message);");
+            }
             builder.AppendTabStringLine(2, "}");
             builder.AppendTabStringLine(1, "}");
             builder.AppendLine("};");

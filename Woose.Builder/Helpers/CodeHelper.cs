@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Windows.Media.Animation;
 using Woose.Data;
 
 namespace Woose.Builder
@@ -77,6 +78,26 @@ namespace Woose.Builder
                                                 break;
                                         }
                                         break;
+                                    case "JAVA":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "ENTITY":
+                                                builder.Append(CodeHelper.Java.CreateEntity(this.option, tableproperties));
+                                                break;
+                                            case "CONTROLLER":
+                                                builder.Append("");
+                                                break;
+                                            case "ABSTRACT":
+                                                builder.Append("");
+                                                break;
+                                            case "REPOSITORY":
+                                                builder.Append("");
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
                                     case "DATABASE":
                                         switch (this.option.Category.Trim().ToUpper())
                                         {
@@ -129,6 +150,48 @@ namespace Woose.Builder
                                             case "REPOSITORY":
                                                 builder.Append(CodeHelper.JavaScript.NodeSequelizeEntitiySaveMethod(this.option, tableproperties));
                                                 break;
+                                            case "YAML":
+                                                builder.Append(CodeHelper.YAML.CreateEntity(this.option, tableproperties));
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "VUE.JS":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "FORM":
+                                                builder.Append(CodeHelper.Vue.CreateEntityForm(this.option, tableproperties));
+                                                break;
+                                            case "COMPONENT":
+                                                builder.Append(CodeHelper.Vue.CreateComponent(this.option, tableproperties));
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "REACT.JS":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "FORM":
+                                                builder.Append("");
+                                                break;
+                                            case "COMPONENT":
+                                                builder.Append("");
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "HTML":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "TAILWINDCSSFORM":
+                                                builder.Append(CodeHelper.HTML.CreateEntity(this.option, tableproperties));
+                                                break;
                                             default:
                                                 builder.Append("분류 탭을 선택해 주세요.");
                                                 break;
@@ -159,6 +222,26 @@ namespace Woose.Builder
                                                 break;
                                             case "REPOSITORY":
                                                 builder.Append(CodeHelper.CSharp.CreateSP(this.option, spentities, sptables, spoutput));
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "JAVA":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "ENTITY":
+                                                builder.Append("");
+                                                break;
+                                            case "CONTROLLER":
+                                                builder.Append("");
+                                                break;
+                                            case "ABSTRACT":
+                                                builder.Append("");
+                                                break;
+                                            case "REPOSITORY":
+                                                builder.Append("");
                                                 break;
                                             default:
                                                 builder.Append("분류 탭을 선택해 주세요.");
@@ -216,6 +299,48 @@ namespace Woose.Builder
                                                 break;
                                             case "REPOSITORY":
                                                 builder.Append("");
+                                                break;
+                                            case "YAML":
+                                                builder.Append(CodeHelper.YAML.CreateSP(this.option, spentities, sptables, spoutput));
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "VUE.JS":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "FORM":
+                                                builder.Append(CodeHelper.Vue.CreateSP(this.option,spentities,sptables,spoutput));
+                                                break;
+                                            case "COMPONENT":
+                                                builder.Append(CodeHelper.Vue.ComponentSP(this.option, spentities,sptables,spoutput));
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "REACT.JS":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "FORM":
+                                                builder.Append("");
+                                                break;
+                                            case "COMPONENT":
+                                                builder.Append("");
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "HTML":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "TAILWINDCSSFORM":
+                                                builder.Append(CodeHelper.HTML.CreateSP(this.option,spentities,sptables,spoutput));
                                                 break;
                                             default:
                                                 builder.Append("분류 탭을 선택해 주세요.");
