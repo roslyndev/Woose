@@ -587,7 +587,7 @@ namespace Woose.Builder
                             File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app));
                             
                             CSharpCreater creater = new CSharpCreater();
-                            File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option));
+                            File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option, this.viewModel.entities.ToList()));
 
                             if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
                             {
@@ -629,11 +629,19 @@ namespace Woose.Builder
                                 File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
                             }
 
+                            
+                            if (!File.Exists($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs", creater.CreateDefaultController(option, true));
+
                             using (var rep = new SqlServerRepository(context))
                             {
                                 foreach (var entity in this.viewModel.entities)
                                 {
                                     var list = rep.GetTableProperties(entity.name);
+
                                     if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
                                     {
                                         File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
@@ -691,7 +699,7 @@ namespace Woose.Builder
                             {
                                 File.Create($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs").Close();
                             }
-                            File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateRepository(option, this.context, this.viewModel.sps.ToList(), true));
+                            File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateDefaultRepository(option, this.context, this.viewModel.sps.ToList(), true));
 
 
                             MessageBox.Show($"프로젝트가 수정되었습니다.");

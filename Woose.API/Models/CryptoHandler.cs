@@ -69,115 +69,168 @@ namespace Woose.API
         }
 
 
-        public RefreshToken GenerateRefreshToken(string rtoken)
+        public RefreshToken? GenerateRefreshToken(string rtoken)
         {
-            return new RefreshToken
+            if (!string.IsNullOrWhiteSpace(rtoken))
             {
-                Token = CryptoHelper.AES256.Encrypt(rtoken),
-                Expiration = DateTime.UtcNow.AddMonths(3)
-            };
+                try
+                {
+                    return new RefreshToken
+                    {
+                        Token = CryptoHelper.AES256.Encrypt(rtoken),
+                        Expiration = DateTime.UtcNow.AddMonths(3)
+                    };
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        public JwtToken GenerateTokens(string userId, string userName)
+        public JwtToken? GenerateTokens(string userId, string userName = "")
         {
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(WooseSecret.JwtSecret));
-            var tokenDescriptor = new SecurityTokenDescriptor
+            if (!string.IsNullOrWhiteSpace(userId))
             {
-                Subject = new ClaimsIdentity(new[]
+                try
                 {
+
+                    var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(WooseSecret.JwtSecret));
+                    var tokenDescriptor = new SecurityTokenDescriptor
+                    {
+                        Subject = new ClaimsIdentity(new[]
+                        {
                     new Claim(ClaimTypes.Name, userId),
                     new Claim(ClaimTypes.Actor, userName)
                 }),
-                Expires = DateTime.UtcNow.AddDays(1),
-                SigningCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256Signature)
-            };
+                        Expires = DateTime.UtcNow.AddDays(1),
+                        SigningCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256Signature)
+                    };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var accessToken = tokenHandler.CreateToken(tokenDescriptor);
-            var refreshToken = GenerateRefreshToken(userId);
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var accessToken = tokenHandler.CreateToken(tokenDescriptor);
+                    var refreshToken = GenerateRefreshToken(userId);
 
-            return new JwtToken
+                    return new JwtToken
+                    {
+                        AccessToken = tokenHandler.WriteToken(accessToken),
+                        AccessTokenExpiration = tokenDescriptor.Expires.Value,
+                        RefreshToken = refreshToken.Token
+                    };
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            else
             {
-                AccessToken = tokenHandler.WriteToken(accessToken),
-                AccessTokenExpiration = tokenDescriptor.Expires.Value,
-                RefreshToken = refreshToken.Token
-            };
+                return null;
+            }
         }
 
-        public User GetUserFromToken(string token)
+        public User? GetUserFromToken(string token)
         {
             User result = new User();
-            var handler = new JwtSecurityTokenHandler();
-            var claimsPrincipal = handler.ReadJwtToken(token);
 
-            // 토큰 해석
-            if (claimsPrincipal != null)
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                // 사용자 아이디 추출
-                var userId = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "unique_name");
-                var userName = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == "actort");
-
-                if (userId != null && userName != null)
+                try
                 {
-                    result.Id = userId.Value;
-                    result.Name = userName.Value;
+                    var handler = new JwtSecurityTokenHandler();
+                    var claimsPrincipal = handler.ReadJwtToken(token);
+
+                    // 토큰 해석
+                    if (claimsPrincipal != null)
+                    {
+                        // 사용자 아이디 추출
+                        var userId = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "unique_name");
+                        var userName = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == "actort");
+
+                        if (userId != null && userName != null)
+                        {
+                            result.Id = userId.Value;
+                            result.Name = userName.Value;
+                        }
+                    }
+                }
+                catch
+                {
+                    result = null;
                 }
             }
 
             return result;
         }
 
-        public JwtSecurityToken ReadToken(string token)
+        public JwtSecurityToken? ReadToken(string token)
         {
-            var handler = new JwtSecurityTokenHandler();
-            return handler.ReadJwtToken(token);
-        }
-
-        public JwtToken RefreshAccessToken(string refreshToken)
-        {
-            var refreshTokenHandler = new JwtSecurityTokenHandler();
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(WooseSecret.JwtSecret));
-
-            try
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                var principal = refreshTokenHandler.ValidateToken(refreshToken, new TokenValidationParameters
+                try
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = secretKey,
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ClockSkew = TimeSpan.Zero // 토큰 만료 시간 검증
-                }, out var validatedToken);
-
-                if (validatedToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    throw new SecurityTokenException("Invalid token");
+                    var handler = new JwtSecurityTokenHandler();
+                    return handler.ReadJwtToken(token);
                 }
-
-                string? userId = principal.FindFirst(ClaimTypes.Name)?.Value;
-                string? username = principal.FindFirst(ClaimTypes.Actor)?.Value;
-                if (!string.IsNullOrWhiteSpace(userId))
+                catch
                 {
-                    var newAccessToken = GenerateTokens(userId, username ?? "");
-                    return newAccessToken;
-                }
-                else
-                {
-                    throw new SecurityTokenException("Required id");
+                    return null;
                 }
             }
-            catch (SecurityTokenException ex)
+            else
             {
-                // RefreshToken 검증 실패
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                // 다른 예외 처리
-                throw new SecurityTokenException("Invalid token", ex);
+                return null;
             }
         }
 
+        public JwtToken? RefreshAccessToken(string refreshToken)
+        {
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                var refreshTokenHandler = new JwtSecurityTokenHandler();
+                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(WooseSecret.JwtSecret));
 
+                try
+                {
+                    var principal = refreshTokenHandler.ValidateToken(refreshToken, new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = secretKey,
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ClockSkew = TimeSpan.Zero // 토큰 만료 시간 검증
+                    }, out var validatedToken);
+
+                    if (validatedToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new SecurityTokenException("Invalid token");
+                    }
+
+                    string? userId = principal.FindFirst(ClaimTypes.Name)?.Value;
+                    string? username = principal.FindFirst(ClaimTypes.Actor)?.Value;
+                    if (!string.IsNullOrWhiteSpace(userId))
+                    {
+                        var newAccessToken = GenerateTokens(userId, username ?? "");
+                        return newAccessToken;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

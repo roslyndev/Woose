@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Windows.Documents;
 using System.Xml.Linq;
 using Woose.Data;
 
@@ -666,7 +667,7 @@ namespace Woose.Builder
 
                 builder.AppendTabStringLine((IsNamespace ? 1 : 0), $"[Route(\"api/[controller]\")]");
                 builder.AppendTabStringLine((IsNamespace ? 1 : 0), "[ApiController]");
-                builder.AppendTabStringLine((IsNamespace ? 1 : 0), $"public class {entityName}Controller : BaseController");
+                builder.AppendTabStringLine((IsNamespace ? 1 : 0), $"public class {entityName}Controller : DefaultController");
                 builder.AppendTabStringLine((IsNamespace ? 1 : 0), "{");
                 builder.AppendTabStringLine((IsNamespace ? 2 :1), $"protected I{entityName}Repository db;");
                 builder.AppendEmptyLine();
@@ -852,6 +853,46 @@ namespace Woose.Builder
                 {
                     builder.AppendLine("}");
                 }
+            }
+
+            return builder.ToString();
+        }
+
+        public string CreateDefaultController(BindOption options, bool IsNamespace = false)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            if (IsNamespace)
+            {
+                builder.AppendLine($"using Microsoft.AspNetCore.Mvc.Filters;");
+                builder.AppendLine($"using Woose.Core;");
+                builder.AppendLine($"using Woose.Data;");
+                builder.AppendLine($"using Woose.API;");
+                builder.AppendEmptyLine();
+                builder.AppendLine($"namespace {options.ProjectName}");
+                builder.AppendLine("{");
+            }
+
+            builder.AppendTabStringLine((IsNamespace ? 1 : 0), $"public class DefaultController : BaseController");
+            builder.AppendTabStringLine((IsNamespace ? 1 : 0), "{");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public DefaultController(IContext context, ICryptoHandler crypto, IConfiguration config) : base(context,crypto,config)");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "//전역으로 적용할 공통사항은 여기에 기술하세요.");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
+            builder.AppendEmptyLine();
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "public override void OnActionExecuting(ActionExecutingContext context)");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "base.OnActionExecuting(context);");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
+            builder.AppendEmptyLine();
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "public override void OnActionExecuted(ActionExecutedContext context)");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "base.OnActionExecuted(context);");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
+            builder.AppendTabStringLine((IsNamespace ? 1 : 0), "}");
+            if (IsNamespace)
+            {
+                builder.AppendLine("}");
             }
 
             return builder.ToString();
@@ -1095,7 +1136,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateRepository(BindOption options, DbContext context, List<DbEntity> properties, bool IsNamespace = false)
+        public string CreateDefaultRepository(BindOption options, DbContext context, List<DbEntity> properties, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1220,6 +1261,7 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
             builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = Entity<{entity.name}>.Run.On(handler)");
             builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Paging(10, paramData.CurPage)");
+            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(paramData.ToWhereString())");
             if (primaryKey != null && !string.IsNullOrWhiteSpace(primaryKey.Name))
             {
                 builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".OrderBy(x => x.{primaryKey.Name}, QueryOption.Sequence.DESC)");
@@ -1240,6 +1282,7 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
             builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = Entity<{entity.name}>.Run.On(handler)");
             builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Count()");
+            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(paramData.ToWhereString())");
             builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToCount();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
@@ -1624,7 +1667,7 @@ namespace Woose.Builder
             return result;
         }
 
-        public string? CreateProgram(BindOption option)
+        public string? CreateProgram(BindOption option, List<DbEntity> properties)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1702,7 +1745,12 @@ namespace Woose.Builder
             builder.AppendLine("});");
             builder.AppendLine("");
             builder.AppendLine("builder.Services.AddSingleton<IContext>(provider => new DbContext(connectionString));");
-            builder.AppendLine("builder.Services.AddSingleton<IBoardsRepository, BoardsRepository>();");
+
+            builder.AppendLine($"builder.Services.AddSingleton<I{option.MethodName}Repository, {option.MethodName}Repository>();");
+            foreach(var table in properties)
+            {
+                builder.AppendLine($"builder.Services.AddSingleton<I{table.name}Repository, {table.name}Repository>();");
+            }
             builder.AppendLine("builder.Services.AddSingleton<ICryptoHandler, CryptoHandler>();");
             builder.AppendLine("");
             builder.AppendLine("var app = builder.Build();");

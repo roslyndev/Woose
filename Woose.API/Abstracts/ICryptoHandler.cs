@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 
 namespace Woose.API
 {
@@ -28,10 +27,10 @@ namespace Woose.API
         string SHA512Encrypt(string contenxt);
         bool SHA512ValidateCheck(string targetHash, string keyString);
 
-        JwtToken GenerateTokens(string userId, string userName);
-        RefreshToken GenerateRefreshToken(string rtoken);
-        JwtSecurityToken ReadToken(string token);
-        JwtToken RefreshAccessToken(string refreshToken);
-        User GetUserFromToken(string token);
+        JwtToken? GenerateTokens(string userId, string userName);
+        RefreshToken? GenerateRefreshToken(string rtoken);
+        JwtSecurityToken? ReadToken(string token);
+        JwtToken? RefreshAccessToken(string refreshToken);
+        User? GetUserFromToken(string token);
     }
 }
