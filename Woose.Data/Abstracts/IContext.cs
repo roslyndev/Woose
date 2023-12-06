@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Data.SqlClient;
 
 namespace Woose.Data
 {
     public interface IContext
     {
-        DatabaseConnection getConnection();
+        SqlConnection getConnection();
     }
 }

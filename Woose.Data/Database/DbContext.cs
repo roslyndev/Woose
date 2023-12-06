@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Data.SqlClient;
 
 namespace Woose.Data
 {
@@ -21,15 +19,28 @@ namespace Woose.Data
             }
         }
 
-        public DatabaseConnection getConnection()
+        public SqlConnection getConnection()
         {
-            return new DatabaseConnection(ConnectionString);
+            var sqlconn = new SqlConnection(this.ConnectionString);
+            sqlconn.Open();
+            return sqlconn;
         }
 
-        public static DatabaseConnection CreateConnection(string connectionstring)
+        public static SqlConnection CreateConnection(string connectionstring)
         {
-            return new DatabaseConnection(connectionstring);
+            var sqlconn = new SqlConnection(connectionstring);
+            sqlconn.Open();
+            return sqlconn;
         }
+    }
 
+    public static class ExtendDbContext
+    {
+        public static SqlCommand CreateCommand(this SqlConnection conn)
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            return cmd;
+        }
     }
 }

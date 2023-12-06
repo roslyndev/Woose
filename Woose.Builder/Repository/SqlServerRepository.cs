@@ -20,10 +20,10 @@ namespace Woose.Builder
             var result = new List<DbEntity>();
 
             string query = "select 'TABLE' as ObjectType, [object_id],[name] from sys.tables where [name] <> '__RefactorLog' union select 'VIEW',[object_id],[name] from sys.views order by[name] asc";
-            using (var db = this.context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler).Query(query).ToList();
+                var dt = Entity.Run.On(cmd).Query(query).ToList();
                 result = EntityHelper.ColumnToEntities<DbEntity>(dt);
             }
 
@@ -35,10 +35,10 @@ namespace Woose.Builder
             var result = new List<DbEntity>();
 
             string query = "select 'SP' as ObjectType, [object_id], [name] from sys.procedures order by [name] asc";
-            using (var db = this.context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler).Query(query).ToList();
+                var dt = Entity.Run.On(cmd).Query(query).ToList();
                 result = EntityHelper.ColumnToEntities<DbEntity>(dt);
             }
 
@@ -65,10 +65,10 @@ inner join sys.all_columns as B on A.TableID = B.[object_id]
 inner join sys.types as C on B.[system_type_id] = C.[system_type_id] and B.user_type_id = C.user_type_id
 left outer join sys.extended_properties as D on D.major_id = B.[object_id] and D.minor_id = B.column_id and D.[name] = 'MS_Description'
 where A.TableName = '{tableName}'";
-            using (var db = this.context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler).Query(query).ToList();
+                var dt = Entity.Run.On(cmd).Query(query).ToList();
                 result = EntityHelper.ColumnToEntities<DbTableInfo>(dt);
             }
 
@@ -92,10 +92,10 @@ inner join sys.types as B with (nolock) on A.system_type_id = B.system_type_id a
 inner join sys.procedures as C with (nolock) on A.[object_id] = C.[object_id] 
 where C.[name] = '{spName}'
 order by A.parameter_id asc";
-            using (var db = this.context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler).Query(query).ToList();
+                var dt = Entity.Run.On(cmd).Query(query).ToList();
                 result = EntityHelper.ColumnToEntities<SPEntity>(dt);
             }
 
@@ -112,10 +112,10 @@ inner join SYSOBJECTS as C with (nolock) on C.id = B.depid and C.xtype = 'U'
 where A.xtype = 'P'
 and A.[name] = '{spName}'
 order by B.[depid] desc";
-            using (var db = this.context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler).Query(query).ToList();
+                var dt = Entity.Run.On(cmd).Query(query).ToList();
                 result = EntityHelper.ColumnToEntities<SpTable>(dt);
             }
 
@@ -127,10 +127,10 @@ order by B.[depid] desc";
             var result = new List<SpOutput>();
 
             string query = @$"EXEC sp_describe_first_result_set N'{spName}', null, 0;";
-            using (var db = this.context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler).Query(query).ToList();
+                var dt = Entity.Run.On(cmd).Query(query).ToList();
                 result = EntityHelper.ColumnToEntities<SpOutput>(dt);
             }
 

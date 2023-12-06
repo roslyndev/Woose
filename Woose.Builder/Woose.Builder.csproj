@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Woose.API\Woose.API.csproj" />
     <ProjectReference Include="..\Woose.Core\Woose.Core.csproj" />
     <ProjectReference Include="..\Woose.Data\Woose.Data.csproj" />
   </ItemGroup>

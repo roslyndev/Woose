@@ -46,9 +46,9 @@ namespace Woose.Data
         {
         }
 
-        public Entity On(SqlDbOperater handler)
+        public Entity On(SqlCommand cmd)
         {
-            this.Command = handler.Command;
+            this.Command = cmd;
             return this;
         }
 

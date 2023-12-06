@@ -20,9 +20,9 @@ namespace Woose.Tests
             var codeList = new GlobalCode();
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                codeList = await Entity<GlobalCode>.Run.On(handler)
+                codeList = await Entity<GlobalCode>.Run.On(cmd)
                                                    .Select(1)
                                                    .Where(x => x.MajorCode == "Member")
                                                    .And(x => x.MinorCode == "Status")
@@ -48,9 +48,9 @@ namespace Woose.Tests
 
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(handler)
+                rst = Entity<GlobalCode>.Run.On(cmd)
                                         .Insert(paramData)
                                         .ToResult<ExecuteResult>() as ExecuteResult;
             }
@@ -73,9 +73,9 @@ namespace Woose.Tests
             paramData.KeyCode = "Absolute";
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(handler)
+                rst = Entity<GlobalCode>.Run.On(cmd)
                                         .Update(paramData)
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
@@ -92,9 +92,9 @@ namespace Woose.Tests
             int cnt = 0;
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                cnt = Entity<GlobalCode>.Run.On(handler)
+                cnt = Entity<GlobalCode>.Run.On(cmd)
                                         .Count()
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
@@ -111,9 +111,9 @@ namespace Woose.Tests
             var rst = new List<GlobalCode>();
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(handler)
+                rst = Entity<GlobalCode>.Run.On(cmd)
                                         .Paging(10, 1)
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
@@ -131,9 +131,9 @@ namespace Woose.Tests
             var rst = new ExecuteResult();
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(handler)
+                rst = Entity<GlobalCode>.Run.On(cmd)
                                         .Delete()
                                         .Where(x => x.MajorCode == "Member")
                                         .And(x => x.MinorCode == "Status")
@@ -153,15 +153,15 @@ namespace Woose.Tests
             object paramValue = default!;
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                var rst = Entity<GlobalCode>.Run.On(handler)
+                var rst = Entity<GlobalCode>.Run.On(cmd)
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
                                             .ToList();
                 
-                paramCount = handler.Command!.Parameters.Count;
-                paramValue = handler.Command!.Parameters[0].Value;
+                paramCount = cmd.Parameters.Count;
+                paramValue = cmd.Parameters[0].Value;
             }
 
             Assert.That(paramCount, Is.EqualTo(1));
@@ -178,16 +178,16 @@ namespace Woose.Tests
             object paramValue = default!;
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                var rst = Entity<GlobalCode>.Run.On(handler)
+                var rst = Entity<GlobalCode>.Run.On(cmd)
                                             .Select()
                                             .Where(x => x.KeyCode == "test")
                                             .And(x => x.IsEnabled)
                                             .ToList();
 
-                paramCount = handler.Command!.Parameters.Count;
-                paramValue = handler.Command!.Parameters[0].Value;
+                paramCount = cmd.Parameters.Count;
+                paramValue = cmd.Parameters[0].Value;
             }
 
             Assert.That(paramCount, Is.EqualTo(2));
@@ -203,9 +203,9 @@ namespace Woose.Tests
             string strValue = string.Empty;
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler)
+                var dt = Entity.Run.On(cmd)
                                      .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
                                      .ToList();
 
@@ -233,9 +233,9 @@ namespace Woose.Tests
             string strValue = string.Empty;
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                var recode = Entity.Run.On(handler)
+                var recode = Entity.Run.On(cmd)
                                        .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
                                        .ToEntity();
 
@@ -259,22 +259,22 @@ namespace Woose.Tests
             string strValue = string.Empty;
 
             using (var db = context.getConnection())
-            using (var handler = new SqlDbOperater(db))
+            using (var cmd = db.CreateCommand())
             {
-                var dt = Entity.Run.On(handler)
+                var dt = Entity.Run.On(cmd)
                                    .StoredProcedure("sp_server_info")
                                    //.AddParameter("@name", SqlDbType.VarChar, "test", 50)
-                                   .ToResult<ExecuteResult>() as ExecuteResult;
+                                   .ToList();
 
-                //if (dt != null && dt.Rows.Count > 0)
-                //{
-                //    cnt = dt.Rows.Count;
-                //    foreach (DataRow row in dt.Rows)
-                //    {
-                //        strValue = row[1].ToString();
-                //        break;
-                //    }
-                //}
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    cnt = dt.Rows.Count;
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        strValue = row[1].ToString();
+                        break;
+                    }
+                }
             }
 
             Assert.That(cnt, Is.EqualTo(29));
