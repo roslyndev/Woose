@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Woose.Builder"
         mc:Ignorable="d"
-        Title="Woose.Builder" Height="450" Width="800">
+        Title="Woose.Builder" Height="500" Width="900">
     <Window.Style>
         <Style TargetType="Window">
             <Setter Property="Template">
