@@ -138,6 +138,7 @@ namespace Woose.Builder
             string returnModel = string.Empty;
             string funcName = string.Empty;
             DbTypeItem typeObj = null;
+            string singleModel = string.Empty;
 
             if (tables != null && tables.Count > 0)
             {
@@ -166,6 +167,7 @@ namespace Woose.Builder
                         break;
                     case "Entities List Bind":
                         returnModel = $"List<{funcName}Item>";
+                        singleModel = $"{funcName}Item";
                         break;
                 }
             }
@@ -219,11 +221,10 @@ namespace Woose.Builder
             builder.AppendTabStringLine(1, "using (var db = context.getConnection())");
             builder.AppendTabStringLine(1, $"using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine(1, "{");
-            builder.AppendTabStringLine(2, "var tmp = Entity.Run.On(cmd)");
-            builder.AppendTabStringLine(5, $".StoredProcedure(\"{spName}\")");
+            builder.AppendTabStringLine(2, $"cmd.On(\"{spName}\").Set();");
             foreach (var input in properties)
             {
-                builder.AppendTabString(5, $".AddParameter(\"{input.name}\", SqlDbType.{input.CsType}, ");
+                builder.AppendTabString(2, $"cmd.Parameters.Set(\"{input.name}\", SqlDbType.{input.CsType}, ");
                 if (options.IsNoModel)
                 {
                     builder.Append(input.name.FirstCharToLower());
@@ -251,56 +252,30 @@ namespace Woose.Builder
                     }
 
                 }
-                builder.AppendLine(")");
+                builder.AppendLine(");");
             }
 
             switch (options.ReturnType)
             {
                 case "Void":
-                    builder.AppendTabStringLine(5, $".Void()");
+                    builder.AppendTabStringLine(2, $"cmd.ExecuteNonQuery();");
                     break;
                 case "BindModel":
                     if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())
                     {
-                        builder.AppendTabStringLine(5, $".ToResult<ExecuteResult>();");
-                        builder.AppendEmptyLine();
-                        builder.AppendTabStringLine(2, "if (tmp != null)");
-                        builder.AppendTabStringLine(2, "{");
-                        builder.AppendTabStringLine(3, "result.Success(tmp)");
-                        builder.AppendTabStringLine(2, "}");
+                        builder.AppendTabStringLine(2, $"result = cmd.ExecuteResult();");
                     }
                     else
                     {
-                        builder.AppendTabStringLine(5, $".ToResult<ReturnValue>();");
-                        builder.AppendEmptyLine();
-                        builder.AppendTabStringLine(2, "if (tmp != null)");
-                        builder.AppendTabStringLine(2, "{");
-                        builder.AppendTabStringLine(3, "result = tmp as ReturnValue;");
-                        builder.AppendTabStringLine(2, "}");
+                        builder.AppendTabStringLine(2, $"result = cmd.ExecuteReturnValue();");
                     }
                     break;
                 case "Entity T Bind":
-                    builder.AppendTabStringLine(5, $".ToEntity();");
-                    builder.AppendEmptyLine();
-                    builder.AppendTabStringLine(2, "if (tmp != null)");
-                    builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, "result.Success(tmp)");
-                    builder.AppendTabStringLine(2, "}");
+                    builder.AppendTabStringLine(2, $"result = cmd.ExecuteEntity<{returnModel}>();");
                     break;
                 case "Entities List Bind":
-                    builder.AppendTabStringLine(5, $".ToList();");
-                    builder.AppendTabStringLine(2, "if (tmp != null && tmp.Count > 0)");
-                    builder.AppendTabStringLine(2, "{");
-                    builder.AppendTabStringLine(3, "result.Success(tmp)");
-                    builder.AppendTabStringLine(2, "}");
+                    builder.AppendTabStringLine(2, $"result = cmd.ExecuteEntities<{singleModel}>();");
                     break;
-            }
-            if (!returnModel.Equals("void", StringComparison.OrdinalIgnoreCase))
-            {
-                builder.AppendTabStringLine(2, "else");
-                builder.AppendTabStringLine(2, "{");
-                builder.AppendTabStringLine(3, "result.Error(\"반환값이 없습니다.\");");
-                builder.AppendTabStringLine(2, "}");
             }
             builder.AppendTabStringLine(1, "}");
             
@@ -1181,14 +1156,17 @@ namespace Woose.Builder
             DbTableInfo? primaryKey = properties.Where(x => x.is_identity).FirstOrDefault();
 
             string exeReturn = string.Empty;
+            string exeReturnMethod = string.Empty;
 
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {
                 exeReturn = "ReturnValue";
+                exeReturnMethod = "ExecuteResult";
             }
             else
             {
                 exeReturn = "ExecuteResult";
+                exeReturnMethod = "ExecuteReturnValue";
             }
 
             if (IsNamespace)
@@ -1222,13 +1200,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Select(1)");
-            if (primaryKey != null && !string.IsNullOrWhiteSpace(primaryKey.Name))
-            {
-                builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(x => x.{primaryKey.Name} == {primaryKey.Name.FirstCharToLower()})");
-            }
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToEntity();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>().Select(1).Where(\"{primaryKey.Name}\", idx).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.ExecuteEntity<{entity.name}>();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -1242,10 +1215,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Select()");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(whereStr)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToList();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>().Select().Where(whereStr).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.ExecuteEntities<{entity.name}>();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -1259,14 +1230,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Paging(10, paramData.CurPage)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(paramData.ToWhereString())");
-            if (primaryKey != null && !string.IsNullOrWhiteSpace(primaryKey.Name))
-            {
-                builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".OrderBy(x => x.{primaryKey.Name}, QueryOption.Sequence.DESC)");
-            }
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToList();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>().Paging(10, paramData.CurPage).Where(paramData.ToWhereString()).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.ExecuteEntities<{entity.name}>();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -1280,10 +1245,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Count()");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(paramData.ToWhereString())");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToCount();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>().Count().Where(paramData.ToWhereString()).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.ExecuteEntities<{entity.name}>();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -1297,9 +1260,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"var tmp = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Insert({entity.name.FirstCharToLower()})");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToResult<{exeReturn}>() as {exeReturn};");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>({entity.name.FirstCharToLower()}).Insert().Try.Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.{exeReturnMethod}();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -1313,13 +1275,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"var tmp = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Update({entity.name.FirstCharToLower()})");
-            if (primaryKey != null && !string.IsNullOrWhiteSpace(primaryKey.Name))
-            {
-                builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(x => x.{primaryKey.Name} == {entity.name.FirstCharToLower()}.{primaryKey.Name})");
-            }
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToResult<{exeReturn}>() as {exeReturn};");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>({entity.name.FirstCharToLower()}).Update().Try.Where(\"{primaryKey.Name}\", {entity.name.FirstCharToLower()}.{primaryKey.Name}).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.{exeReturnMethod}();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -1340,13 +1297,8 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
-            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"var tmp = Entity<{entity.name}>.Run.On(cmd)");
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Delete()");
-            if (primaryKey != null && !string.IsNullOrWhiteSpace(primaryKey.Name))
-            {
-                builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".Where(x => x.{primaryKey.Name} == {primaryKey.Name.FirstCharToLower()})");
-            }
-            builder.AppendTabStringLine((IsNamespace ? 9 : 8), $".ToResult<{exeReturn}>() as {exeReturn};");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>().Delete().Try.Where(\"{primaryKey.Name}\", {entity.name.FirstCharToLower()}.{primaryKey.Name}).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.{exeReturnMethod}();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");

@@ -17,19 +17,17 @@ namespace Woose.Tests
         public async Task ContextAndQueryHelper_TestCase_Create()
         {
             IContext context = new DbContext(this.connStr);
-            var codeList = new GlobalCode();
+            var result = new GlobalCode();
 
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                codeList = await Entity<GlobalCode>.Run.On(cmd)
-                                                   .Select(1)
-                                                   .Where(x => x.MajorCode == "Member")
-                                                   .And(x => x.MinorCode == "Status")
-                                                   .ToEntityAsync();
+                cmd.On<GlobalCode>().Select(1).Where("KeyCode", "Active").Set();
+                result = cmd.ExecuteEntity<GlobalCode>();
             }
 
-            Assert.IsNotNull(codeList);
+            Assert.IsNotNull(result);
+            Assert.That(result.KeyName, Is.EqualTo("Á¤»ó"));
         }
 
         [Test, Order(1)]
@@ -50,9 +48,8 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(cmd)
-                                        .Insert(paramData)
-                                        .ToResult<ExecuteResult>() as ExecuteResult;
+                cmd.On<GlobalCode>(paramData).Insert().Try().Set();
+                rst = cmd.ExecuteResult();
             }
 
             Assert.IsTrue(rst!.IsSuccess);
@@ -75,11 +72,8 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(cmd)
-                                        .Update(paramData)
-                                        .Where(x => x.MajorCode == "Member")
-                                        .And(x => x.MinorCode == "Status")
-                                        .ToResult<ExecuteResult>() as ExecuteResult;
+                cmd.On<GlobalCode>(paramData).Update().Try().Where("KeyCode", "Active").Set();
+                rst = cmd.ExecuteResult();
             }
 
             Assert.IsTrue(rst!.IsSuccess);
@@ -94,11 +88,8 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                cnt = Entity<GlobalCode>.Run.On(cmd)
-                                        .Count()
-                                        .Where(x => x.MajorCode == "Member")
-                                        .And(x => x.MinorCode == "Status")
-                                        .ToCount();
+                cmd.On<GlobalCode>().Count().Where("MajorCode", "Member").Set();
+                cnt = Convert.ToInt32(cmd.ExecuteScalar());
             }
 
             Assert.That(cnt, Is.EqualTo(1));
@@ -113,12 +104,8 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(cmd)
-                                        .Paging(10, 1)
-                                        .Where(x => x.MajorCode == "Member")
-                                        .And(x => x.MinorCode == "Status")
-                                        .OrderBy(x => x.CodeIDX, QueryOption.Sequence.DESC)
-                                        .ToList();
+                cmd.On<GlobalCode>().Paging(10, 1).Where("MajorCode", "Member").Desc("CodeIDX").Set();
+                rst = cmd.ExecuteEntities<GlobalCode>();
             }
 
             Assert.That(rst.Count(), Is.EqualTo(1));
@@ -133,152 +120,30 @@ namespace Woose.Tests
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                rst = Entity<GlobalCode>.Run.On(cmd)
-                                        .Delete()
-                                        .Where(x => x.MajorCode == "Member")
-                                        .And(x => x.MinorCode == "Status")
-                                        .ToResult<ExecuteResult>() as ExecuteResult;
+                cmd.On<GlobalCode>().Delete().Try().Where("MajorCode", "Member").Set();
+                rst = cmd.ExecuteResult();
             }
 
             Assert.IsTrue(rst!.IsSuccess);
         }
 
-        [Test]
-        public void Entity_Test_Select_Case1()
+
+        [Test, Order(7)]
+        public void ContextAndQueryHelper_TestCase_SP()
         {
             IContext context = new DbContext(this.connStr);
-
-            List<GlobalCode> list = new List<GlobalCode>();
-            int paramCount = 0;
-            object paramValue = default!;
+            var rst = new ExecuteResult();
 
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                var rst = Entity<GlobalCode>.Run.On(cmd)
-                                            .Select()
-                                            .Where(x => x.KeyCode == "test")
-                                            .ToList();
+                cmd.On("spname").Set();
+                rst = cmd.ExecuteResult();
                 
-                paramCount = cmd.Parameters.Count;
-                paramValue = cmd.Parameters[0].Value;
             }
 
-            Assert.That(paramCount, Is.EqualTo(1));
-            Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
+            Assert.IsTrue(rst!.IsSuccess);
         }
 
-        [Test]
-        public void Entity_Test_Select_Case2()
-        {
-            IContext context = new DbContext(this.connStr);
-
-            List<GlobalCode> list = new List<GlobalCode>();
-            int paramCount = 0;
-            object paramValue = default!;
-
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
-            {
-                var rst = Entity<GlobalCode>.Run.On(cmd)
-                                            .Select()
-                                            .Where(x => x.KeyCode == "test")
-                                            .And(x => x.IsEnabled)
-                                            .ToList();
-
-                paramCount = cmd.Parameters.Count;
-                paramValue = cmd.Parameters[0].Value;
-            }
-
-            Assert.That(paramCount, Is.EqualTo(2));
-            Assert.That(Convert.ToString(paramValue), Is.EqualTo("test"));
-        }
-
-        [Test]
-        public void Entity_Test_Select_Case3()
-        {
-            IContext context = new DbContext(this.connStr);
-
-            int cnt = 0;
-            string strValue = string.Empty;
-
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
-            {
-                var dt = Entity.Run.On(cmd)
-                                     .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                                     .ToList();
-
-                if (dt != null && dt.Rows.Count > 0)
-                {
-                    cnt = dt.Rows.Count;
-                    foreach(DataRow row in dt.Rows)
-                    {
-                        strValue = row["title"].ToString();
-                        break;
-                    }
-                }
-            }
-
-            Assert.That(cnt, Is.EqualTo(2));
-            Assert.That(Convert.ToString(strValue), Is.EqualTo("Test"));
-        }
-
-        [Test]
-        public void Entity_Test_Select_Case4()
-        {
-            IContext context = new DbContext(this.connStr);
-
-            int idx = 0;
-            string strValue = string.Empty;
-
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
-            {
-                var recode = Entity.Run.On(cmd)
-                                       .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                                       .ToEntity();
-
-                if (recode != null)
-                {
-                    idx = Convert.ToInt32(recode["idx"]);
-                    strValue = Convert.ToString(recode["title"]);
-                }
-            }
-
-            Assert.That(idx, Is.EqualTo(1));
-            Assert.That(Convert.ToString(strValue), Is.EqualTo("Test"));
-        }
-
-        [Test]
-        public void Entity_Test_Select_Case5()
-        {
-            IContext context = new DbContext(this.connStr);
-
-            int cnt = 0;
-            string strValue = string.Empty;
-
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
-            {
-                var dt = Entity.Run.On(cmd)
-                                   .StoredProcedure("sp_server_info")
-                                   //.AddParameter("@name", SqlDbType.VarChar, "test", 50)
-                                   .ToList();
-
-                if (dt != null && dt.Rows.Count > 0)
-                {
-                    cnt = dt.Rows.Count;
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        strValue = row[1].ToString();
-                        break;
-                    }
-                }
-            }
-
-            Assert.That(cnt, Is.EqualTo(29));
-            Assert.That(Convert.ToString(strValue), Is.EqualTo("DBMS_NAME"));
-        }
     }
 }
