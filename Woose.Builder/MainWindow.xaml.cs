@@ -537,7 +537,16 @@ namespace Woose.Builder
 
         private void Btn_Reload_Click(object sender, RoutedEventArgs e)
         {
-
+            Database? selectedDatabase = viewModel.SelectedDatabase;
+            if (selectedDatabase == null)
+            {
+                MessageBox.Show("대상을 선택해 주세요.", "Alert", MessageBoxButton.OK);
+            }
+            else
+            {
+                this.context = new DbContext(selectedDatabase.ConnectionString);
+                this.onLoad();
+            }
         }
 
         private void Btn_AlterProject_Click(object sender, RoutedEventArgs e)
