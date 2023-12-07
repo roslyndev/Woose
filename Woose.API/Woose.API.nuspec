@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Woose.API</id>
+    <version>1.0.2</version>
+    <title>Woose API Library</title>
+    <authors>https://parkheesung.github.io</authors>
+    <owners>Parkheesung</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/parkheesung/Woose</projectUrl>
+    <iconUrl>https://ko.gravatar.com/userimage/174965688/6f5f295bad0e3eb61298885602b9c318?size=200</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>.Net7 Library for ASP.NET MVC</description>
+    <releaseNotes>Target Framework .Net7 Downgrade</releaseNotes>
+    <copyright>Copyright 2023</copyright>
+    <tags>ASP.NET, .net7, MVC, Library, Woose</tags>
+  <dependencies>
+    <group targetFramework="net7.0">
+		<dependency id="Woose.Core" version="1.0.8" />
+		<dependency id="Woose.Data" version="1.0.8" />
+		<dependency id="System.Data.SqlClient" version="4.8.5" />
+		<dependency id="Newtonsoft.Json" version="13.0.3" />
+		<dependency id="Microsoft.AspNetCore.Authentication.JwtBearer" version="7.0.14" />
+    </group>
+  </dependencies>
+  </metadata>
+</package>

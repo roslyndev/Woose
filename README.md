@@ -70,13 +70,10 @@ public class GlobalCode : BaseEntity, IEntity
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    var instance = Entity<TableEntity>.Run.On(handler)
-                                        .Select(1)
-                                        .Where(x => x.ColumnA == "Value1")
-                                        .And(x => x.ColumnB == "Value2")
-                                        .ToEntity();
+    cmd.On<TableEntity>().Select(1).Where("ColumnA", Value1).Set();
+    result = cmd.ExecuteEntity<TableEntity>();
 }
 ```
 
@@ -85,42 +82,22 @@ using (var handler = new SqlDbOperater(db))
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    var list = Entity<TableEntity>.Run.On(handler)
-                                    .Select()
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .ToList();
+	cmd.On<TableEntity>().Select().Where("ColumnA", Value1).Set();
+	result = cmd.ExecuteEntities<TableEntity>();
 }
 ```
-
-### Select Async (multi line)
-
-```csharp
-using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
-{
-    var list = await Entity<TableEntity>.Run.On(handler)
-                                    .Select()
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .ToListAsync();
-}
-```
-
 
 ### Paging (multi line)
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    var list = Entity<TableEntity>.Run.On(handler)
-                                    .Paging(10, 1)  // ({PageSize},{CurrentPage})
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .ToList();
+    // ({PageSize},{CurrentPage})
+	cmd.On<TableEntity>().Paging(10, paramData.CurPage).Where("ColumnA", Value1).Set();
+	result = cmd.ExecuteEntities<TableEntity>();
 }
 ```
 
@@ -129,13 +106,10 @@ using (var handler = new SqlDbOperater(db))
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    int count = Entity<TableEntity>.Run.On(handler)
-                                    .Count()
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .ToCount();
+	cmd.On<TableEntity>().Count().Where("ColumnA", Value1).Set();
+	result = cmd.ExecuteCount();
 }
 ```
 
@@ -143,11 +117,10 @@ using (var handler = new SqlDbOperater(db))
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    var rst = Entity<TableEntity>.Run.On(handler)
-                                    .Insert(tableEntityInstance)
-                                    .ToResult<ExecuteResult>() as ExecuteResult;   //ExecuteResult : IFeedback
+	cmd.On<TableEntity>(tableEntityInstance).Insert().Try().Set();
+	result = cmd.ExecuteResult();
 }
 ```
 
@@ -155,13 +128,10 @@ using (var handler = new SqlDbOperater(db))
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    var rst = Entity<TableEntity>.Run.On(handler)
-                                    .Update(tableEntityInstance)
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .ToResult<ExecuteResult>() as ExecuteResult;   //ExecuteResult : IFeedback
+	cmd.On<TableEntity>(tableEntityInstance).Update().Try().Where("idx", tableEntityInstance.idx).Set();
+	result = cmd.ExecuteResult();
 }
 ```
 
@@ -169,80 +139,9 @@ using (var handler = new SqlDbOperater(db))
 
 ```csharp
 using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
+using (var cmd = db.CreateCommand())
 {
-    var rst = Entity<TableEntity>.Run.On(handler)
-                                    .Delete()
-                                    .Where(x => x.ColumnA == "Value1")
-                                    .And(x => x.ColumnB == "Value2")
-                                    .ToResult<ReturnValue>() as ReturnValue;   //ReturnValue : IFeedback
-}
-```
-
-
-다음은 Entity가 규정되지 않은 경우입니다.
-
-### Select (multi line)
-
-```csharp
-using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
-{
-    var dt = Entity.Run.On(handler)
-                            .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                            .ToList();
-
-    if (dt != null && dt.Rows.Count > 0)
-    {
-        cnt = dt.Rows.Count;
-        foreach(DataRow row in dt.Rows)
-        {
-            strValue = row["title"].ToString();
-            break;
-        }
-    }
-}
-```
-
-
-### Select (single line)
-
-```csharp
-using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
-{
-    var recode = Entity.Run.On(handler)
-                            .Query("select 1 as [idx], 'Test' as [title] union select 2, 'sample'")
-                            .ToEntity();
-
-    if (recode != null)
-    {
-        idx = Convert.ToInt32(recode["idx"]);
-        strValue = Convert.ToString(recode["title"]);
-    }
-}
-```
-
-
-### Stored Procedure
-
-```csharp
-using (var db = context.getConnection())
-using (var handler = new SqlDbOperater(db))
-{
-    var dt = Entity.Run.On(handler)
-                        .StoredProcedure("sp_server_info")
-                        //.AddParameter("@name", SqlDbType.VarChar, "test", 50)
-                        .ToList();
-
-    if (dt != null && dt.Rows.Count > 0)
-    {
-        cnt = dt.Rows.Count;
-        foreach (DataRow row in dt.Rows)
-        {
-            strValue = row[1].ToString();
-            break;
-        }
-    }
+	cmd.On<TableEntity>().Delete().Try().Where("ColumnA", Value1).Set();
+	result = cmd.ExecuteResult();
 }
 ```

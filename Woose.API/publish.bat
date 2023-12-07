@@ -3,5 +3,5 @@ dotnet pack
 cd .\bin\Release
 rd /s /q .\lib
 mkdir lib
-move .\netstandard2.1 .\lib
+move .\net7.0 .\lib
 del *.nupkg
