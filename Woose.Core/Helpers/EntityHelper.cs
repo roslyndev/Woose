@@ -16,6 +16,58 @@ namespace Woose.Core
             return type.GetProperties();
         }
 
+        public static IEntity? CreateInstance(string className)
+        {
+            try
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                Type type = assembly.GetType(className);
+                if (type != null)
+                {
+                    return Activator.CreateInstance(type) as IEntity;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static bool CompareEntity<T,U>(T entity1, U entity2)
+        {
+            try
+            {
+                var type1 = typeof(T);
+                var type2 = typeof(U);
+
+                var properties1 = type1.GetProperties().Select(p => p.Name);
+                var properties2 = type2.GetProperties().Select(p => p.Name);
+
+
+                return properties2.All(properties1.Contains);
+            }
+            catch { return false; }
+        }
+
+        public static bool CompareEntity<T, U>(List<T> entity1, List<U> entity2)
+        {
+            try
+            {
+                var type1 = typeof(T);
+                var type2 = typeof(U);
+
+                var properties1 = type1.GetProperties().Select(p => p.Name);
+                var properties2 = type2.GetProperties().Select(p => p.Name);
+
+
+                return properties2.All(properties1.Contains);
+            }
+            catch { return false; }
+        }
 
         public static List<T> ColumnToEntities<T>(DataTable data) where T : new()
         {

@@ -55,6 +55,22 @@ namespace Woose.Data
             return result;
         }
 
+        public static int ExecuteCount(this SqlCommand cmd)
+        {
+            int result = 0;
+            
+            try
+            {
+                result = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+            catch
+            {
+                result = 0;
+            }
+
+            return result;
+        }
+
         public static void Set(this SqlParameterCollection Parameter, string Name, SqlDbType type, object? Value)
         {
             Parameter.Add(Name, type);

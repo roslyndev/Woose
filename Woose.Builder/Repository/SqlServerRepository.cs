@@ -1,5 +1,6 @@
 ﻿using Woose.Core;
 using Woose.Data;
+using Woose.Data.Entities;
 
 namespace Woose.Builder
 {
@@ -137,6 +138,90 @@ order by B.[depid] desc";
             return result;
         }
 
+
+        public DbEntity? Find(List<DbEntity> tables, List<SpOutput> spoutput)
+        {
+            if (tables != null && tables.Count > 0)
+            {
+                int num = 0;
+                int i = 0;
+
+                foreach (var table in tables)
+                {
+                    if (table != null)
+                    {
+                        try
+                        {
+                            num = 0;
+                            i = 0;
+                            var properties = this.GetTableProperties(table.name);
+                            if (properties != null)
+                            {
+                                foreach (var info in properties)
+                                {
+                                    num += (spoutput.Where(x => x.name.Equals(info.ColumnName, StringComparison.OrdinalIgnoreCase)).Count() > 0) ? 1 : 0;
+                                    i++;
+                                }
+
+                                if (num == i)
+                                {
+                                    return table;
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public DbEntity? Find(List<SpOutput> spoutput)
+        {
+            List<DbEntity> tables = this.GetTableEntities();
+
+            if (tables != null && tables.Count > 0)
+            {
+                int num = 0;
+                int i = 0;
+
+                foreach (var table in tables)
+                {
+                    if (table != null)
+                    {
+                        try
+                        {
+                            num = 0;
+                            i = 0;
+                            var properties = this.GetTableProperties(table.name);
+                            if (properties != null)
+                            {
+                                foreach (var info in properties)
+                                {
+                                    num += (spoutput.Where(x => x.name.Equals(info.ColumnName, StringComparison.OrdinalIgnoreCase)).Count() > 0) ? 1 : 0;
+                                    i++;
+                                }
+
+                                if (num == i)
+                                {
+                                    return table;
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
 
 
         protected virtual void Dispose(bool disposing)
