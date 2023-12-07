@@ -7,8 +7,8 @@
     <authors>https://parkheesung.github.io</authors>
     <owners>Parkheesung</owners>
     <license type="expression">MIT</license>
-    <projectUrl>https://github.com/parkheesung/Woose</projectUrl>
-    <iconUrl>https://ko.gravatar.com/userimage/174965688/6f5f295bad0e3eb61298885602b9c318?size=200</iconUrl>
+    <projectUrl>https://github.com/roslyndev/Woose</projectUrl>
+    <iconUrl>https://ko.gravatar.com/userimage/174965688/793d45b41bb23c8ffbf748ff8cfae42b.jpeg?size=200</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.Net7 Library for ASP.NET MVC</description>
     <releaseNotes>Target Framework .Net7 Downgrade</releaseNotes>
