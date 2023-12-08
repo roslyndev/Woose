@@ -103,6 +103,120 @@ order by A.parameter_id asc";
             return result;
         }
 
+        public void ClearDatabase()
+        {
+            string query = @$"
+-- 모든 뷰 삭제
+DECLARE @viewName NVARCHAR(MAX);
+DECLARE viewCursor CURSOR FOR
+SELECT name
+FROM sys.views; -- 모든 뷰를 선택
+
+OPEN viewCursor;
+FETCH NEXT FROM viewCursor INTO @viewName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    EXEC('DROP VIEW ' + @viewName);
+    FETCH NEXT FROM viewCursor INTO @viewName;
+END;
+
+CLOSE viewCursor;
+DEALLOCATE viewCursor;
+
+-- 모든 저장 프로시저(SP) 삭제
+DECLARE @spName NVARCHAR(MAX);
+DECLARE spCursor CURSOR FOR
+SELECT name
+FROM sys.objects
+WHERE type = 'P'; -- 모든 저장 프로시저를 선택
+
+OPEN spCursor;
+FETCH NEXT FROM spCursor INTO @spName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    EXEC('DROP PROCEDURE ' + @spName);
+    FETCH NEXT FROM spCursor INTO @spName;
+END;
+
+CLOSE spCursor;
+DEALLOCATE spCursor;
+
+-- 모든 테이블 반환 함수 삭제
+DECLARE @tableFunctionName NVARCHAR(MAX);
+DECLARE tableFunctionCursor CURSOR FOR
+SELECT name
+FROM sys.objects
+WHERE type = 'TF'; -- 모든 테이블 반환 함수를 선택
+
+OPEN tableFunctionCursor;
+FETCH NEXT FROM tableFunctionCursor INTO @tableFunctionName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    EXEC('DROP FUNCTION ' + @tableFunctionName);
+    FETCH NEXT FROM tableFunctionCursor INTO @tableFunctionName;
+END;
+
+CLOSE tableFunctionCursor;
+DEALLOCATE tableFunctionCursor;
+
+-- 모든 스칼라 반환 함수 삭제
+DECLARE @scalarFunctionName NVARCHAR(MAX);
+DECLARE scalarFunctionCursor CURSOR FOR
+SELECT name
+FROM sys.objects
+WHERE type = 'FN'; -- 모든 스칼라 반환 함수를 선택
+
+OPEN scalarFunctionCursor;
+FETCH NEXT FROM scalarFunctionCursor INTO @scalarFunctionName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    EXEC('DROP FUNCTION ' + @scalarFunctionName);
+    FETCH NEXT FROM scalarFunctionCursor INTO @scalarFunctionName;
+END;
+
+CLOSE scalarFunctionCursor;
+DEALLOCATE scalarFunctionCursor;
+
+-- 모든 테이블 삭제
+DECLARE @tableName NVARCHAR(MAX);
+DECLARE tableCursor CURSOR FOR
+SELECT name
+FROM sys.objects
+WHERE type = 'U'; -- 모든 테이블을 선택
+
+OPEN tableCursor;
+FETCH NEXT FROM tableCursor INTO @tableName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    EXEC('DROP TABLE ' + @tableName);
+    FETCH NEXT FROM tableCursor INTO @tableName;
+END;
+
+CLOSE tableCursor;
+DEALLOCATE tableCursor;
+";
+            using (var db = context.getConnection())
+            using (var cmd = db.CreateCommand())
+            {
+                try
+                {
+                    cmd.CommandText = query;
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    cmd.CommandTimeout = 1000 * 60 * 2;
+                    cmd.ExecuteNonQuery();
+                }
+                catch
+                {
+
+                }
+            }
+        }
+
         public List<SpTable> GetSPTables(string spName)
         {
             var result = new List<SpTable>();

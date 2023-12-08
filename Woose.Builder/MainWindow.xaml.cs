@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Options;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -498,40 +499,59 @@ namespace Woose.Builder
 
         private void Btn_CodeCopy_Click(object sender, RoutedEventArgs e)
         {
-            TabItem languageTab = Languages.SelectedItem as TabItem; // 현재 선택된 탭을 가져옵니다.
-
-            if (languageTab != null)
+            RichTextBox selectedEditor = GetCurrentBox();
+            if (selectedEditor != null)
             {
-                switch (languageTab.Header.ToString())
-                {
-                    case "ASP.NET":
-                        TabItem selectedTab = AspNetOptions.SelectedItem as TabItem;
-                        if (selectedTab != null)
-                        {
-                            RichTextBox selectedEditor = selectedTab.Content as RichTextBox; // 선택한 탭의 RichTextBox를 가져옵니다.
-
-                            if (selectedEditor != null)
-                            {
-                                // RichTextBox의 내용을 클립보드에 복사합니다.
-                                Clipboard.SetText(new TextRange(selectedEditor.Document.ContentStart, selectedEditor.Document.ContentEnd).Text);
-                                MessageBox.Show("복사했습니다.", "Success", MessageBoxButton.OK);
-                            }
-                        }
-                        break;
-                    default:
-                        MessageBox.Show("대상을 선택해 주세요.", "Warning", MessageBoxButton.OK);
-                        break;
-                }
+                Clipboard.SetText(new TextRange(selectedEditor.Document.ContentStart, selectedEditor.Document.ContentEnd).Text);
+                MessageBox.Show("복사했습니다.", "Success", MessageBoxButton.OK);
             }
-
-
+            else
+            {
+                MessageBox.Show("대상을 선택해 주세요.", "Warning", MessageBoxButton.OK);
+            }
         }
 
         private void Btn_NameCopy_Click(object sender, RoutedEventArgs e)
         {
             if (option != null && option.target != null && !string.IsNullOrWhiteSpace(option.target.name))
             {
-                Clipboard.SetText(option.target.name);
+                TabItem languageTab = Languages.SelectedItem as TabItem;
+                if (languageTab != null)
+                {
+                    option.Language = languageTab.Header.ToString();
+                }
+
+                TabItem selectedTab;
+                string filename = string.Empty;
+
+                switch ((this.option?.Language ?? "").Trim().ToUpper())
+                {
+                    case "ASP.NET":
+                        filename = $"{option.target.name}";
+                        break;
+                    case "JAVA":
+                        filename = $"{option.target.name}";
+                        break;
+                    case "DATABASE":
+                        filename = $"USP_{option.target.name}_Save";
+                        break;
+                    case "TYPESCRIPT":
+                        filename = $"{option.target.name}";
+                        break;
+                    case "NODE.JS":
+                        filename = $"{option.target.name}";
+                        break;
+                    case "VUE.JS":
+                        filename = $"{option.target.name}";
+                        break;
+                    case "REACT.JS":
+                        filename = $"{option.target.name}";
+                        break;
+                    case "HTML":
+                        filename = $"{option.target.name}";
+                        break;
+                }
+                Clipboard.SetText(filename);
                 MessageBox.Show("복사했습니다.", "Success", MessageBoxButton.OK);
             }
         }
@@ -553,6 +573,67 @@ namespace Woose.Builder
         private void Btn_AlterProject_Click(object sender, RoutedEventArgs e)
         {
             Btn_AlterProject_Click_Async().Wait();
+        }
+
+        private void Btn_CreateAllSpFile_Click(object sender, RoutedEventArgs e)
+        {
+            Btn_CreateAllSpFile_Click_Async().Wait();
+        }
+
+        private void Btn_CreateSpFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.IsConnection)
+            {
+                if (option.target != null && !string.IsNullOrWhiteSpace(option.target.name))
+                {
+                    string selectedFolderPath = ShowFolderDialog();
+
+                    if (!string.IsNullOrEmpty(selectedFolderPath))
+                    {
+                        if (!Directory.Exists(selectedFolderPath))
+                        {
+                            MessageBox.Show($"대상 위치를 찾을 수 없습니다.");
+                        }
+                        else
+                        {
+                            try
+                            {
+                                MsSqlCreater creater = new MsSqlCreater();
+
+                                if (!Directory.Exists($"{selectedFolderPath}\\StoredProcedures"))
+                                {
+                                    Directory.CreateDirectory($"{selectedFolderPath}\\StoredProcedures");
+                                }
+
+                                using (var rep = new SqlServerRepository(context))
+                                {
+                                    var list = rep.GetTableProperties(option.target.name);
+
+                                    if (!File.Exists($"{selectedFolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql"))
+                                    {
+                                        File.Create($"{selectedFolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql", creater.CreateSaveSP(option, list));
+                                }
+
+                                MessageBox.Show($"SP가 작성되었습니다.");
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message.ToString());
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"대상을 선택해 주세요.");
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
         }
 
         private async Task Btn_AlterProject_Click_Async()
@@ -794,6 +875,64 @@ namespace Woose.Builder
             }
         }
 
+        private async Task Btn_CreateAllSpFile_Click_Async()
+        {
+            if (this.IsConnection)
+            {
+                string selectedFolderPath = ShowFolderDialog();
+
+                if (!string.IsNullOrEmpty(selectedFolderPath))
+                {
+                    if (!Directory.Exists(selectedFolderPath))
+                    {
+                        MessageBox.Show($"대상 위치를 찾을 수 없습니다.");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            MsSqlCreater creater = new MsSqlCreater();
+
+                            await Task.Factory.StartNew(() =>
+                            {
+                                if (!Directory.Exists($"{selectedFolderPath}\\StoredProcedures"))
+                                {
+                                    Directory.CreateDirectory($"{selectedFolderPath}\\StoredProcedures");
+                                }
+                            }).ConfigureAwait(false);
+
+                            using (var rep = new SqlServerRepository(context))
+                            {
+                                foreach (var entity in this.viewModel.entities)
+                                {
+                                    var list = rep.GetTableProperties(entity.name);
+
+                                    await Task.Factory.StartNew(() =>
+                                    {
+                                        if (!File.Exists($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql"))
+                                        {
+                                            File.Create($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql").Close();
+                                        }
+                                        File.WriteAllText($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql", creater.CreateSaveSP(option, list));
+                                    }).ConfigureAwait(false);
+                                }
+                            }
+
+                            MessageBox.Show($"SP가 모두 작성되었습니다.");
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message.ToString());
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
+        }
+
         private string ShowFolderDialog()
         {
             var dialog = new Microsoft.Win32.SaveFileDialog
@@ -962,5 +1101,281 @@ namespace Woose.Builder
         {
             this.option.UseMultiApi = false;
         }
+
+        private RichTextBox GetCurrentBox()
+        {
+            RichTextBox? result = null;
+            TabItem? selectedTab = null;
+
+            TabItem languageTab = Languages.SelectedItem as TabItem;
+            if (languageTab != null)
+            {
+                option.Language = languageTab.Header.ToString();
+            }
+
+            switch ((this.option?.Language ?? "").Trim().ToUpper())
+            {
+                case "ASP.NET":
+                    selectedTab = AspNetOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            result = AspNetEntity;
+                            break;
+                        case "CONTROLLER":
+                            result = AspNetController;
+                            break;
+                        case "ABSTRACT":
+                            result = AspNetAbstract;
+                            break;
+                        case "REPOSITORY":
+                            result = AspNetRepository;
+                            break;
+                    }
+                    break;
+                case "JAVA":
+                    selectedTab = JavaOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            result = JavaEntity;
+                            break;
+                        case "CONTROLLER":
+                            result = JavaController;
+                            break;
+                        case "ABSTRACT":
+                            result = JavaAbstract;
+                            break;
+                        case "REPOSITORY":
+                            result = JavaRepository;
+                            break;
+                    }
+                    break;
+                case "DATABASE":
+                    selectedTab = SQL.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "MSSQL":
+                            result = MsSqlQuery;
+                            break;
+                        case "MYSQL":
+                            result = MySqlQuery;
+                            break;
+                        case "MONGODB":
+                            result = MongoDbQuery;
+                            break;
+                    }
+                    break;
+                case "TYPESCRIPT":
+                    selectedTab = TypeOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            result = TsEntity;
+                            break;
+                        case "CONTROLLER":
+                            result = TsController;
+                            break;
+                        case "ABSTRACT":
+                            result = TsController;
+                            break;
+                        case "REPOSITORY":
+                            result = TsRepository;
+                            break;
+                    }
+                    break;
+                case "NODE.JS":
+                    selectedTab = NodeOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            result = JsEntity;
+                            break;
+                        case "CONTROLLER":
+                            result = JsController;
+                            break;
+                        case "ABSTRACT":
+                            result = JsAbstract;
+                            break;
+                        case "REPOSITORY":
+                            result = JsRepository;
+                            break;
+                        case "YAML":
+                            result = YAMLBox;
+                            break;
+                    }
+                    break;
+                case "VUE.JS":
+                    selectedTab = VueOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "FORM":
+                            result = VueForm;
+                            break;
+                        case "COMPONENT":
+                            result = VueComponent;
+                            break;
+                    }
+                    break;
+                case "REACT.JS":
+                    selectedTab = ReactOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "FORM":
+                            result = ReactForm;
+                            break;
+                        case "COMPONENT":
+                            result = ReactComponent;
+                            break;
+                    }
+                    break;
+                case "HTML":
+                    selectedTab = HtmlOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "TAILWINDCSSFORM":
+                            result = TailwindCssFormBox;
+                            break;
+                    }
+                    break;
+            }
+
+            return result;
+        }
+
+        private void Btn_DbClear_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show("대상 데이터베이스내에 생성된 모든 테이블과 SP, 뷰, 함수가 삭제됩니다.  진행하시겠습니까?", "Database Clear!!", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                using (var rep = new SqlServerRepository(this.context))
+                {
+                    rep.ClearDatabase();
+                    MessageBox.Show("삭제되었습니다.  하지만, FK 순서에 따라 일부가 삭제되지 않았을 수 있으니, DB Clear 버튼을 연속해서 눌러주세요.");
+                }
+            }
+        }
+
+        private void Btn_FileSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (option.target != null && !string.IsNullOrWhiteSpace(option.target.name))
+            {
+                string selectedFolderPath = ShowFolderDialog();
+                string filename = option.target.name;
+
+                if (!string.IsNullOrEmpty(selectedFolderPath))
+                {
+                    if (Directory.Exists(selectedFolderPath))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}");
+                    }
+
+                    TabItem languageTab = Languages.SelectedItem as TabItem;
+                    if (languageTab != null)
+                    {
+                        option.Language = languageTab.Header.ToString();
+                    }
+
+                    string body = string.Empty;
+                    string extend = "txt";
+
+                    RichTextBox targetBox = GetCurrentBox();
+                    if (targetBox != null)
+                    {
+                        body = new TextRange(targetBox.Document.ContentStart, targetBox.Document.ContentEnd).Text;
+                    }
+
+                    switch ((this.option?.Language ?? "").Trim().ToUpper())
+                    {
+                        case "ASP.NET":
+                            extend = "cs";
+                            break;
+                        case "JAVA":
+                            extend = "java";
+                            break;
+                        case "DATABASE":
+                            extend = "sql";
+                            break;
+                        case "TYPESCRIPT":
+                            extend = "ts";
+                            break;
+                        case "NODE.JS":
+                            extend = "js";
+                            break;
+                        case "VUE.JS":
+                            extend = "vue";
+                            break;
+                        case "REACT.JS":
+                            extend = "tsx";
+                            break;
+                        case "HTML":
+                            extend = "html";
+                            break;
+                    }
+
+                    try
+                    {
+                        if (!File.Exists($"{selectedFolderPath}\\{filename}.{extend}"))
+                        {
+                            File.Create($"{selectedFolderPath}").Close();
+                        }
+                        File.WriteAllText($"{selectedFolderPath}\\{filename}.{extend}", body);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"{ex.Message}.  {selectedFolderPath}");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"올바른 위치를 지정해 주세요[1].");
+                }
+            }
+            else
+            {
+                MessageBox.Show($"대상을 지정해 주세요.");
+            }
+        }
+
     }
 }
