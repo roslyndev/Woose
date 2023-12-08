@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using Woose.Core;
 
 namespace Woose.Builder
 {
@@ -21,6 +20,8 @@ namespace Woose.Builder
 
         private List<Database> _databases;
 
+        private bool _IsProc = false;
+
         public List<Database> Databases
         {
             get { return _databases; }
@@ -35,6 +36,22 @@ namespace Woose.Builder
         }
 
         private Database? _selectedDatabase;
+
+        public bool IsProc
+        {
+            get
+            {
+                return _IsProc;
+            }
+            set
+            {
+                if (_IsProc != value)
+                {
+                    _IsProc = value;
+                    OnPropertyChanged(nameof(IsProc));
+                }
+            }
+        }
 
         public Database? SelectedDatabase
         {

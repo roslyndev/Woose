@@ -12,6 +12,10 @@ namespace Woose.Builder
         {
         }
 
+        public string[] Functions = new string[] { "Split", "GenerateCustomCode" };
+
+        public string[] Views = new string[] { "SystemInfo" };
+
         public string CreateSaveSP(BindOption options, List<DbTableInfo> info)
         {
             StringBuilder builder = new StringBuilder(200);
@@ -280,6 +284,96 @@ namespace Woose.Builder
             }
 
             return builder.ToString();
+        }
+
+        public string CreateCommon(string common)
+        {
+            string result = string.Empty;
+
+            switch (common) {
+                case "Split":
+                    result = @"
+Create FUNCTION [dbo].[Split]
+(
+@str varchar(8000)
+, @chr char(1)
+)
+RETURNS @Split_tmp TABLE (idx int identity(1,1), Value varchar(300))
+AS
+BEGIN
+Declare
+@oPos int
+, @nPos int
+, @tmpVar varchar(8000)
+
+set @oPos = 1
+set @nPos = 1
+
+while(@nPos > 0)
+begin
+set @nPos = Charindex(@chr,@str,@oPos)
+
+if (@nPos = 0)
+set @tmpVar = Right(@str,len(@str) - @oPos * 1 + 1)
+else
+set @tmpVar = Substring(@str,@oPos,@nPos - @oPos)
+
+
+if len(@tmpVar) > 0
+insert into @Split_tmp values (@tmpVar)
+
+set @oPos = @nPos + 1
+end
+
+RETURN
+END
+                    ";
+                    break;
+                case "SystemInfo":
+                    result = @"
+CREATE VIEW [dbo].[SystemData]
+AS
+select A.*
+from (
+	select newid() as [GUID], getdate() as [NowDate],rand() as [Random]
+) as A
+                    ";
+                    break;
+                case "GenerateCustomCode":
+                    result = @"
+CREATE FUNCTION dbo.GenerateCustomCode(@InputString VARCHAR(20))
+RETURNS VARCHAR(50)
+AS
+BEGIN
+    DECLARE @OrderDate CHAR(6) = FORMAT(GETDATE(), 'yyMMdd');
+    DECLARE @RandomString NVARCHAR(20);
+
+    DECLARE @UppercaseChars NVARCHAR(26) = N'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    DECLARE @Numbers NVARCHAR(10) = N'0123456789';
+
+    SET @RandomString = ''
+
+    DECLARE @Counter INT = 1;
+    WHILE @Counter <= 10  -- 랜덤 문자열 길이
+    BEGIN
+        SELECT @RandomString = @RandomString +
+            SUBSTRING(@UppercaseChars, ABS(CHECKSUM(CAST([GUID] AS VARCHAR(36)) + @InputString)) % LEN(@UppercaseChars) + 1, 1)
+            + SUBSTRING(@Numbers, ABS(CHECKSUM(CAST([GUID] AS VARCHAR(36)) + @InputString)) % LEN(@Numbers) + 1, 1)
+        FROM [SystemData];
+
+        SET @Counter = @Counter + 1;
+    END
+
+    -- 최종 결과 코드 생성 및 반환
+    RETURN @InputString + '-' + @OrderDate + '-' + @RandomString;
+END;
+
+                    ";
+                    break;
+            }
+
+
+            return result;
         }
     }
 }

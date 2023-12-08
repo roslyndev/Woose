@@ -27,6 +27,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Background="{StaticResource PastelBeige}">
@@ -209,6 +210,7 @@
                                 <Button x:Name="Btn_Db_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center"></Button>
                                 <Button x:Name="Btn_SaveSp_Output" Content="현재SP저장" Width="100" Style="{StaticResource OrangeButton}" Click="Btn_CreateSpFile_Click" VerticalAlignment="Center" Margin="5,0,0,0"></Button>
                                 <Button x:Name="Btn_SaveSp_All_Output" Content="저장SP모두생성" Width="120" Style="{StaticResource OrangeButton}" Click="Btn_CreateAllSpFile_Click" VerticalAlignment="Center" Margin="5,0,0,0"></Button>
+                                <Button x:Name="Btn_Common_Output" Content="공용요소생성" Width="100" Style="{StaticResource BlueButton}" Click="Btn_CommonFile_Click" VerticalAlignment="Center" Margin="5,0,0,0"></Button>
                             </StackPanel>
                         </Grid>
                         <Grid Grid.Row="1">
@@ -462,12 +464,14 @@
                 <Button x:Name="Btn_Export" Content="내보내기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Export_Click"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="Btn_Test" Content="TEST" Width="120" Style="{StaticResource PinkButton}" Margin="5" Click="Btn_Test_Click"/>
                 <Button x:Name="Btn_FileSave" Content="DB Clear" Width="120" Style="{StaticResource PinkButton}" Margin="5" Click="Btn_DbClear_Click"/>
                 <Button x:Name="Btn_Reload" Content="다시 불러오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Reload_Click"/>
                 <Button x:Name="Btn_NameCopy" Content="개체명 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5" Click="Btn_NameCopy_Click"/>
                 <Button x:Name="Btn_CodeCopy" Content="코드 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5" Click="Btn_CodeCopy_Click"/>
             </StackPanel>
+        </Grid>
+        <Grid Grid.Row="3">
+            <ProgressBar x:Name="BottomBar" Grid.Row="1" IsIndeterminate="{Binding IsProc}" Height="10" Margin="5" />
         </Grid>
     </Grid>
 </Window>

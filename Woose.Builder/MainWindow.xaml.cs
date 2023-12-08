@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -52,6 +53,8 @@ namespace Woose.Builder
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private Thread? worker = null;
 
 
         #region [ Database Changed ]
@@ -185,36 +188,55 @@ namespace Woose.Builder
             if (openFileDialog.ShowDialog() == true)
             {
                 string filePath = openFileDialog.FileName;
-                try
-                {
-                    string fileContents = File.ReadAllText(filePath, Encoding.UTF8);
-                    if (!string.IsNullOrWhiteSpace(fileContents))
-                    {
-                        List<Database> list = JsonConvert.DeserializeObject<List<Database>>(fileContents);
-                        if (list != null && list.Count > 0)
-                        {
-                            foreach (var item in list)
-                            {
-                                this.db.InsertDatabase(item);
-                            }
 
-                            MessageBox.Show($"총 {list.Count}개의 Database가 등록되었습니다.", "성공", MessageBoxButton.OK);
-                            this.viewModel.RefreshDatabases();
-                        }
-                        else
+                Loading(true);
+
+                worker = new Thread(new ParameterizedThreadStart((path) => {
+                    Btn_Import_Proc(path);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        worker = null;
+                        Loading(false);
+                    });
+                }));
+
+                worker.Start(filePath);
+            }
+        }
+
+        private void Btn_Import_Proc(object paramData)
+        {
+            try
+            {
+                string filePath = Convert.ToString(paramData);
+                string fileContents = File.ReadAllText(filePath, Encoding.UTF8);
+                if (!string.IsNullOrWhiteSpace(fileContents))
+                {
+                    List<Database> list = JsonConvert.DeserializeObject<List<Database>>(fileContents);
+                    if (list != null && list.Count > 0)
+                    {
+                        foreach (var item in list)
                         {
-                            MessageBox.Show($"올바른 형식이 아닙니다.", "오류", MessageBoxButton.OK);
+                            this.db.InsertDatabase(item);
                         }
+
+                        MessageBox.Show($"총 {list.Count}개의 Database가 등록되었습니다.", "성공", MessageBoxButton.OK);
+                        this.viewModel.RefreshDatabases();
                     }
                     else
                     {
-                        MessageBox.Show($"내용이 없습니다.", "오류", MessageBoxButton.OK);
+                        MessageBox.Show($"올바른 형식이 아닙니다.", "오류", MessageBoxButton.OK);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"파일 읽기 중 오류 발생: {ex.Message}", "오류", MessageBoxButton.OK);
+                    MessageBox.Show($"내용이 없습니다.", "오류", MessageBoxButton.OK);
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"파일 읽기 중 오류 발생: {ex.Message}", "오류", MessageBoxButton.OK);
             }
         }
 
@@ -231,19 +253,31 @@ namespace Woose.Builder
             // 사용자가 파일을 선택하고 확인 버튼을 누르면 저장 경로 및 파일명을 가져옵니다.
             if (saveFileDialog.ShowDialog() == true)
             {
-                string selectedFilePath = saveFileDialog.FileName;
-                var list = this.db.GetDatabases();
-                string jsonString = JsonConvert.SerializeObject(list);
-                try
-                {
-                    File.WriteAllText(selectedFilePath, jsonString, Encoding.UTF8);
+                Loading(true);
 
-                    MessageBox.Show("파일이 성공적으로 저장되었습니다.", "성공", MessageBoxButton.OK);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"파일 저장 중 오류 발생: {ex.Message}", "오류", MessageBoxButton.OK);
-                }
+                worker = new Thread(new ParameterizedThreadStart((path) => {
+                    string selectedFilePath = Convert.ToString(path);
+                    var list = this.db.GetDatabases();
+                    string jsonString = JsonConvert.SerializeObject(list);
+                    try
+                    {
+                        File.WriteAllText(selectedFilePath, jsonString, Encoding.UTF8);
+
+                        MessageBox.Show("파일이 성공적으로 저장되었습니다.", "성공", MessageBoxButton.OK);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"파일 저장 중 오류 발생: {ex.Message}", "오류", MessageBoxButton.OK);
+                    }
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        worker = null;
+                        Loading(false);
+                    });
+                }));
+
+                worker.Start(saveFileDialog.FileName);
             }
         }
 
@@ -576,20 +610,123 @@ namespace Woose.Builder
 
         private void Btn_AlterProject_Click(object sender, RoutedEventArgs e)
         {
-            Loading(true);
-
-            Task.Run(async () =>
+            if (worker != null && worker.ThreadState != ThreadState.Running)
             {
-                await Btn_AlterProject_Click_Async();
-            }).Wait();
+                MessageBox.Show($"현재 작업중입니다. 잠시만 기다려 주세요.");
+            }
+            else
+            {
+                if (this.IsConnection)
+                {
+                    string selectedFolderPath = ShowFolderDialog();
 
-            Loading(false);
+                    if (!string.IsNullOrEmpty(selectedFolderPath))
+                    {
+                        if (!Directory.Exists(selectedFolderPath) || !File.Exists(selectedFolderPath + "\\appsettings.json"))
+                        {
+                            MessageBox.Show($"프로젝트 설정파일을 찾을 수 없습니다.");
+                        }
+                        else
+                        {
+                            Loading(true);
+
+                            worker = new Thread(new ParameterizedThreadStart((path) => {
+                                Btn_AlterProject_Click_Async(path).Wait();
+
+                                Dispatcher.Invoke(() =>
+                                {
+                                    worker = null;
+                                    Loading(false);
+                                });
+                            }));
+
+                            worker.Start(selectedFolderPath);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+                }
+            }
         }
 
         private void Btn_CreateAllSpFile_Click(object sender, RoutedEventArgs e)
         {
-            Btn_CreateAllSpFile_Click_Async().Wait();
+            if (this.IsConnection)
+            {
+                string selectedFolderPath = ShowFolderDialog();
+
+                if (!string.IsNullOrEmpty(selectedFolderPath))
+                {
+                    if (!Directory.Exists(selectedFolderPath))
+                    {
+                        MessageBox.Show($"대상 위치를 찾을 수 없습니다.");
+                    }
+                    else
+                    {
+                        Loading(true);
+
+                        worker = new Thread(new ParameterizedThreadStart((path) => {
+                            Btn_CreateAllSpFile_Click_Async(path).Wait();
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                worker = null;
+                                Loading(false);
+                            });
+                        }));
+
+                        worker.Start(selectedFolderPath);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
         }
+
+        private async Task Btn_CreateAllSpFile_Click_Async(object paramData)
+        {
+            try
+            {
+                string selectedFolderPath = Convert.ToString(paramData);
+                MsSqlCreater creater = new MsSqlCreater();
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\StoredProcedures"))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}\\StoredProcedures");
+                    }
+                }).ConfigureAwait(false);
+
+                using (var rep = new SqlServerRepository(context))
+                {
+                    foreach (var entity in this.viewModel.entities)
+                    {
+                        var list = rep.GetTableProperties(entity.name);
+
+                        await Task.Factory.StartNew(() =>
+                        {
+                            if (!File.Exists($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql"))
+                            {
+                                File.Create($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql", creater.CreateSaveSP(option, list));
+                        }).ConfigureAwait(false);
+                    }
+                }
+
+                MessageBox.Show($"SP가 모두 작성되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message.ToString());
+            }
+        }
+
 
         private void Btn_CreateSpFile_Click(object sender, RoutedEventArgs e)
         {
@@ -607,32 +744,45 @@ namespace Woose.Builder
                         }
                         else
                         {
-                            try
-                            {
-                                MsSqlCreater creater = new MsSqlCreater();
+                            Loading(true);
 
-                                if (!Directory.Exists($"{selectedFolderPath}\\StoredProcedures"))
+                            worker = new Thread(new ParameterizedThreadStart((path) => {
+                                try
                                 {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\StoredProcedures");
-                                }
+                                    string FolderPath = Convert.ToString(path);
+                                    MsSqlCreater creater = new MsSqlCreater();
 
-                                using (var rep = new SqlServerRepository(context))
-                                {
-                                    var list = rep.GetTableProperties(option.target.name);
-
-                                    if (!File.Exists($"{selectedFolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql"))
+                                    if (!Directory.Exists($"{FolderPath}\\StoredProcedures"))
                                     {
-                                        File.Create($"{selectedFolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql").Close();
+                                        Directory.CreateDirectory($"{FolderPath}\\StoredProcedures");
                                     }
-                                    File.WriteAllText($"{selectedFolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql", creater.CreateSaveSP(option, list));
+
+                                    using (var rep = new SqlServerRepository(context))
+                                    {
+                                        var list = rep.GetTableProperties(option.target.name);
+
+                                        if (!File.Exists($"{FolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql"))
+                                        {
+                                            File.Create($"{FolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql").Close();
+                                        }
+                                        File.WriteAllText($"{FolderPath}\\StoredProcedures\\USP_{option.target.name}_Save.sql", creater.CreateSaveSP(option, list));
+                                    }
+
+                                    MessageBox.Show($"SP가 작성되었습니다.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show(ex.Message.ToString());
                                 }
 
-                                MessageBox.Show($"SP가 작성되었습니다.");
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show(ex.Message.ToString());
-                            }
+                                Dispatcher.Invoke(() =>
+                                {
+                                    worker = null;
+                                    Loading(false);
+                                });
+                            }));
+
+                            worker.Start(selectedFolderPath);
                         }
                     }
                 }
@@ -649,311 +799,229 @@ namespace Woose.Builder
 
         private void Loading(bool chk)
         {
-            if (chk)
-            {
-                AllEnables(false, this);
-            }
-            else
-            {
-                AllEnables(true, this);
-            }
+            viewModel.IsProc = chk;
+            AllEnables(!chk, this);
         }
 
-        private async Task Btn_AlterProject_Click_Async()
+        private async Task Btn_AlterProject_Click_Async(object paramData)
         {
-            if (this.IsConnection)
+            try
             {
-                string selectedFolderPath = ShowFolderDialog();
-
-                if (!string.IsNullOrEmpty(selectedFolderPath))
+                string selectedFolderPath = Convert.ToString(paramData);
+                option.ProjectName = GetProjectName(selectedFolderPath);
+                option.MethodName = GetMethodName(selectedFolderPath);
+                string jsonConfig = File.ReadAllText($"{selectedFolderPath}\\appsettings.json");
+                AppSettings app = new AppSettings();
+                if (!string.IsNullOrWhiteSpace(jsonConfig))
                 {
-                    if (!Directory.Exists(selectedFolderPath) || !File.Exists(selectedFolderPath + "\\appsettings.json"))
+                    app = JsonConvert.DeserializeObject<AppSettings>(jsonConfig);
+                    if (app == null)
                     {
-                        MessageBox.Show($"프로젝트 설정파일을 찾을 수 없습니다.");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            option.ProjectName = GetProjectName(selectedFolderPath);
-                            option.MethodName = GetMethodName(selectedFolderPath);
-                            string jsonConfig = File.ReadAllText($"{selectedFolderPath}\\appsettings.json");
-                            AppSettings app = new AppSettings();
-                            if (!string.IsNullOrWhiteSpace(jsonConfig))
-                            {
-                                app = JsonConvert.DeserializeObject<AppSettings>(jsonConfig);
-                                if (app == null)
-                                {
-                                    app = new AppSettings();
-                                }
-                            }
-
-                            app.AppName = option.ProjectName;
-                            SqlConnectionStringBuilder sql = new SqlConnectionStringBuilder(this.context.GetConnectionString);
-                            sql.ApplicationName = option.ProjectName.Replace(".", "");
-                            app.Database.ConnectionString = sql.ConnectionString;
-                            app.Config.AppID = option.ProjectName.Replace(".","");
-                            app.Config.CookieVar = $"{option.ProjectName}Token";
-                            app.ServerToken = CryptoHelper.SHA256.Encrypt($"W{option.ProjectName.Trim().ToUpper()}O{DateTime.Now.ToString("YYMMDD")}S");
-                            await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app))).ConfigureAwait(false);
-                            
-                            CSharpCreater creater = new CSharpCreater();
-                            await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option, this.viewModel.entities.ToList()))).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\Entities");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!Directory.Exists($"{selectedFolderPath}\\Controllers"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\Controllers");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!Directory.Exists($"{selectedFolderPath}\\Repositories"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\Repositories");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!Directory.Exists($"{selectedFolderPath}\\Abstracts"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\Abstracts");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!Directory.Exists($"{selectedFolderPath}\\Models"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\Models");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!Directory.Exists($"{selectedFolderPath}\\Models\\Parameters"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\Models\\Parameters");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (File.Exists($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs"))
-                                {
-                                    File.Delete($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs");
-                                }
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (File.Exists($"{selectedFolderPath}\\WeatherForecast.cs"))
-                                {
-                                    File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
-                                }
-                            }).ConfigureAwait(false);
-
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!File.Exists($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs"))
-                                {
-                                    File.Create($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs").Close();
-                                }
-                                File.WriteAllText($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs", creater.CreateDefaultController(option, true));
-                            }).ConfigureAwait(false);
-
-
-                            using (var rep = new SqlServerRepository(context))
-                            {
-                                foreach (var entity in this.viewModel.entities)
-                                {
-                                    var list = rep.GetTableProperties(entity.name);
-
-                                    await Task.Factory.StartNew(() =>
-                                    {
-                                        if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
-                                    }).ConfigureAwait(false);
-
-                                    await Task.Factory.StartNew(() =>
-                                    {
-                                        if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, context, true));
-
-                                    }).ConfigureAwait(false);
-
-                                    await Task.Factory.StartNew(() =>
-                                    {
-                                        if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs", creater.CreateAbstract(option, entity, list, true));
-
-                                    }).ConfigureAwait(false);
-
-                                    await Task.Factory.StartNew(() =>
-                                    {
-                                        if (!File.Exists($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs", creater.CreateRepository(option, entity, list, true));
-                                    }).ConfigureAwait(false);
-
-                                }
-
-                                foreach (var sp in this.viewModel.sps)
-                                {
-                                    var inputs = rep.GetSpProperties(sp.name);
-
-                                    await Task.Factory.StartNew(() =>
-                                    {
-                                        if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, inputs, true));
-
-                                    }).ConfigureAwait(false);
-
-                                    await Task.Factory.StartNew(() =>
-                                    {
-                                        var outputs = rep.GetSpOutput(sp.name);
-                                        if (outputs != null && !(outputs.Where(x => x.name.Equals("IsError", StringComparison.OrdinalIgnoreCase)).Count() > 0))
-                                        {
-                                            var objTarget = rep.Find(viewModel.entities.ToList(), outputs);
-                                            if (objTarget == null)
-                                            {
-                                                if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs"))
-                                                {
-                                                    File.Create($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs").Close();
-                                                }
-                                                File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, outputs, true));
-                                            }
-                                        }
-                                    }).ConfigureAwait(false);
-
-                                }
-                            }
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!File.Exists($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs"))
-                                {
-                                    File.Create($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs").Close();
-                                }
-                                File.WriteAllText($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs", creater.CreateProcController(option, this.context, this.viewModel.sps.ToList(), true));
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs"))
-                                {
-                                    File.Create($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs").Close();
-                                }
-                                File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateAbstract(option, this.context, this.viewModel.sps.ToList(), true));
-
-                            }).ConfigureAwait(false);
-
-                            await Task.Factory.StartNew(() =>
-                            {
-                                if (!File.Exists($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs"))
-                                {
-                                    File.Create($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs").Close();
-                                }
-                                File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateDefaultRepository(option, this.context, this.viewModel.sps.ToList(), true));
-
-                            }).ConfigureAwait(false);
-
-                            MessageBox.Show($"프로젝트가 수정되었습니다.");
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.Message.ToString());
-                        }
+                        app = new AppSettings();
                     }
                 }
-            }
-            else
-            {
-                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
-            }
-        }
 
-        private async Task Btn_CreateAllSpFile_Click_Async()
-        {
-            if (this.IsConnection)
-            {
-                string selectedFolderPath = ShowFolderDialog();
+                app.AppName = option.ProjectName;
+                SqlConnectionStringBuilder sql = new SqlConnectionStringBuilder(this.context.GetConnectionString);
+                sql.ApplicationName = option.ProjectName.Replace(".", "");
+                app.Database.ConnectionString = sql.ConnectionString;
+                app.Config.AppID = option.ProjectName.Replace(".", "");
+                app.Config.CookieVar = $"{option.ProjectName}Token";
+                app.ServerToken = CryptoHelper.SHA256.Encrypt($"W{option.ProjectName.Trim().ToUpper()}O{DateTime.Now.ToString("YYMMDD")}S");
+                await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app))).ConfigureAwait(false);
 
-                if (!string.IsNullOrEmpty(selectedFolderPath))
+                CSharpCreater creater = new CSharpCreater();
+                await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option, this.viewModel.entities.ToList()))).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
                 {
-                    if (!Directory.Exists(selectedFolderPath))
+                    if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
                     {
-                        MessageBox.Show($"대상 위치를 찾을 수 없습니다.");
+                        Directory.CreateDirectory($"{selectedFolderPath}\\Entities");
                     }
-                    else
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\Controllers"))
                     {
-                        try
+                        Directory.CreateDirectory($"{selectedFolderPath}\\Controllers");
+                    }
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\Repositories"))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}\\Repositories");
+                    }
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\Abstracts"))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}\\Abstracts");
+                    }
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\Models"))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}\\Models");
+                    }
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\Models\\Parameters"))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}\\Models\\Parameters");
+                    }
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (File.Exists($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs"))
+                    {
+                        File.Delete($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs");
+                    }
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (File.Exists($"{selectedFolderPath}\\WeatherForecast.cs"))
+                    {
+                        File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
+                    }
+                }).ConfigureAwait(false);
+
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!File.Exists($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs"))
+                    {
+                        File.Create($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs", creater.CreateDefaultController(option, true));
+                }).ConfigureAwait(false);
+
+
+                using (var rep = new SqlServerRepository(context))
+                {
+                    foreach (var entity in this.viewModel.entities)
+                    {
+                        var list = rep.GetTableProperties(entity.name);
+
+                        await Task.Factory.StartNew(() =>
                         {
-                            MsSqlCreater creater = new MsSqlCreater();
-
-                            await Task.Factory.StartNew(() =>
+                            if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
                             {
-                                if (!Directory.Exists($"{selectedFolderPath}\\StoredProcedures"))
-                                {
-                                    Directory.CreateDirectory($"{selectedFolderPath}\\StoredProcedures");
-                                }
-                            }).ConfigureAwait(false);
+                                File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
+                        }).ConfigureAwait(false);
 
-                            using (var rep = new SqlServerRepository(context))
+                        await Task.Factory.StartNew(() =>
+                        {
+                            if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
                             {
-                                foreach (var entity in this.viewModel.entities)
-                                {
-                                    var list = rep.GetTableProperties(entity.name);
+                                File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, context, true));
 
-                                    await Task.Factory.StartNew(() =>
+                        }).ConfigureAwait(false);
+
+                        await Task.Factory.StartNew(() =>
+                        {
+                            if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs", creater.CreateAbstract(option, entity, list, true));
+
+                        }).ConfigureAwait(false);
+
+                        await Task.Factory.StartNew(() =>
+                        {
+                            if (!File.Exists($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs", creater.CreateRepository(option, entity, list, true));
+                        }).ConfigureAwait(false);
+
+                    }
+
+                    foreach (var sp in this.viewModel.sps)
+                    {
+                        var inputs = rep.GetSpProperties(sp.name);
+
+                        await Task.Factory.StartNew(() =>
+                        {
+                            if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, inputs, true));
+
+                        }).ConfigureAwait(false);
+
+                        await Task.Factory.StartNew(() =>
+                        {
+                            var outputs = rep.GetSpOutput(sp.name);
+                            if (outputs != null && !(outputs.Where(x => x.name.Equals("IsError", StringComparison.OrdinalIgnoreCase)).Count() > 0))
+                            {
+                                var objTarget = rep.Find(viewModel.entities.ToList(), outputs);
+                                if (objTarget == null)
+                                {
+                                    if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs"))
                                     {
-                                        if (!File.Exists($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql"))
-                                        {
-                                            File.Create($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql").Close();
-                                        }
-                                        File.WriteAllText($"{selectedFolderPath}\\StoredProcedures\\USP_{entity.name}_Save.sql", creater.CreateSaveSP(option, list));
-                                    }).ConfigureAwait(false);
+                                        File.Create($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs").Close();
+                                    }
+                                    File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, outputs, true));
                                 }
                             }
+                        }).ConfigureAwait(false);
 
-                            MessageBox.Show($"SP가 모두 작성되었습니다.");
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.Message.ToString());
-                        }
                     }
                 }
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!File.Exists($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs"))
+                    {
+                        File.Create($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs", creater.CreateProcController(option, this.context, this.viewModel.sps.ToList(), true));
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs"))
+                    {
+                        File.Create($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateAbstract(option, this.context, this.viewModel.sps.ToList(), true));
+
+                }).ConfigureAwait(false);
+
+                await Task.Factory.StartNew(() =>
+                {
+                    if (!File.Exists($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs"))
+                    {
+                        File.Create($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateDefaultRepository(option, this.context, this.viewModel.sps.ToList(), true));
+
+                }).ConfigureAwait(false);
+
+                MessageBox.Show($"프로젝트가 수정되었습니다.");
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+                MessageBox.Show(ex.Message.ToString());
             }
         }
 
@@ -1003,9 +1071,9 @@ namespace Woose.Builder
             {
                 DependencyObject child = VisualTreeHelper.GetChild(parent, i);
 
-                if (child is UIElement)
+                if (child is FrameworkElement frameworkElement && frameworkElement.Name != "BottomBar")
                 {
-                    ((UIElement)child).IsEnabled = enable;
+                    frameworkElement.IsEnabled = enable;
                 }
 
                 AllEnables(enable, child); // 재귀 호출
@@ -1416,11 +1484,84 @@ namespace Woose.Builder
             }
         }
 
-        private void Btn_Test_Click(object sender, RoutedEventArgs e)
+        private void Btn_CommonFile_Click(object sender, RoutedEventArgs e)
         {
-            Loading(true);
-            Thread.Sleep(5000);
-            Loading(false);
+            if (this.IsConnection)
+            {
+                string selectedFolderPath = ShowFolderDialog();
+
+                if (!string.IsNullOrEmpty(selectedFolderPath))
+                {
+                    if (!Directory.Exists(selectedFolderPath))
+                    {
+                        MessageBox.Show($"대상 위치를 찾을 수 없습니다.");
+                    }
+                    else
+                    {
+                        Loading(true);
+
+                        worker = new Thread(new ParameterizedThreadStart((path) => {
+                            Btn_ComminFile_Proc(path);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                worker = null;
+                                Loading(false);
+                            });
+                        }));
+
+                        worker.Start(selectedFolderPath);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
+        }
+
+        private void Btn_ComminFile_Proc(object paramData)
+        {
+            try
+            {
+                string selectedFolderPath = Convert.ToString(paramData);
+                MsSqlCreater creater = new MsSqlCreater();
+
+                if (!Directory.Exists($"{selectedFolderPath}\\Functions"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Functions");
+                }
+
+                if (!Directory.Exists($"{selectedFolderPath}\\Views"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Views");
+                }
+
+                foreach (string common in creater.Functions)
+                {
+                    if (!File.Exists($"{selectedFolderPath}\\Functions\\{common}.sql"))
+                    {
+                        File.Create($"{selectedFolderPath}\\Functions\\{common}.sql").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Functions\\{common}.sql", creater.CreateCommon(common));
+                }
+
+                foreach (string common in creater.Views)
+                {
+                    if (!File.Exists($"{selectedFolderPath}\\Views\\{common}.sql"))
+                    {
+                        File.Create($"{selectedFolderPath}\\Views\\{common}.sql").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Views\\{common}.sql", creater.CreateCommon(common));
+                }
+
+
+                MessageBox.Show($"공통요소가 작성되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message.ToString());
+            }
         }
     }
 }
