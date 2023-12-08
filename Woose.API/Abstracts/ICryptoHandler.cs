@@ -27,7 +27,7 @@ namespace Woose.API
         string SHA512Encrypt(string contenxt);
         bool SHA512ValidateCheck(string targetHash, string keyString);
 
-        JwtToken? GenerateTokens(string userId, string userName);
+        JwtToken? GenerateTokens(string userId, string userName, string serverToken);
         RefreshToken? GenerateRefreshToken(string rtoken);
         JwtSecurityToken? ReadToken(string token);
         JwtToken? RefreshAccessToken(string refreshToken);

@@ -10,6 +10,8 @@ namespace Woose.Data
         public string AppName { get; set; } = string.Empty;
         public string AllowedHosts { get; set; } = string.Empty;
 
+        public string ServerToken { get; set; } = string.Empty;
+
         public AppSettingConfig Config { get; set; } = new AppSettingConfig();
 
         public AppDatabase Database { get; set; } = new AppDatabase();

@@ -6,6 +6,8 @@
 
         public string Name { get; set; } = string.Empty;
 
+        public string ServerToken { get; set; } = string.Empty;
+
         public User()
         {
         }

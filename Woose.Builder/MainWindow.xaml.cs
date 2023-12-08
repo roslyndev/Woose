@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Xml.Linq;
 using Woose.Builder.Popup;
+using Woose.Core;
 using Woose.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -671,6 +672,7 @@ namespace Woose.Builder
                             app.Database.ConnectionString = sql.ConnectionString;
                             app.Config.AppID = option.ProjectName.Replace(".","");
                             app.Config.CookieVar = $"{option.ProjectName}Token";
+                            app.ServerToken = CryptoHelper.SHA256.Encrypt($"W{option.ProjectName.Trim().ToUpper()}O{DateTime.Now.ToString("YYMMDD")}S");
                             await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app))).ConfigureAwait(false);
                             
                             CSharpCreater creater = new CSharpCreater();
@@ -772,7 +774,7 @@ namespace Woose.Builder
                                         {
                                             File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
                                         }
-                                        File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, true));
+                                        File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, context, true));
 
                                     }).ConfigureAwait(false);
 

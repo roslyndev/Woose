@@ -518,7 +518,7 @@ namespace Woose.Builder
                     builder.AppendEmptyLine();
                 }
                 builder.AppendTabStringLine(1, "var user = this.GetAccessToken();");
-                builder.AppendTabStringLine(1, "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
+                builder.AppendTabStringLine(1, "if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken))");
                 builder.AppendTabStringLine(1, "{");
 
                 switch (options.ReturnType)
@@ -599,9 +599,16 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateController(BindOption options, DbEntity entity, List<DbTableInfo> properties, bool IsNamespace = false)
+        public string CreateController(BindOption options, DbEntity entity, List<DbTableInfo> properties, DbContext context, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
+
+            var sps = new List<DbEntity>();
+
+            using(var rep = new SqlServerRepository(context))
+            {
+                sps = rep.GetSpEntities();
+            }
 
             if (properties != null && properties.Count > 0)
             {
@@ -666,7 +673,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new {getReturn}();");
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "var user = this.GetAccessToken();");
-                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
+                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken))");
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
                 builder.AppendTabStringLine((IsNamespace ? 4 : 3), "var tmp = db.Single(idx);");
                 if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
@@ -701,7 +708,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new {listReturn}();");
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "var user = this.GetAccessToken();");
-                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
+                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken))");
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
 
                 builder.AppendTabStringLine((IsNamespace ? 4 : 3), "var list = db.List(paramData);");
@@ -741,6 +748,21 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
 
+                if (sps != null && sps.Count > 0)
+                {
+                    foreach(var sp in sps)
+                    {
+                        if (CodeHelper.ContainEntitySaveSP(sp.name, out string inEntityName))
+                        {
+                            if (inEntityName.Equals(entityName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                builder.AppendEmptyLine();
+                                builder.AppendLine(CreateSPControllerItem(options, context, sp, false, 1, "Save"));
+                            }
+                        }
+                    }
+                }
+
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), "[Route(\"Regist\")]");
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), "[HttpPost]");
@@ -749,7 +771,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new {exeReturn}();");
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "var user = this.GetAccessToken();");
-                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
+                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken))");
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
                 builder.AppendTabStringLine((IsNamespace ? 5 : 4), $"var tmp = db.Insert({entityName.FirstCharToLower()});");
                 if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
@@ -777,7 +799,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new {exeReturn}();");
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "var user = this.GetAccessToken();");
-                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
+                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken))");
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
                 builder.AppendTabStringLine((IsNamespace ? 5 : 4), $"var tmp = db.Update({entityName.FirstCharToLower()});");
                 if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
@@ -805,7 +827,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new {exeReturn}();");
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "var user = this.GetAccessToken();");
-                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.Id))");
+                builder.AppendTabStringLine((IsNamespace ? 3 : 2), "if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken))");
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
                 builder.AppendTabStringLine((IsNamespace ? 5 : 4), "var tmp = db.Delete(idx);");
                 if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
@@ -875,6 +897,7 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 4 : 3), "result = new User();");
             builder.AppendTabStringLine((IsNamespace ? 4 : 3), "result.Id = \"admin\";");
             builder.AppendTabStringLine((IsNamespace ? 4 : 3), "result.Name = \"관리자\";");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), "result.ServerToken = AppSettings.Current.ServerToken;");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
             builder.AppendEmptyLine();
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
@@ -888,7 +911,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateProcController(BindOption options, DbContext context, List<DbEntity> properties, bool IsNamespace = false)
+        public string CreateProcController(BindOption options, DbContext context, List<DbEntity> sps, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -914,11 +937,14 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "this.db = _db;");
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
             builder.AppendEmptyLine();
-            if (properties != null && properties.Count > 0)
+            if (sps != null && sps.Count > 0)
             {
-                foreach (var sp in properties)
+                foreach (var sp in sps)
                 {
-                    builder.AppendLine(CreateSPControllerItem(options, context, sp, IsNamespace));
+                    if (!CodeHelper.ContainEntitySaveSP(sp.name, out string entity))
+                    {
+                        builder.AppendLine(CreateSPControllerItem(options, context, sp, IsNamespace));
+                    }
                 }
             }
             builder.AppendTabStringLine((IsNamespace ? 1 : 0), "}");
@@ -930,6 +956,8 @@ namespace Woose.Builder
 
             return builder.ToString();
         }
+
+
 
         public string CreateParameter(BindOption options, DbEntity sp, List<SPEntity> properties, bool IsNamespace = false)
         {
@@ -1394,6 +1422,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
+        //Repository
         private string CreateSPItem(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
@@ -1527,7 +1556,8 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        private string CreateSPControllerItem(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false)
+        //Controller
+        private string CreateSPControllerItem(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false, int startindex = 2, string RouteName = "")
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1579,9 +1609,16 @@ namespace Woose.Builder
                 }
             }
 
-            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"[Route(\"{GetNameFromSP(property.name).AddSlashBeforeUppercase()}\")]");
-            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"[{methodType}]");
-            builder.AppendTabString((IsNamespace ? 2 : 1), $"public {((isAnotherModel) ? $"List<{exeReturn}>" : exeReturn)}? {GetNameFromSP(property.name)}(");
+            if (string.IsNullOrWhiteSpace(RouteName))
+            {
+                builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), $"[Route(\"{GetNameFromSP(property.name).AddSlashBeforeUppercase()}\")]");
+            }
+            else
+            {
+                builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), $"[Route(\"{RouteName}\")]");
+            }
+            builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), $"[{methodType}]");
+            builder.AppendTabString((IsNamespace ? startindex : (startindex + 1)), $"public {((isAnotherModel) ? $"List<{exeReturn}>" : exeReturn)}? {GetNameFromSP(property.name)}(");
             if (options.IsNoModel)
             {
                 num = 0;
@@ -1597,10 +1634,10 @@ namespace Woose.Builder
                 builder.Append($"[{formType}] Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
             }
             builder.AppendLine(")");
-            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
-            builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
-            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
-            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
+            builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "{");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), "return result;");
+            builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "}");
 
             return builder.ToString();
         }

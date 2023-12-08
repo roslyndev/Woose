@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Windows.Media.Animation;
+﻿using System.Text;
 using Woose.Data;
 
 namespace Woose.Builder
@@ -52,6 +50,8 @@ namespace Woose.Builder
                 {
                     using (var rep = new SqlServerRepository(context))
                     {
+                        var sps = rep.GetSpEntities();
+
                         switch (this.option.targetType)
                         {
                             case "TABLE":
@@ -65,7 +65,7 @@ namespace Woose.Builder
                                                 builder.Append(CodeHelper.CSharp.CreateEntity(this.option, tableproperties));
                                                 break;
                                             case "CONTROLLER":
-                                                builder.Append(CodeHelper.CSharp.CreateController(this.option, this.option.target, tableproperties, false));
+                                                builder.Append(CodeHelper.CSharp.CreateController(this.option, this.option.target, tableproperties, context, false));
                                                 break;
                                             case "ABSTRACT":
                                                 builder.Append(CodeHelper.CSharp.CreateAbstract(this.option, this.option.target, tableproperties, false));
@@ -392,6 +392,25 @@ namespace Woose.Builder
             }
 
             return result;
+        }
+
+        public static bool ContainEntitySaveSP(string str, out string entity)
+        {
+            entity = string.Empty;
+
+            // 문자열이 "USP_"로 시작하고 "_Save"로 끝나는지 확인
+            if (str.StartsWith("USP_") && str.EndsWith("_Save"))
+            {
+                // "USP_"와 "_Save" 사이의 문자열 추출
+                int startIndex = "USP_".Length;
+                int endIndex = str.Length - "_Save".Length - startIndex;
+
+                entity = str.Substring(startIndex, endIndex);
+
+                return true;
+            }
+
+            return false;
         }
     }
 

@@ -29,6 +29,7 @@ namespace Woose.API
             if (this.config != null)
             {
                 AppSettings.Current.AppName = this.config.GetSection("AppName").Value ?? string.Empty;
+                AppSettings.Current.ServerToken = this.config.GetSection("ServerToken").Value ?? string.Empty;
                 AppSettings.Current.Config.AppID = this.config.GetSection("Config").GetSection("AppID").Value ?? string.Empty;
                 AppSettings.Current.Config.CookieVar = this.config.GetSection("Config").GetSection("CookieVar").Value ?? string.Empty;
                 AppSettings.Current.Database.ConnectionString = this.config.GetSection("Database").GetSection("ConnectionString").Value ?? string.Empty;

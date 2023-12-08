@@ -92,7 +92,7 @@ namespace Woose.API
             }
         }
 
-        public JwtToken? GenerateTokens(string userId, string userName = "")
+        public JwtToken? GenerateTokens(string userId, string userName = "", string serverToken = "")
         {
             if (!string.IsNullOrWhiteSpace(userId))
             {
@@ -105,7 +105,8 @@ namespace Woose.API
                         Subject = new ClaimsIdentity(new[]
                         {
                     new Claim(ClaimTypes.Name, userId),
-                    new Claim(ClaimTypes.Actor, userName)
+                    new Claim("name", userName),
+                    new Claim("servertoken", serverToken)
                 }),
                         Expires = DateTime.UtcNow.AddDays(1),
                         SigningCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256Signature)
@@ -149,7 +150,8 @@ namespace Woose.API
                     {
                         // 사용자 아이디 추출
                         var userId = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "unique_name");
-                        var userName = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == "actort");
+                        var userName = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == "name");
+                        var serverToken = claimsPrincipal.Claims.FirstOrDefault(x => x.Type == "servertoken");
 
                         if (userId != null && userName != null)
                         {
@@ -211,7 +213,8 @@ namespace Woose.API
                     }
 
                     string? userId = principal.FindFirst(ClaimTypes.Name)?.Value;
-                    string? username = principal.FindFirst(ClaimTypes.Actor)?.Value;
+                    string? username = principal.FindFirst("name")?.Value;
+                    string? serverToken = principal.FindFirst("servertoken")?.Value;
                     if (!string.IsNullOrWhiteSpace(userId))
                     {
                         var newAccessToken = GenerateTokens(userId, username ?? "");
