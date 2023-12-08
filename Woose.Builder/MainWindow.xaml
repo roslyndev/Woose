@@ -457,13 +457,12 @@
         </Grid>
 
         <Grid Grid.Row="2">
-        </Grid>
-        <Grid Grid.Row="3">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                 <Button x:Name="Btn_Import" Content="가져오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Import_Click"/>
                 <Button x:Name="Btn_Export" Content="내보내기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Export_Click"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="Btn_Test" Content="TEST" Width="120" Style="{StaticResource PinkButton}" Margin="5" Click="Btn_Test_Click"/>
                 <Button x:Name="Btn_FileSave" Content="DB Clear" Width="120" Style="{StaticResource PinkButton}" Margin="5" Click="Btn_DbClear_Click"/>
                 <Button x:Name="Btn_Reload" Content="다시 불러오기" Width="120" Style="{StaticResource OrangeButton}" Margin="5" Click="Btn_Reload_Click"/>
                 <Button x:Name="Btn_NameCopy" Content="개체명 복사" Width="120" Style="{StaticResource BlueButton}" Margin="5" Click="Btn_NameCopy_Click"/>

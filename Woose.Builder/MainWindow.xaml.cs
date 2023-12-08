@@ -10,6 +10,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
 using System.Xml.Linq;
 using Woose.Builder.Popup;
 using Woose.Core;
@@ -27,6 +28,8 @@ namespace Woose.Builder
         public MainViewModel viewModel { get; set; }
 
         protected DbContext context { get; set; }
+
+        protected LoadingWindow? loading = null;
 
         protected BindOption option { get; set; } = new BindOption();
 
@@ -573,7 +576,14 @@ namespace Woose.Builder
 
         private void Btn_AlterProject_Click(object sender, RoutedEventArgs e)
         {
-            Btn_AlterProject_Click_Async().Wait();
+            Loading(true);
+
+            Task.Run(async () =>
+            {
+                await Btn_AlterProject_Click_Async();
+            }).Wait();
+
+            Loading(false);
         }
 
         private void Btn_CreateAllSpFile_Click(object sender, RoutedEventArgs e)
@@ -634,6 +644,18 @@ namespace Woose.Builder
             else
             {
                 MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
+        }
+
+        private void Loading(bool chk)
+        {
+            if (chk)
+            {
+                AllEnables(false, this);
+            }
+            else
+            {
+                AllEnables(true, this);
             }
         }
 
@@ -972,6 +994,21 @@ namespace Woose.Builder
             {
                 Btn_Apply.Style = (Style)FindResource("GrayButton");
                 Btn_AlterProject.Style = (Style)FindResource("GrayButton");
+            }
+        }
+
+        public void AllEnables(bool enable, DependencyObject parent)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+
+                if (child is UIElement)
+                {
+                    ((UIElement)child).IsEnabled = enable;
+                }
+
+                AllEnables(enable, child); // 재귀 호출
             }
         }
 
@@ -1379,5 +1416,11 @@ namespace Woose.Builder
             }
         }
 
+        private void Btn_Test_Click(object sender, RoutedEventArgs e)
+        {
+            Loading(true);
+            Thread.Sleep(5000);
+            Loading(false);
+        }
     }
 }
