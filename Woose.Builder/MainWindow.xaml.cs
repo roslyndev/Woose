@@ -297,30 +297,45 @@ namespace Woose.Builder
 
         protected void onLoad()
         {
+            Loading(true);
+
             viewModel.entities.Clear();
             viewModel.sps.Clear();
-            
+
             using (var rep = new SqlServerRepository(this.context))
             {
-                var tmp = rep.GetTableEntities();
-                if (tmp != null && tmp.Count > 0)
+                option.tables = rep.GetTableEntities();
+                if (option.tables != null && option.tables.Count > 0)
                 {
-                    foreach (var item in tmp)
+                    var tableproperties = new List<DbTableInfo>();
+                    foreach (var item in option.tables)
                     {
                         viewModel.entities.Add(item);
+                        tableproperties = rep.GetTableProperties(item.name);
+                        option.tableProperties.AddOrUpdate(item.name, tableproperties, (x, y) => tableproperties);
                     }
                 }
-                var tmp2 = rep.GetSpEntities();
-                if (tmp2 != null && tmp2.Count > 0)
+                option.sps = rep.GetSpEntities();
+                if (option.sps != null && option.sps.Count > 0)
                 {
-                    foreach (var item in tmp2)
+                    var spproperties = new List<SPEntity>();
+                    var spoutput = new List<SpOutput>();
+                    var sptables = new List<SpTable>();
+                    foreach (var item in option.sps)
                     {
                         viewModel.sps.Add(item);
+                        spproperties = rep.GetSpProperties(item.name);
+                        spoutput = rep.GetSpOutput(item.name);
+                        sptables = rep.GetSPTables(item.name);
+                        option.spProperties.AddOrUpdate(item.name, spproperties, (x, y) => spproperties);
+                        option.spOutputs.AddOrUpdate(item.name, spoutput, (x, y) => spoutput);
+                        option.spTables.AddOrUpdate(item.name, sptables, (x, y) => sptables);
                     }
                 }
-
-                Enables(true);
             }
+
+            Enables(true);
+            Loading(false);
         }
 
         private void TableListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -630,12 +645,15 @@ namespace Woose.Builder
                         {
                             Loading(true);
 
-                            worker = new Thread(new ParameterizedThreadStart((path) => {
-                                Btn_AlterProject_Click_Async(path).Wait();
+                            worker = new Thread(new ParameterizedThreadStart(async (path) => {
+                                await Task.Run(() => Btn_AlterProject_Click1(path)).ConfigureAwait(false);
+                                await Task.Run(() => Btn_AlterProject_Click2(path)).ConfigureAwait(false);
+                                await Task.Run(() => Btn_AlterProject_Click3(path)).ConfigureAwait(false);
 
                                 Dispatcher.Invoke(() =>
                                 {
                                     worker = null;
+                                    MessageBox.Show($"프로젝트가 수정되었습니다.");
                                     Loading(false);
                                 });
                             }));
@@ -803,7 +821,7 @@ namespace Woose.Builder
             AllEnables(!chk, this);
         }
 
-        private async Task Btn_AlterProject_Click_Async(object paramData)
+        private void Btn_AlterProject_Click1(object paramData)
         {
             try
             {
@@ -828,196 +846,155 @@ namespace Woose.Builder
                 app.Config.AppID = option.ProjectName.Replace(".", "");
                 app.Config.CookieVar = $"{option.ProjectName}Token";
                 app.ServerToken = CryptoHelper.SHA256.Encrypt($"W{option.ProjectName.Trim().ToUpper()}O{DateTime.Now.ToString("YYMMDD")}S");
-                await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app))).ConfigureAwait(false);
+                File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app));
 
                 CSharpCreater creater = new CSharpCreater();
-                await Task.Factory.StartNew(() => File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option, this.viewModel.entities.ToList()))).ConfigureAwait(false);
+                File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option, this.viewModel.entities.ToList()));
 
-                await Task.Factory.StartNew(() =>
+                if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
                 {
-                    if (!Directory.Exists($"{selectedFolderPath}\\Entities"))
-                    {
-                        Directory.CreateDirectory($"{selectedFolderPath}\\Entities");
-                    }
-                }).ConfigureAwait(false);
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Entities");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (!Directory.Exists($"{selectedFolderPath}\\Controllers"))
                 {
-                    if (!Directory.Exists($"{selectedFolderPath}\\Controllers"))
-                    {
-                        Directory.CreateDirectory($"{selectedFolderPath}\\Controllers");
-                    }
-                }).ConfigureAwait(false);
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Controllers");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (!Directory.Exists($"{selectedFolderPath}\\Repositories"))
                 {
-                    if (!Directory.Exists($"{selectedFolderPath}\\Repositories"))
-                    {
-                        Directory.CreateDirectory($"{selectedFolderPath}\\Repositories");
-                    }
-                }).ConfigureAwait(false);
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Repositories");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (!Directory.Exists($"{selectedFolderPath}\\Abstracts"))
                 {
-                    if (!Directory.Exists($"{selectedFolderPath}\\Abstracts"))
-                    {
-                        Directory.CreateDirectory($"{selectedFolderPath}\\Abstracts");
-                    }
-                }).ConfigureAwait(false);
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Abstracts");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (!Directory.Exists($"{selectedFolderPath}\\Models"))
                 {
-                    if (!Directory.Exists($"{selectedFolderPath}\\Models"))
-                    {
-                        Directory.CreateDirectory($"{selectedFolderPath}\\Models");
-                    }
-                }).ConfigureAwait(false);
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Models");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (!Directory.Exists($"{selectedFolderPath}\\Models\\Parameters"))
                 {
-                    if (!Directory.Exists($"{selectedFolderPath}\\Models\\Parameters"))
-                    {
-                        Directory.CreateDirectory($"{selectedFolderPath}\\Models\\Parameters");
-                    }
-                }).ConfigureAwait(false);
+                    Directory.CreateDirectory($"{selectedFolderPath}\\Models\\Parameters");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (File.Exists($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs"))
                 {
-                    if (File.Exists($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs"))
-                    {
-                        File.Delete($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs");
-                    }
-                }).ConfigureAwait(false);
+                    File.Delete($"{selectedFolderPath}\\Controllers\\WeatherForecastController.cs");
+                }
 
-                await Task.Factory.StartNew(() =>
+                if (File.Exists($"{selectedFolderPath}\\WeatherForecast.cs"))
                 {
-                    if (File.Exists($"{selectedFolderPath}\\WeatherForecast.cs"))
-                    {
-                        File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
-                    }
-                }).ConfigureAwait(false);
+                    File.Delete($"{selectedFolderPath}\\WeatherForecast.cs");
+                }
 
-
-                await Task.Factory.StartNew(() =>
+                if (!File.Exists($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs"))
                 {
-                    if (!File.Exists($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs"))
-                    {
-                        File.Create($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs").Close();
-                    }
-                    File.WriteAllText($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs", creater.CreateDefaultController(option, true));
-                }).ConfigureAwait(false);
+                    File.Create($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\Controllers\\DefaultControllers.cs", creater.CreateDefaultController(option, true));
 
+                if (!File.Exists($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs"))
+                {
+                    File.Create($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs", creater.CreateProcController(option, this.viewModel.sps.ToList(), true));
 
+                if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs"))
+                {
+                    File.Create($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateAbstract(option, this.viewModel.sps.ToList(), true));
+
+                if (!File.Exists($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs"))
+                {
+                    File.Create($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateDefaultRepository(option, this.viewModel.sps.ToList(), true));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message.ToString());
+            }
+        }
+
+        private void Btn_AlterProject_Click2(object paramData)
+        {
+            try
+            {
+                CSharpCreater creater = new CSharpCreater();
+                string selectedFolderPath = Convert.ToString(paramData);
                 using (var rep = new SqlServerRepository(context))
                 {
                     foreach (var entity in this.viewModel.entities)
                     {
                         var list = rep.GetTableProperties(entity.name);
 
-                        await Task.Factory.StartNew(() =>
+                        if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
                         {
-                            if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
-                            {
-                                File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
-                            }
-                            File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
-                        }).ConfigureAwait(false);
+                            File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
+                        }
+                        File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
 
-                        await Task.Factory.StartNew(() =>
+                        if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
                         {
-                            if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
-                            {
-                                File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
-                            }
-                            File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, context, true));
+                            File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();
+                        }
+                        File.WriteAllText($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs", creater.CreateController(option, entity, list, true));
 
-                        }).ConfigureAwait(false);
-
-                        await Task.Factory.StartNew(() =>
+                        if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs"))
                         {
-                            if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs"))
-                            {
-                                File.Create($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs").Close();
-                            }
-                            File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs", creater.CreateAbstract(option, entity, list, true));
+                            File.Create($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs").Close();
+                        }
+                        File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{entity.name}Repository.cs", creater.CreateAbstract(option, entity, list, true));
 
-                        }).ConfigureAwait(false);
-
-                        await Task.Factory.StartNew(() =>
+                        if (!File.Exists($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs"))
                         {
-                            if (!File.Exists($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs"))
-                            {
-                                File.Create($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs").Close();
-                            }
-                            File.WriteAllText($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs", creater.CreateRepository(option, entity, list, true));
-                        }).ConfigureAwait(false);
-
-                    }
-
-                    foreach (var sp in this.viewModel.sps)
-                    {
-                        var inputs = rep.GetSpProperties(sp.name);
-
-                        await Task.Factory.StartNew(() =>
-                        {
-                            if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs"))
-                            {
-                                File.Create($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs").Close();
-                            }
-                            File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, inputs, true));
-
-                        }).ConfigureAwait(false);
-
-                        await Task.Factory.StartNew(() =>
-                        {
-                            var outputs = rep.GetSpOutput(sp.name);
-                            if (outputs != null && !(outputs.Where(x => x.name.Equals("IsError", StringComparison.OrdinalIgnoreCase)).Count() > 0))
-                            {
-                                var objTarget = rep.Find(viewModel.entities.ToList(), outputs);
-                                if (objTarget == null)
-                                {
-                                    if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs"))
-                                    {
-                                        File.Create($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs").Close();
-                                    }
-                                    File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, outputs, true));
-                                }
-                            }
-                        }).ConfigureAwait(false);
-
+                            File.Create($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs").Close();
+                        }
+                        File.WriteAllText($"{selectedFolderPath}\\Repositories\\{entity.name}Repository.cs", creater.CreateRepository(option, entity, list, true));
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message.ToString());
+            }
+        }
 
-                await Task.Factory.StartNew(() =>
+        private void Btn_AlterProject_Click3(object paramData)
+        {
+            try
+            {
+                CSharpCreater creater = new CSharpCreater();
+                string selectedFolderPath = Convert.ToString(paramData);
+                foreach (var sp in this.viewModel.sps)
                 {
-                    if (!File.Exists($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs"))
+                    var inputs = option.GetSpProperties(sp.name);
+                    var outputs = option.GetSpOutputs(sp.name);
+
+                    if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs"))
                     {
-                        File.Create($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs").Close();
+                        File.Create($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs").Close();
                     }
-                    File.WriteAllText($"{selectedFolderPath}\\Controllers\\{option.MethodName}ProcController.cs", creater.CreateProcController(option, this.context, this.viewModel.sps.ToList(), true));
-                }).ConfigureAwait(false);
+                    File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Input{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, inputs, true));
 
-                await Task.Factory.StartNew(() =>
-                {
-                    if (!File.Exists($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs"))
+                    if (outputs != null && !(outputs.Where(x => x.name.Equals("IsError", StringComparison.OrdinalIgnoreCase)).Count() > 0))
                     {
-                        File.Create($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs").Close();
+                        var objTarget = option.Find(viewModel.entities.ToList(), outputs);
+                        if (objTarget == null)
+                        {
+                            if (!File.Exists($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs"))
+                            {
+                                File.Create($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs").Close();
+                            }
+                            File.WriteAllText($"{selectedFolderPath}\\Models\\Parameters\\Output{GetNameFromSP(sp.name)}Parameter.cs", creater.CreateParameter(option, sp, outputs, true));
+                        }
                     }
-                    File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateAbstract(option, this.context, this.viewModel.sps.ToList(), true));
-
-                }).ConfigureAwait(false);
-
-                await Task.Factory.StartNew(() =>
-                {
-                    if (!File.Exists($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs"))
-                    {
-                        File.Create($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs").Close();
-                    }
-                    File.WriteAllText($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs", creater.CreateDefaultRepository(option, this.context, this.viewModel.sps.ToList(), true));
-
-                }).ConfigureAwait(false);
-
-                MessageBox.Show($"프로젝트가 수정되었습니다.");
+                }
             }
             catch (Exception ex)
             {

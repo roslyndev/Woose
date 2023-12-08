@@ -65,7 +65,7 @@ namespace Woose.Builder
                                                 builder.Append(CodeHelper.CSharp.CreateEntity(this.option, tableproperties));
                                                 break;
                                             case "CONTROLLER":
-                                                builder.Append(CodeHelper.CSharp.CreateController(this.option, this.option.target, tableproperties, context, false));
+                                                builder.Append(CodeHelper.CSharp.CreateController(this.option, this.option.target, tableproperties, false));
                                                 break;
                                             case "ABSTRACT":
                                                 builder.Append(CodeHelper.CSharp.CreateAbstract(this.option, this.option.target, tableproperties, false));

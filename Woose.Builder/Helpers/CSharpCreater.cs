@@ -599,16 +599,9 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateController(BindOption options, DbEntity entity, List<DbTableInfo> properties, DbContext context, bool IsNamespace = false)
+        public string CreateController(BindOption options, DbEntity entity, List<DbTableInfo> properties, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
-
-            var sps = new List<DbEntity>();
-
-            using(var rep = new SqlServerRepository(context))
-            {
-                sps = rep.GetSpEntities();
-            }
 
             if (properties != null && properties.Count > 0)
             {
@@ -748,16 +741,16 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
 
-                if (sps != null && sps.Count > 0)
+                if (options.sps != null && options.sps.Count > 0)
                 {
-                    foreach(var sp in sps)
+                    foreach(var sp in options.sps)
                     {
                         if (CodeHelper.ContainEntitySaveSP(sp.name, out string inEntityName))
                         {
                             if (inEntityName.Equals(entityName, StringComparison.OrdinalIgnoreCase))
                             {
                                 builder.AppendEmptyLine();
-                                builder.AppendLine(CreateControllerSP(options, context, sp, false, 1, "Save"));
+                                builder.AppendLine(CreateControllerSP(options, sp, false, 1, "Save"));
                             }
                         }
                     }
@@ -911,7 +904,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateProcController(BindOption options, DbContext context, List<DbEntity> sps, bool IsNamespace = false)
+        public string CreateProcController(BindOption options, List<DbEntity> sps, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -943,7 +936,7 @@ namespace Woose.Builder
                 {
                     if (!CodeHelper.ContainEntitySaveSP(sp.name, out string entity))
                     {
-                        builder.AppendLine(CreateSPControllerItem(options, context, sp, IsNamespace));
+                        builder.AppendLine(CreateSPControllerItem(options, sp, IsNamespace));
                     }
                 }
             }
@@ -1077,7 +1070,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateAbstract(BindOption options, DbContext context, List<DbEntity> properties, bool IsNamespace = false)
+        public string CreateAbstract(BindOption options, List<DbEntity> properties, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1105,7 +1098,7 @@ namespace Woose.Builder
                         {
                             builder.AppendEmptyLine();
                         }
-                        builder.AppendLine(CreateSPAbstractItem(options, context, sp, IsNamespace));
+                        builder.AppendLine(CreateSPAbstractItem(options, sp, IsNamespace));
                         num++;
                     }
                 }
@@ -1197,7 +1190,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateDefaultRepository(BindOption options, DbContext context, List<DbEntity> properties, bool IsNamespace = false)
+        public string CreateDefaultRepository(BindOption options, List<DbEntity> properties, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1222,7 +1215,7 @@ namespace Woose.Builder
             {
                 foreach (var sp in properties)
                 {
-                    builder.AppendLine(CreateSPItem(options, context, sp, IsNamespace));
+                    builder.AppendLine(CreateSPItem(options, sp, IsNamespace));
                 }
             }
             builder.AppendTabStringLine((IsNamespace ? 1 : 0), "}");
@@ -1423,7 +1416,7 @@ namespace Woose.Builder
         }
 
         //Repository
-        private string CreateSPItem(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false)
+        private string CreateSPItem(BindOption options, DbEntity property, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1434,12 +1427,9 @@ namespace Woose.Builder
             List<SpOutput> outputs = new List<SpOutput>();
             DbEntity? output = null;
 
-            using (var rep = new SqlServerRepository(context))
-            {
-                inputs = rep.GetSpProperties(property.name);
-                outputs = rep.GetSpOutput(property.name);
-                output = rep.Find(outputs);
-            }
+            inputs = options.GetSpProperties(property.name);
+            outputs = options.GetSpOutputs(property.name);
+            output = options.Find(outputs);
 
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {
@@ -1557,7 +1547,7 @@ namespace Woose.Builder
         }
 
         //Controller
-        private string CreateSPControllerItem(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false)
+        private string CreateSPControllerItem(BindOption options, DbEntity property, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1571,12 +1561,9 @@ namespace Woose.Builder
             List<SpOutput> outputs = new List<SpOutput>();
             DbEntity? output = null;
 
-            using (var rep = new SqlServerRepository(context))
-            {
-                inputs = rep.GetSpProperties(property.name);
-                outputs = rep.GetSpOutput(property.name);
-                output = rep.Find(outputs);
-            }
+            inputs = options.GetSpProperties(property.name);
+            outputs = options.GetSpOutputs(property.name);
+            output = options.Find(outputs);
 
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {
@@ -1638,7 +1625,7 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        private string CreateControllerSP(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false, int startindex = 2, string RouteName = "")
+        private string CreateControllerSP(BindOption options, DbEntity property, bool IsNamespace = false, int startindex = 2, string RouteName = "")
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1651,12 +1638,9 @@ namespace Woose.Builder
             List<SpOutput> outputs = new List<SpOutput>();
             DbEntity? output = null;
 
-            using (var rep = new SqlServerRepository(context))
-            {
-                inputs = rep.GetSpProperties(property.name);
-                outputs = rep.GetSpOutput(property.name);
-                output = rep.Find(outputs);
-            }
+            inputs = options.GetSpProperties(property.name);
+            outputs = options.GetSpOutputs(property.name);
+            output = options.Find(outputs);
 
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {
@@ -1722,13 +1706,13 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken) && user.ServerToken == AppSettings.Current.ServerToken)");
             builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), "{");
 
-            builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"var tmp = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {
-                builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"result.Success(1, tmp);");
+                builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"result = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
             }
             else
             {
+                builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"var tmp = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
                 if (isAnotherModel)
                 {
                     builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"result = tmp;");
@@ -1752,7 +1736,7 @@ namespace Woose.Builder
         }
 
 
-        private string CreateSPAbstractItem(BindOption options, DbContext context, DbEntity property, bool IsNamespace = false)
+        private string CreateSPAbstractItem(BindOption options, DbEntity property, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
@@ -1763,12 +1747,9 @@ namespace Woose.Builder
             List<SpOutput> outputs = new List<SpOutput>();
             DbEntity? output = null;
 
-            using (var rep = new SqlServerRepository(context))
-            {
-                inputs = rep.GetSpProperties(property.name);
-                outputs = rep.GetSpOutput(property.name);
-                output = rep.Find(outputs);
-            }
+            inputs = options.GetSpProperties(property.name);
+            outputs = options.GetSpOutputs(property.name);
+            output = options.Find(outputs);
 
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {

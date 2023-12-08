@@ -20,12 +20,19 @@ namespace Woose.Builder
         {
             var result = new List<DbEntity>();
 
-            string query = "select 'TABLE' as ObjectType, [object_id],[name] from sys.tables where [name] <> '__RefactorLog' union select 'VIEW',[object_id],[name] from sys.views order by[name] asc";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+            try
             {
-                var dt = Entity.Run.On(cmd).Query(query).ToList();
-                result = EntityHelper.ColumnToEntities<DbEntity>(dt);
+                string query = "select 'TABLE' as ObjectType, [object_id],[name] from sys.tables where [name] <> '__RefactorLog' union select 'VIEW',[object_id],[name] from sys.views order by[name] asc";
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<DbEntity>(dt);
+                }
+            }
+            catch
+            {
+                result = new List<DbEntity>();
             }
 
             return result;
@@ -35,12 +42,19 @@ namespace Woose.Builder
         {
             var result = new List<DbEntity>();
 
-            string query = "select 'SP' as ObjectType, [object_id], [name] from sys.procedures order by [name] asc";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+            try
             {
-                var dt = Entity.Run.On(cmd).Query(query).ToList();
-                result = EntityHelper.ColumnToEntities<DbEntity>(dt);
+                string query = "select 'SP' as ObjectType, [object_id], [name] from sys.procedures order by [name] asc";
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<DbEntity>(dt);
+                }
+            }
+            catch
+            {
+                result = new List<DbEntity>();
             }
 
             return result;
@@ -50,7 +64,9 @@ namespace Woose.Builder
         {
             var result = new List<DbTableInfo>();
 
-            string query = @$"select
+            try
+            {
+                string query = @$"select
 	A.TableID
 ,	A.TableName
 ,	B.[name] as ColumnName
@@ -66,11 +82,16 @@ inner join sys.all_columns as B on A.TableID = B.[object_id]
 inner join sys.types as C on B.[system_type_id] = C.[system_type_id] and B.user_type_id = C.user_type_id
 left outer join sys.extended_properties as D on D.major_id = B.[object_id] and D.minor_id = B.column_id and D.[name] = 'MS_Description'
 where A.TableName = '{tableName}'";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<DbTableInfo>(dt);
+                }
+            }
+            catch
             {
-                var dt = Entity.Run.On(cmd).Query(query).ToList();
-                result = EntityHelper.ColumnToEntities<DbTableInfo>(dt);
+                result = new List<DbTableInfo>();
             }
 
             return result;
@@ -80,7 +101,9 @@ where A.TableName = '{tableName}'";
         {
             var result = new List<SPEntity>();
 
-            string query = @$"select
+            try
+            {
+                string query = @$"select
 	A.[name]
 ,	B.[name] as [type]
 ,	A.max_length
@@ -93,11 +116,16 @@ inner join sys.types as B with (nolock) on A.system_type_id = B.system_type_id a
 inner join sys.procedures as C with (nolock) on A.[object_id] = C.[object_id] 
 where C.[name] = '{spName}'
 order by A.parameter_id asc";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<SPEntity>(dt);
+                }
+            }
+            catch
             {
-                var dt = Entity.Run.On(cmd).Query(query).ToList();
-                result = EntityHelper.ColumnToEntities<SPEntity>(dt);
+                result = new List<SPEntity>();
             }
 
             return result;
@@ -200,20 +228,22 @@ END;
 CLOSE tableCursor;
 DEALLOCATE tableCursor;
 ";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+
+            try
             {
-                try
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
                 {
                     cmd.CommandText = query;
                     cmd.CommandType = System.Data.CommandType.Text;
                     cmd.CommandTimeout = 1000 * 60 * 2;
                     cmd.ExecuteNonQuery();
-                }
-                catch
-                {
 
                 }
+            }
+            catch
+            {
+
             }
         }
 
@@ -221,17 +251,24 @@ DEALLOCATE tableCursor;
         {
             var result = new List<SpTable>();
 
-            string query = @$"select DISTINCT A.[name], B.[depid], C.[name] as TableName from SYSOBJECTS as A with(nolock)
+            try
+            {
+                string query = @$"select DISTINCT A.[name], B.[depid], C.[name] as TableName from SYSOBJECTS as A with(nolock)
 inner join SYSDEPENDS as B with (nolock) on A.id = B.id
 inner join SYSOBJECTS as C with (nolock) on C.id = B.depid and C.xtype = 'U'
 where A.xtype = 'P'
 and A.[name] = '{spName}'
 order by B.[depid] desc";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<SpTable>(dt);
+                }
+            }
+            catch
             {
-                var dt = Entity.Run.On(cmd).Query(query).ToList();
-                result = EntityHelper.ColumnToEntities<SpTable>(dt);
+                result = new List<SpTable>();
             }
 
             return result;
@@ -241,101 +278,25 @@ order by B.[depid] desc";
         {
             var result = new List<SpOutput>();
 
-            string query = @$"EXEC sp_describe_first_result_set N'{spName}', null, 0;";
-            using (var db = context.getConnection())
-            using (var cmd = db.CreateCommand())
+            try
             {
-                var dt = Entity.Run.On(cmd).Query(query).ToList();
-                result = EntityHelper.ColumnToEntities<SpOutput>(dt);
+                string query = @$"EXEC sp_describe_first_result_set N'{spName}', null, 0;";
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<SpOutput>(dt);
+                }
+            }
+            catch
+            {
+                result = new List<SpOutput>();
             }
 
             return result;
         }
 
 
-        public DbEntity? Find(List<DbEntity> tables, List<SpOutput> spoutput)
-        {
-            if (tables != null && tables.Count > 0)
-            {
-                int num = 0;
-                int i = 0;
-
-                foreach (var table in tables)
-                {
-                    if (table != null)
-                    {
-                        try
-                        {
-                            num = 0;
-                            i = 0;
-                            var properties = this.GetTableProperties(table.name);
-                            if (properties != null)
-                            {
-                                foreach (var info in properties)
-                                {
-                                    num += (spoutput.Where(x => x.name.Equals(info.ColumnName, StringComparison.OrdinalIgnoreCase)).Count() > 0) ? 1 : 0;
-                                    i++;
-                                }
-
-                                if (num == i)
-                                {
-                                    return table;
-                                }
-                            }
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public DbEntity? Find(List<SpOutput> spoutput)
-        {
-            List<DbEntity> tables = this.GetTableEntities();
-
-            if (tables != null && tables.Count > 0)
-            {
-                int num = 0;
-                int i = 0;
-
-                foreach (var table in tables)
-                {
-                    if (table != null)
-                    {
-                        try
-                        {
-                            num = 0;
-                            i = 0;
-                            var properties = this.GetTableProperties(table.name);
-                            if (properties != null)
-                            {
-                                foreach (var info in properties)
-                                {
-                                    num += (spoutput.Where(x => x.name.Equals(info.ColumnName, StringComparison.OrdinalIgnoreCase)).Count() > 0) ? 1 : 0;
-                                    i++;
-                                }
-
-                                if (num == i)
-                                {
-                                    return table;
-                                }
-                            }
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
 
 
         protected virtual void Dispose(bool disposing)
@@ -358,7 +319,7 @@ order by B.[depid] desc";
         public void Dispose()
         {
             Dispose(disposing: true);
-            //GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
     }
 }

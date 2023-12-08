@@ -216,7 +216,7 @@ namespace Woose.Builder
         public void Dispose()
         {
             Dispose(disposing: true);
-            //GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
     }
 }
