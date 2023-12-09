@@ -223,7 +223,7 @@ namespace Woose.Builder
             builder.AppendTabStringLine(1, $"using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine(1, "{");
             builder.AppendTabStringLine(2, $"cmd.On(\"{spName}\").Set();");
-            foreach (var input in properties)
+            foreach (var input in properties.Where(x => x.is_output == false))
             {
                 builder.AppendTabString(2, $"cmd.Parameters.Set(\"{input.name}\", SqlDbType.{input.CsType}, ");
                 if (options.IsNoModel)
@@ -232,7 +232,7 @@ namespace Woose.Builder
                 }
                 else
                 {
-                    builder.Append($"input{GetNameFromSP(input.name)}.{input.name.Replace("@", "")}");
+                    builder.Append($"input{GetNameFromSP(input.name)}.{input.Name}");
                 }
                 if (input.IsSize)
                 {
@@ -375,7 +375,28 @@ namespace Woose.Builder
             }
             else
             {
-                builder.AppendLine($"{returnModel} {funcName}(Input{funcName} {mainTable.ToLower()});");
+                if (properties.Where(x => x.is_output == false).Count() > 1)
+                {
+                    builder.AppendLine($"{returnModel} {funcName}(Input{funcName} {mainTable.ToLower()});");
+                }
+                else
+                {
+                    builder.Append($"{returnModel} {funcName}(");
+                    if (properties != null && properties.Count > 0)
+                    {
+                        int c = 0;
+                        foreach (var item in properties.Where(x => x.is_output == false))
+                        {
+                            if (c > 0)
+                            {
+                                builder.Append(",");
+                            }
+                            builder.Append($"{DbTypeHelper.MSSQL.GetObjectTypeByCsharp(item.type)} {item.name.Replace("@", "")}");
+                            c++;
+                        }
+                    }
+                    builder.AppendLine(");");
+                }
             }
 
             return builder.ToString();
@@ -950,8 +971,6 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-
-
         public string CreateParameter(BindOption options, DbEntity sp, List<SPEntity> properties, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
@@ -971,7 +990,7 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 1 : 0), $"public class Input{GetNameFromSP(sp.name)}Parameter : IParameter");
                 builder.AppendTabStringLine((IsNamespace ? 1 : 0), "{");
 
-                foreach (var item in properties)
+                foreach (var item in properties.Where(x => x.is_output == false))
                 {
                     builder.AppendTabString((IsNamespace ? 2 : 1), $"public {item.ObjectType} {item.Name}");
                     builder.Append(" { get; set; }");
@@ -1422,6 +1441,7 @@ namespace Woose.Builder
 
             string exeReturn = string.Empty;
             int num = 0;
+            bool isinline_nomodel = false;
             bool isAnotherModel = false;
             List<SPEntity> inputs = new List<SPEntity>();
             List<SpOutput> outputs = new List<SpOutput>();
@@ -1465,7 +1485,7 @@ namespace Woose.Builder
             if (options.IsNoModel)
             {
                 num = 0;
-                foreach (var input in inputs)
+                foreach (var input in inputs.Where(x => x.is_output == false))
                 {
                     if (num > 0) builder.Append(",");
                     builder.Append($"{input.ObjectType} {input.Name.FirstCharToLower()}");
@@ -1474,7 +1494,21 @@ namespace Woose.Builder
             }
             else
             {
-                builder.Append($"Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                if (inputs.Where(x => x.is_output == false).Count() > 1)
+                {
+                    builder.Append($"Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                }
+                else
+                {
+                    isinline_nomodel = true;
+                    num = 0;
+                    foreach (var input in inputs.Where(x => x.is_output == false))
+                    {
+                        if (num > 0) builder.Append(",");
+                        builder.Append($"{input.ObjectType} {input.Name.FirstCharToLower()}");
+                        num++;
+                    }
+                }
             }
             builder.AppendLine(")");
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
@@ -1491,16 +1525,23 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
             builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On(\"{property.name}\").Set();");
-            foreach (var input in inputs)
+            foreach (var input in inputs.Where(x => x.is_output == false))
             {
                 builder.AppendTabString((IsNamespace ? 4 : 3), $"cmd.Parameters.Set(\"{input.name}\", SqlDbType.{input.CsType}, ");
                 if (options.IsNoModel)
                 {
-                    builder.Append(input.name.FirstCharToLower());
+                    builder.Append(input.Name.FirstCharToLower());
                 }
                 else
                 {
-                    builder.Append($"input{GetNameFromSP(property.name)}.{input.name.Replace("@","")}");
+                    if (isinline_nomodel)
+                    {
+                        builder.Append(input.Name.FirstCharToLower());
+                    }
+                    else
+                    {
+                        builder.Append($"input{GetNameFromSP(property.name)}.{input.Name}");
+                    }
                 }
                 if (input.IsSize)
                 {
@@ -1603,7 +1644,7 @@ namespace Woose.Builder
             if (options.IsNoModel)
             {
                 num = 0;
-                foreach (var input in inputs)
+                foreach (var input in inputs.Where(x => x.is_output == false))
                 {
                     if (num > 0) builder.Append(",");
                     builder.Append($"[{formType}] {input.ObjectType} {input.Name.FirstCharToLower()}");
@@ -1612,12 +1653,63 @@ namespace Woose.Builder
             }
             else
             {
-                builder.Append($"[{formType}] Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                if (inputs.Where(x => x.is_output == false).Count() > 1)
+                {
+                    builder.Append($"[{formType}] Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                }
+                else
+                {
+                    num = 0;
+                    foreach (var input in inputs.Where(x => x.is_output == false))
+                    {
+                        if (num > 0) builder.Append(",");
+                        builder.Append($"[{formType}] {input.ObjectType} {input.Name.FirstCharToLower()}");
+                        num++;
+                    }
+                }
+                
             }
             builder.AppendLine(")");
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "{");
-
-            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
+            if (inputs.Where(x => x.is_output == false).Count() > 0)
+            {
+                if (options.IsNoModel)
+                {
+                    builder.AppendTabString((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(");
+                    num = 0;
+                    foreach (var input in inputs.Where(x => x.is_output == false))
+                    {
+                        if (num > 0) builder.Append(",");
+                        builder.Append($"{input.Name.FirstCharToLower()}");
+                        num++;
+                    }
+                    builder.AppendLine(");");
+                }
+                else
+                {
+                    if (inputs.Where(x => x.is_output == false).Count() > 1)
+                    {
+                        builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
+                    }
+                    else
+                    {
+                        builder.AppendTabString((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(");
+                        num = 0;
+                        foreach (var input in inputs.Where(x => x.is_output == false))
+                        {
+                            if (num > 0) builder.Append(",");
+                            builder.Append($"{input.Name.FirstCharToLower()}");
+                            num++;
+                        }
+                        builder.AppendLine(");");
+                    }
+                }
+            }
+            else
+            {
+                builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}();");
+            }
+            
             builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"return result;");
 
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "}");
@@ -1687,7 +1779,7 @@ namespace Woose.Builder
             if (options.IsNoModel)
             {
                 num = 0;
-                foreach (var input in inputs)
+                foreach (var input in inputs.Where(x => x.is_output == false))
                 {
                     if (num > 0) builder.Append(",");
                     builder.Append($"[{formType}] {input.ObjectType} {input.Name.FirstCharToLower()}");
@@ -1696,7 +1788,20 @@ namespace Woose.Builder
             }
             else
             {
-                builder.Append($"[{formType}] Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                if (inputs.Where(x => x.is_output == false).Count() > 1)
+                {
+                    builder.Append($"[{formType}] Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                }
+                else
+                {
+                    num = 0;
+                    foreach (var input in inputs.Where(x => x.is_output == false))
+                    {
+                        if (num > 0) builder.Append(",");
+                        builder.Append($"[{formType}] {input.ObjectType} {input.Name.FirstCharToLower()}");
+                        num++;
+                    }
+                }
             }
             builder.AppendLine(")");
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "{");
@@ -1784,7 +1889,7 @@ namespace Woose.Builder
             if (options.IsNoModel)
             {
                 num = 0;
-                foreach (var input in inputs)
+                foreach (var input in inputs.Where(x => x.is_output == false))
                 {
                     if (num > 0) builder.Append(",");
                     builder.Append($"{input.ObjectType} {input.Name.FirstCharToLower()}");
@@ -1793,7 +1898,21 @@ namespace Woose.Builder
             }
             else
             {
-                builder.Append($"Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                if (inputs.Where(x => x.is_output == false).Count() > 1)
+                {
+                    builder.Append($"Input{GetNameFromSP(property.name)}Parameter input{GetNameFromSP(property.name)}");
+                }
+                else
+                {
+                    num = 0;
+                    foreach (var input in inputs.Where(x => x.is_output == false))
+                    {
+                        if (num > 0) builder.Append(",");
+                        builder.Append($"{input.ObjectType} {input.Name.FirstCharToLower()}");
+                        num++;
+                    }
+                }
+                
             }
             builder.AppendLine(");");
 
@@ -2006,7 +2125,7 @@ namespace Woose.Builder
             builder.AppendLine("builder.Services.AddSingleton<IContext>(provider => new DbContext(connectionString));");
 
             builder.AppendLine($"builder.Services.AddSingleton<I{option.MethodName}Repository, {option.MethodName}Repository>();");
-            foreach(var table in properties)
+            foreach(var table in properties.Where(x => x.ObjectType.Equals("TABLE", StringComparison.OrdinalIgnoreCase)))
             {
                 builder.AppendLine($"builder.Services.AddSingleton<I{table.name}Repository, {table.name}Repository>();");
             }

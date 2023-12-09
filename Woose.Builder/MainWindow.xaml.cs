@@ -302,40 +302,64 @@ namespace Woose.Builder
             viewModel.entities.Clear();
             viewModel.sps.Clear();
 
-            using (var rep = new SqlServerRepository(this.context))
-            {
-                option.tables = rep.GetTableEntities();
-                if (option.tables != null && option.tables.Count > 0)
+            worker = new Thread(new ParameterizedThreadStart((main) => {
+                MainWindow target = main as MainWindow;
+                if (target != null)
                 {
                     var tableproperties = new List<DbTableInfo>();
-                    foreach (var item in option.tables)
-                    {
-                        viewModel.entities.Add(item);
-                        tableproperties = rep.GetTableProperties(item.name);
-                        option.tableProperties.AddOrUpdate(item.name, tableproperties, (x, y) => tableproperties);
-                    }
-                }
-                option.sps = rep.GetSpEntities();
-                if (option.sps != null && option.sps.Count > 0)
-                {
                     var spproperties = new List<SPEntity>();
                     var spoutput = new List<SpOutput>();
                     var sptables = new List<SpTable>();
-                    foreach (var item in option.sps)
+
+                    using (var rep = new SqlServerRepository(target.context))
                     {
-                        viewModel.sps.Add(item);
-                        spproperties = rep.GetSpProperties(item.name);
-                        spoutput = rep.GetSpOutput(item.name);
-                        sptables = rep.GetSPTables(item.name);
-                        option.spProperties.AddOrUpdate(item.name, spproperties, (x, y) => spproperties);
-                        option.spOutputs.AddOrUpdate(item.name, spoutput, (x, y) => spoutput);
-                        option.spTables.AddOrUpdate(item.name, sptables, (x, y) => sptables);
+                        target.option.tables = rep.GetTableEntities();
+                        if (target.option.tables != null && target.option.tables.Count > 0)
+                        {
+                            foreach (var item in target.option.tables)
+                            {
+                                tableproperties = rep.GetTableProperties(item.name);
+                                target.option.tableProperties.AddOrUpdate(item.name, tableproperties, (x, y) => tableproperties);
+
+                                Dispatcher.Invoke(() =>
+                                {
+                                    viewModel.entities.Add(item);
+                                });
+                            }
+                        }
+
+                        target.option.sps = rep.GetSpEntities();
+                        if (target.option.sps != null && target.option.sps.Count > 0)
+                        {
+                            foreach (var item in target.option.sps)
+                            {
+                                spproperties = rep.GetSpProperties(item.name);
+                                spoutput = rep.GetSpOutput(item.name);
+                                sptables = rep.GetSPTables(item.name);
+                                
+                                target.option.spProperties.AddOrUpdate(item.name, spproperties, (x, y) => spproperties);
+                                target.option.spOutputs.AddOrUpdate(item.name, spoutput, (x, y) => spoutput);
+                                target.option.spTables.AddOrUpdate(item.name, sptables, (x, y) => sptables);
+
+                                Dispatcher.Invoke(() =>
+                                {
+                                    viewModel.sps.Add(item);
+                                });
+                            }
+                        }
                     }
                 }
-            }
 
-            Enables(true);
-            Loading(false);
+                Dispatcher.Invoke(() =>
+                {
+                    worker = null;
+                    MessageBox.Show($"연결구성이 완료되었습니다.");
+                    Enables(true);
+                    Loading(false);
+                });
+            }));
+
+            worker.Start(this);
         }
 
         private void TableListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -927,18 +951,19 @@ namespace Woose.Builder
             {
                 CSharpCreater creater = new CSharpCreater();
                 string selectedFolderPath = Convert.ToString(paramData);
-                using (var rep = new SqlServerRepository(context))
+                foreach (var entity in this.viewModel.entities)
                 {
-                    foreach (var entity in this.viewModel.entities)
+                    var list = option.GetTableProperties(entity.name);
+
+
+                    if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
                     {
-                        var list = rep.GetTableProperties(entity.name);
+                        File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
 
-                        if (!File.Exists($"{selectedFolderPath}\\Entities\\{entity.name}.cs"))
-                        {
-                            File.Create($"{selectedFolderPath}\\Entities\\{entity.name}.cs").Close();
-                        }
-                        File.WriteAllText($"{selectedFolderPath}\\Entities\\{entity.name}.cs", creater.CreateEntity(option, entity, list, true));
-
+                    if (entity.ObjectType.Equals("TABLE", StringComparison.OrdinalIgnoreCase))
+                    {
                         if (!File.Exists($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs"))
                         {
                             File.Create($"{selectedFolderPath}\\Controllers\\{entity.name}Controllers.cs").Close();

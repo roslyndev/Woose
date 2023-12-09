@@ -77,7 +77,8 @@ namespace Woose.Builder
 ,	B.is_nullable
 ,	B.is_identity
 ,	D.[value] as [Description]
-from (select [object_id] as TableID,[name] as TableName from sys.tables union select [object_id] as TableID,[name] as TableName from sys.views) as A
+,	A.Mode
+from (select [object_id] as TableID,[name] as TableName,'TABLE' as [Mode] from sys.tables union select [object_id],[name],'VIEW' from sys.views) as A
 inner join sys.all_columns as B on A.TableID = B.[object_id]
 inner join sys.types as C on B.[system_type_id] = C.[system_type_id] and B.user_type_id = C.user_type_id
 left outer join sys.extended_properties as D on D.major_id = B.[object_id] and D.minor_id = B.column_id and D.[name] = 'MS_Description'

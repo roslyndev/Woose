@@ -20,6 +20,8 @@ namespace Woose.Builder
 
         public string Description { get; set; } = string.Empty;
 
+        public string Mode { get; set; } = string.Empty;
+
         public string Name
         {
             get
