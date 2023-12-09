@@ -422,6 +422,9 @@ namespace Woose.Data
                         builder.Append($" and {where5}");
                     }
                     break;
+                case "Direct":
+                    builder = new StringBuilder(SpName);
+                    break;
             }
 
             return builder.ToString();
@@ -472,6 +475,13 @@ namespace Woose.Data
             return this;
         }
 
+        public QueryHelper Direct(string query)
+        {
+            this.Method = "Direct";
+            this.SpName = query;
+            return this;
+        }
+
         public virtual void Set()
         {
             this.Command.CommandText = this.SpName;
@@ -501,6 +511,14 @@ namespace Woose.Data
             var result = new QueryHelper();
             result.Command = cmd;
             result.SP(spName);
+            return result;
+        }
+
+        public static QueryHelper Execute(this SqlCommand cmd, string query)
+        {
+            var result = new QueryHelper();
+            result.Command = cmd;
+            result.Direct(query);
             return result;
         }
     }

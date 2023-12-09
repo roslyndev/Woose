@@ -1321,6 +1321,23 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
             builder.AppendEmptyLine();
 
+
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public {entity.name} Single(string whereStr)");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new {entity.name}();");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var db = context.getConnection())");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "using (var cmd = db.CreateCommand())");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "{");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"cmd.On<{entity.name}>().Select(1).Where(whereStr).Set();");
+            builder.AppendTabStringLine((IsNamespace ? 4 : 3), $"result = cmd.ExecuteEntity<{entity.name}>();");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "}");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
+            builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
+            builder.AppendEmptyLine();
+
+
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public List<{entity.name}> Select(string whereStr = \"\")");
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new List<{entity.name}>();");

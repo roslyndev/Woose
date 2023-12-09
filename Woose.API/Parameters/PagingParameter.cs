@@ -1,9 +1,13 @@
 ﻿using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Woose.API
 {
     public class PagingParameter : IPagingParameter
     {
+        [JsonIgnore]
+        public int PageSize { get; set; } = 10;
+
         public int CurPage { get; set; } = 1;
 
         protected StringBuilder AddWhereString { get; set; } = new StringBuilder(200);
