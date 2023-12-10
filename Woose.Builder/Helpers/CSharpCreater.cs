@@ -860,7 +860,7 @@ namespace Woose.Builder
                 builder.AppendEmptyLine();
                 builder.AppendTabStringLine((IsNamespace ? 3 : 2), "return result;");
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
-                builder.AppendLine("}");
+                builder.AppendTabStringLine((IsNamespace ? 1 : 2), "}");
                 if (IsNamespace)
                 {
                     builder.AppendLine("}");
