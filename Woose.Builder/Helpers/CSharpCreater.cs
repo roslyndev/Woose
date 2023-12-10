@@ -1177,10 +1177,10 @@ namespace Woose.Builder
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"List<{entity.name}> Select(string whereStr);");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"List<{entity.name}> List(PagingParameter paramData);");
+                builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"List<{entity.name}> List(IPagingParameter paramData);");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"int Count(PagingParameter paramData);");
+                builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"int Count(IPagingParameter paramData);");
                 builder.AppendEmptyLine();
 
                 builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"{exeReturn} Insert({entity.name} {entity.name.FirstCharToLower()});");
@@ -1353,7 +1353,7 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
             builder.AppendEmptyLine();
 
-            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public List<{entity.name}> List(PagingParameter paramData)");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public List<{entity.name}> List(IPagingParameter paramData)");
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), $"var result = new List<{entity.name}>();");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
@@ -1368,7 +1368,7 @@ namespace Woose.Builder
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "}");
             builder.AppendEmptyLine();
 
-            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public int Count(PagingParameter paramData)");
+            builder.AppendTabStringLine((IsNamespace ? 2 : 1), $"public int Count(IPagingParameter paramData)");
             builder.AppendTabStringLine((IsNamespace ? 2 : 1), "{");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "int result = 0;");
             builder.AppendTabStringLine((IsNamespace ? 3 : 2), "");
