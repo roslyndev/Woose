@@ -1612,6 +1612,7 @@ namespace Woose.Builder
             string exeReturn = string.Empty;
             string methodType = "HttpPost";
             string formType = "FromBody";
+            string returnType = string.Empty;
             int num = 0;
             int startindex = 2;
             bool isAnotherModel = false;
@@ -1625,39 +1626,72 @@ namespace Woose.Builder
 
             if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
             {
-                exeReturn = "ReturnValue";
-            }
-            else
-            {
-                exeReturn = "ExecuteResult";
-            }
-
-
-            if (outputs != null && outputs.Count > 0)
-            {
-                if (outputs.Where(x => x.name == "IsError").Count() > 0)
+                if (outputs != null && outputs.Count > 0)
                 {
-                    exeReturn = "ExecuteResult";
-                }
-                else
-                {
-                    if (output != null)
+                    if (outputs.Where(x => x.name == "IsError").Count() > 0)
                     {
-                        exeReturn = output.name;
+                        exeReturn = "ReturnValue";
+                        returnType = "ReturnValue";
                     }
                     else
                     {
-                        exeReturn = $"Output{GetNameFromSP(property.name)}Parameter";
+                        if (output != null)
+                        {
+                            exeReturn = output.name;
+                            returnType = $"ReturnValues<List<{output.name}>>";
+                        }
+                        else
+                        {
+                            exeReturn = $"Output{GetNameFromSP(property.name)}Parameter";
+                            returnType = $"ReturnValues<List<Output{GetNameFromSP(property.name)}Parameter>>";
+                        }
+                        methodType = "HttpGet";
+                        formType = "FromQuery";
+                        isAnotherModel = true;
                     }
-                    methodType = "HttpGet";
-                    formType = "FromQuery";
-                    isAnotherModel = true;
+                }
+                else
+                {
+                    exeReturn = "ReturnValue";
+                    returnType = "ReturnValue";
+                }
+            }
+            else
+            {
+                if (outputs != null && outputs.Count > 0)
+                {
+                    if (outputs.Where(x => x.name == "IsError").Count() > 0)
+                    {
+                        exeReturn = "ExecuteResult";
+                        returnType = "ApiResult<ExecuteResult>";
+                    }
+                    else
+                    {
+                        if (output != null)
+                        {
+                            exeReturn = output.name;
+                            returnType = $"ApiResult<List<{output.name}>>";
+                        }
+                        else
+                        {
+                            exeReturn = $"Output{GetNameFromSP(property.name)}Parameter";
+                            returnType = $"ApiResult<List<Output{GetNameFromSP(property.name)}Parameter>>";
+                        }
+                        methodType = "HttpGet";
+                        formType = "FromQuery";
+                        isAnotherModel = true;
+                    }
+                }
+                else
+                {
+                    exeReturn = "ExecuteResult";
+                    returnType = "ApiResult<ExecuteResult>";
                 }
             }
 
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), $"[Route(\"{GetNameFromSP(property.name).AddSlashBeforeUppercase()}\")]");
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), $"[{methodType}]");
-            builder.AppendTabString((IsNamespace ? startindex : (startindex + 1)), $"public {((isAnotherModel) ? $"List<{exeReturn}>" : exeReturn)}? {GetNameFromSP(property.name)}(");
+            builder.AppendTabString((IsNamespace ? startindex : (startindex + 1)), $"public {returnType}? {GetNameFromSP(property.name)}(");
             if (options.IsNoModel)
             {
                 num = 0;
@@ -1688,11 +1722,19 @@ namespace Woose.Builder
             }
             builder.AppendLine(")");
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "{");
+
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = new {returnType}();");
+            builder.AppendEmptyLine();
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var user = this.GetAccessToken();");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"if (user != null && !string.IsNullOrWhiteSpace(user.ServerToken) && user.ServerToken == AppSettings.Current.ServerToken)");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), "{");
+            
+
             if (inputs.Where(x => x.is_output == false).Count() > 0)
             {
                 if (options.IsNoModel)
                 {
-                    builder.AppendTabString((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(");
+                    builder.AppendTabString((IsNamespace ? (startindex + 2) : (startindex + 3)), $"var tmp = db.{GetNameFromSP(property.name)}(");
                     num = 0;
                     foreach (var input in inputs.Where(x => x.is_output == false))
                     {
@@ -1706,11 +1748,11 @@ namespace Woose.Builder
                 {
                     if (inputs.Where(x => x.is_output == false).Count() > 1)
                     {
-                        builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
+                        builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"var tmp = db.{GetNameFromSP(property.name)}(input{GetNameFromSP(property.name)});");
                     }
                     else
                     {
-                        builder.AppendTabString((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}(");
+                        builder.AppendTabString((IsNamespace ? (startindex + 2) : (startindex + 3)), $"var tmp = db.{GetNameFromSP(property.name)}(");
                         num = 0;
                         foreach (var input in inputs.Where(x => x.is_output == false))
                         {
@@ -1724,9 +1766,38 @@ namespace Woose.Builder
             }
             else
             {
-                builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"var result = db.{GetNameFromSP(property.name)}();");
+                builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), $"var tmp = db.{GetNameFromSP(property.name)}();");
             }
-            
+
+            if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
+            {
+                if (isAnotherModel)
+                {
+                    builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), "result.Success(tmp.Count(), tmp);");
+                }
+                else
+                {
+                    builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), "result = tmp;");
+                }
+            }
+            else
+            {
+                if (isAnotherModel)
+                {
+                    builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), "result.Success(tmp);");
+                }
+                else
+                {
+                    builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), "result = tmp.ToResult();");
+                }
+            }
+
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), "}");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"else");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), "{");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 2) : (startindex + 3)), "result.Error(\"Authorization header not found\");");
+            builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), "}");
+
             builder.AppendTabStringLine((IsNamespace ? (startindex + 1) : (startindex + 2)), $"return result;");
 
             builder.AppendTabStringLine((IsNamespace ? startindex : (startindex + 1)), "}");
