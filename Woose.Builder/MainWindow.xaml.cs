@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
@@ -290,6 +291,7 @@ namespace Woose.Builder
             }
             else
             {
+                this.option.Database = selectedDatabase;
                 this.context = new DbContext(selectedDatabase.ConnectionString);
                 this.onLoad();
             }
@@ -1092,7 +1094,16 @@ namespace Woose.Builder
                 {
                     string[] arr = folderPath.Trim().Split('\\');
                     result = arr[arr.Length - 1].Trim();
+                    if (string.IsNullOrWhiteSpace(result) && arr.Length > 1)
+                    {
+                        result = arr[arr.Length - 2].Trim();
+                    }
                 }
+            }
+
+            if (string.IsNullOrWhiteSpace(result))
+            {
+                result = option.Database.GetAppName();
             }
 
             return result;
@@ -1559,6 +1570,93 @@ namespace Woose.Builder
 
 
                 MessageBox.Show($"공통요소가 작성되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message.ToString());
+            }
+        }
+
+        private void Btn_NodeCreate_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.IsConnection)
+            {
+                string selectedFolderPath = ShowFolderDialog();
+                option.ProjectName = GetProjectName(selectedFolderPath);
+                option.MethodName = GetMethodName(selectedFolderPath);
+
+                if (!string.IsNullOrEmpty(selectedFolderPath))
+                {
+                    if (!Directory.Exists(selectedFolderPath))
+                    {
+                        MessageBox.Show($"대상 위치를 찾을 수 없습니다.");
+                    }
+                    else
+                    {
+                        Loading(true);
+
+                        worker = new Thread(new ParameterizedThreadStart((path) => {
+                            Btn_NodeCreate_Proc(path);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                worker = null;
+                                Loading(false);
+                            });
+                        }));
+
+                        worker.Start(selectedFolderPath);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Database 연결을 먼저 진행해 주세요.");
+            }
+        }
+
+        private void Btn_NodeCreate_Proc(object paramData)
+        {
+            try
+            {
+                string selectedFolderPath = Convert.ToString(paramData);
+                JavaScriptCreater creater = new JavaScriptCreater();
+
+                if (!Directory.Exists($"{selectedFolderPath}\\models"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\models");
+                }
+
+                if (!Directory.Exists($"{selectedFolderPath}\\routes"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\routes");
+                }
+
+                if (!Directory.Exists($"{selectedFolderPath}\\swagger"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\swagger");
+                }
+
+                if (!File.Exists($"{selectedFolderPath}\\package.json"))
+                {
+                    File.Create($"{selectedFolderPath}\\package.json").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\package.json", creater.NodePackgeJsonCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\index.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\index.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\index.js", creater.NodeIndexJsCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\config.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\config.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\config.js", creater.NodeConfigCreate(this.option));
+
+
+                MessageBox.Show($"모든 파일이 생성되었습니다.");
             }
             catch (Exception ex)
             {

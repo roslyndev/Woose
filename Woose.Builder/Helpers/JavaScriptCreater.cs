@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -257,6 +258,86 @@ namespace Woose.Builder
                 builder.AppendLine("}");
             }
 
+            return builder.ToString();
+        }
+
+
+
+        public string NodePackgeJsonCreate(BindOption options)
+        {
+            StringBuilder builder = new StringBuilder(200);
+            PackageJson json = new PackageJson();
+            json.name = options.ProjectName.FirstCharToLower();
+            json.version = "1.0.0";
+            json.description = $"{options.ProjectName} with Woose Api Server";
+            json.main = "index.js";
+            json.scripts.start = "nodemon index.js";
+            json.scripts.test = "mocha";
+            json.repository.type = "git";
+            json.keywords.Add(options.ProjectName);
+            json.license = "ISC";
+            builder.Append(JsonConvert.SerializeObject(json));
+            builder.Replace(",", $",{Environment.NewLine}");
+            builder.Replace("{", "{" + $"{Environment.NewLine}");
+            builder.Replace("}", $"{Environment.NewLine}" + "}");
+            return builder.ToString();
+        }
+
+        public string NodeConfigCreate(BindOption options)
+        {
+            StringBuilder builder = new StringBuilder(200);
+            NodeJsConfig json = new NodeJsConfig();
+            json.database.host = options.Database.GetHost();
+            json.database.port = options.Database.GetPort();
+            json.database.user = options.Database.GetID();
+            json.database.password = options.Database.GetPassword();
+            json.database.database = options.Database.GetDb();
+            json.tokenKey = "access_token";
+            json.port = 4000;
+            json.secret = $"{options.ProjectName}  JWT key @ Woose";
+
+            builder.Append("var config = ");
+            builder.AppendLine(JsonConvert.SerializeObject(json));
+            builder.AppendLine("");
+            builder.AppendLine("module.exports = config;");
+            builder.Replace(",", $",{Environment.NewLine}");
+            builder.Replace("{", "{" + $"{Environment.NewLine}");
+            builder.Replace("}", $"{Environment.NewLine}" + "}");
+            return builder.ToString();
+        }
+
+        public string NodeIndexJsCreate(BindOption options)
+        {
+            StringBuilder builder = new StringBuilder(200);
+            builder.AppendLine("const express = require('express');");
+            builder.AppendLine("const cors = require('cors');");
+            builder.AppendLine("const path = require('path');");
+            builder.AppendLine("const { swaggerUi } = require('./swagger');");
+            builder.AppendLine("const apis = require('./routes');");
+            builder.AppendLine("const YAML = require('yamljs');");
+            builder.AppendLine("const globalConfig = require('./models/globalConfig');");
+            builder.AppendLine("");
+            builder.AppendLine("const app = express();");
+            builder.AppendLine("const config = require('./config');");
+            builder.AppendLine("");
+            builder.AppendLine("app.use(cors());");
+            builder.AppendLine("app.use(express.urlencoded({ extended: false })); ");
+            builder.AppendLine("app.use(express.json());");
+            builder.AppendLine("");
+            builder.AppendLine("let imageURL = path.join(__dirname, 'uploads');");
+            builder.AppendLine("app.use('/uploads', express.static(imageURL)); ");
+            builder.AppendLine("");
+            builder.AppendLine("const swaggerSpec = YAML.load(path.join(__dirname, './swagger/openapi.yaml'));");
+            builder.AppendLine("");
+            builder.AppendLine("let global = globalConfig.current.getInstance();");
+            builder.AppendLine("global.set(\"root\", __dirname);");
+            builder.AppendLine("");
+            builder.AppendLine("app.use('/api', apis);");
+            builder.AppendLine("app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));");
+            builder.AppendLine("");
+            builder.AppendLine("app.listen(config.port, () => {");
+            builder.AppendTabStringLine(1, "console.log(`Server running successfully on ${config.port}`);");
+            builder.AppendLine("});");
             return builder.ToString();
         }
     }

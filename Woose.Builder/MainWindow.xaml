@@ -316,7 +316,8 @@
                                     <ComboBoxItem Content="HttpDelete" />
                                 </ComboBox>
 
-                                <Button x:Name="Btn_Js_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center"></Button>
+                                <Button x:Name="Btn_Js_Apply" Content="적용" Width="60" Style="{StaticResource MintButton}" Click="Btn_Apply_Click" VerticalAlignment="Center" Margin="0,0,5,0"></Button>
+                                <Button x:Name="Btn_Node_Create" Content="프로젝트 생성" Width="100" Style="{StaticResource OrangeButton}" Click="Btn_NodeCreate_Click" VerticalAlignment="Center"></Button>
                             </StackPanel>
                         </Grid>
                         <Grid Grid.Row="1">
