@@ -14,7 +14,7 @@ namespace Woose.Tests
         }
 
         [Test, Order(2)]
-        public async Task ContextAndQueryHelper_TestCase_Create()
+        public void ContextAndQueryHelper_TestCase_Create()
         {
             IContext context = new DbContext(this.connStr);
             var result = new GlobalCode();

@@ -3,11 +3,19 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Woose.Core;
+using Woose.Data;
 
 namespace Woose.API
 {
     public class CryptoHandler : ICryptoHandler
     {
+        public CryptoHandler()
+        {
+            CryptoHelper.AES.Set(WooseSecret.PublicKey, WooseSecret.SecretKey);
+            CryptoHelper.AES128.Set(WooseSecret.SecretKey);
+            CryptoHelper.AES256.Set(WooseSecret.SecretKey);
+        }
+
         public string AES128Decode(string contenxt)
         {
             return CryptoHelper.AES128.Decrypt(contenxt);
@@ -69,15 +77,15 @@ namespace Woose.API
         }
 
 
-        public RefreshToken? GenerateRefreshToken(string rtoken)
+        public RefreshToken? GenerateRefreshToken(string userid)
         {
-            if (!string.IsNullOrWhiteSpace(rtoken))
+            if (!string.IsNullOrWhiteSpace(userid))
             {
                 try
                 {
                     return new RefreshToken
                     {
-                        Token = CryptoHelper.AES256.Encrypt(rtoken),
+                        Token = CryptoHelper.AES256.Encrypt(userid),
                         Expiration = DateTime.UtcNow.AddMonths(3)
                     };
                 }

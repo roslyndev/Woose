@@ -15,11 +15,11 @@ namespace Woose.Core
         {
             string result = String.Empty;
 
-            using (RNGCryptoServiceProvider CString = new RNGCryptoServiceProvider())
+            using (var rng = RandomNumberGenerator.Create())
             {
                 byte[] salt = new byte[24];
-                CString.GetBytes(salt);
-                byte[] hash = PBKDF2(keyString, salt, PBKDF2_ITERATIONS, 24);
+                rng.GetBytes(salt);
+                byte[] hash = PBKDF2(keyString, salt, PBKDF2_ITERATIONS, 64); // SHA-512 has 64 bytes output
                 result = String.Format("{0}:{1}:{2}", PBKDF2_ITERATIONS, Convert.ToBase64String(salt), Convert.ToBase64String(hash));
             }
 
@@ -39,9 +39,10 @@ namespace Woose.Core
 
         private byte[] PBKDF2(string password, byte[] salt, int iterations, int outputBytes)
         {
-            Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(password, salt);
-            pbkdf2.IterationCount = iterations;
-            return pbkdf2.GetBytes(outputBytes);
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA512))
+            {
+                return pbkdf2.GetBytes(outputBytes);
+            }
         }
 
         private bool SlowEquals(byte[] a, byte[] b)
