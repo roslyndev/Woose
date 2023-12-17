@@ -17,6 +17,8 @@ namespace Woose.Data
 
         protected int CurPage { get; set; } = 1;
 
+        protected ILogHelper Logger { get; set; }
+
         protected bool IsTryCatch { get; set; } = false;
 
         protected string WhereString { get; set; } = string.Empty;
@@ -110,6 +112,12 @@ namespace Woose.Data
         {
             this.Method = "Count";
             this.IsTopCount = false;
+            return this;
+        }
+
+        public DynamicQueryHelper<T> SetLogger(ILogHelper logger)
+        {
+            this.Logger = logger;
             return this;
         }
 
@@ -249,6 +257,10 @@ namespace Woose.Data
         public override void Set()
         {
             this.Command.CommandText = this.ToQuery();
+            if (this.Logger != null)
+            {
+                this.Logger.Debug($"Query : {this.Command.CommandText}");
+            }
             this.Command.CommandType = System.Data.CommandType.Text;
             if (ModelValue != null && ModelValue.Count > 0)
             {

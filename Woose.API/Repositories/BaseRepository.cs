@@ -8,11 +8,18 @@ namespace Woose.API
     {
         protected IContext context;
 
+        protected ILogHelper Logger;
+
         private bool disposedValue;
 
         public BaseRepository(IContext _context)
         {
             this.context = _context;
+        }
+
+        public void LogSet(ILogHelper log)
+        {
+            this.Logger = log;
         }
 
         public SqlTransaction BeginTransaction(SqlConnection conn)
@@ -59,6 +66,10 @@ namespace Woose.API
                 {
                     cmd.On<T>().Select(1).Where(info.ColumnName, idx).Set();
                     result = cmd.ExecuteEntity<T>();
+                    if (this.Logger != null)
+                    {
+                        this.Logger.Info(cmd.CommandText);
+                    }
                 }
 
                 if (result == null)
@@ -80,6 +91,11 @@ namespace Woose.API
                 cmd.On<T>().Select(1).Where(whereStr).Set();
                 result = cmd.ExecuteEntity<T>();
 
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
+
                 if (result == null)
                 {
                     result = new T();
@@ -99,6 +115,11 @@ namespace Woose.API
                 cmd.On<T>().Select().Where(whereStr).Set();
                 result = cmd.ExecuteEntities<T>();
 
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
+
                 if (result == null)
                 {
                     result = new List<T>();
@@ -117,6 +138,11 @@ namespace Woose.API
             {
                 cmd.On<T>().Select(TopCount).Where(whereStr).Set();
                 result = cmd.ExecuteEntities<T>();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
 
                 if (result == null)
                 {
@@ -151,6 +177,11 @@ namespace Woose.API
                     result = cmd.ExecuteEntities<T>();
                 }
 
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
+
                 if (result == null)
                 {
                     result = new List<T>();
@@ -179,6 +210,11 @@ namespace Woose.API
 
                 result = cmd.ExecuteEntities<T>();
 
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
+
                 if (result == null)
                 {
                     result = new List<T>();
@@ -197,6 +233,11 @@ namespace Woose.API
             {
                 cmd.On<T>().Count().Where(whereStr).Set();
                 result = cmd.ExecuteCount();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -215,6 +256,11 @@ namespace Woose.API
                 {
                     cmd.On<T>().Paging(paramData.PageSize, paramData.CurPage).Where(paramData.ToWhereString()).Desc(info.ColumnName).Set();
                     result = cmd.ExecuteEntities<T>();
+                }
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
                 }
 
                 if (result == null)
@@ -236,6 +282,11 @@ namespace Woose.API
                 cmd.Execute(query).Set();
                 result = cmd.ExecuteEntities<T>();
 
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
+
                 if (result == null)
                 {
                     result = new List<T>();
@@ -254,6 +305,11 @@ namespace Woose.API
             {
                 cmd.On(target).Insert().Try().Set();
                 result = cmd.ExecuteReturnValue();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -268,6 +324,11 @@ namespace Woose.API
             {
                 cmd.On(target).Insert(Columns).Try().Set();
                 result = cmd.ExecuteReturnValue();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -282,6 +343,11 @@ namespace Woose.API
             {
                 cmd.On(target).Update().Try().Set();
                 result = cmd.ExecuteReturnValue();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -296,6 +362,11 @@ namespace Woose.API
             {
                 cmd.On(target).Update(Columns).Try().Set();
                 result = cmd.ExecuteReturnValue();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -310,6 +381,11 @@ namespace Woose.API
             {
                 cmd.On<T>().Delete().Try().Where(whereStr).Set();
                 result = cmd.ExecuteReturnValue();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -325,6 +401,11 @@ namespace Woose.API
             {
                 cmd.On(target).Insert().Try().Set();
                 result = cmd.ExecuteResult();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -339,6 +420,11 @@ namespace Woose.API
             {
                 cmd.On(target).Insert(Columns).Try().Set();
                 result = cmd.ExecuteResult();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -353,6 +439,11 @@ namespace Woose.API
             {
                 cmd.On(target).Update().Try().Set();
                 result = cmd.ExecuteResult();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -367,6 +458,11 @@ namespace Woose.API
             {
                 cmd.On(target).Update(Columns).Try().Set();
                 result = cmd.ExecuteResult();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
@@ -381,6 +477,11 @@ namespace Woose.API
             {
                 cmd.On<T>().Delete().Try().Where(whereStr).Set();
                 result = cmd.ExecuteResult();
+
+                if (this.Logger != null)
+                {
+                    this.Logger.Info(cmd.CommandText);
+                }
             }
 
             return result;
