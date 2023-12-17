@@ -23,12 +23,12 @@ namespace Woose.API
         ReturnValue InsertOut<T>(T target, params string[] Columns) where T : IEntity, new();
         ReturnValue UpdateOut<T>(T target) where T : IEntity, new();
         ReturnValue UpdateOut<T>(T target, params string[] Columns) where T : IEntity, new();
-        ReturnValue DeleteOut<T>(T target, string whereStr) where T : IEntity, new();
+        ReturnValue DeleteOut<T>(string whereStr) where T : IEntity, new();
         ExecuteResult InsertIn<T>(T target) where T : IEntity, new();
         ExecuteResult InsertIn<T>(T target, params string[] Columns) where T : IEntity, new();
         ExecuteResult UpdateIn<T>(T target) where T : IEntity, new();
         ExecuteResult UpdateIn<T>(T target, params string[] Columns) where T : IEntity, new();
-        ExecuteResult DeleteIn<T>(T target, string whereStr) where T : IEntity, new();
+        ExecuteResult DeleteIn<T>(string whereStr) where T : IEntity, new();
 
     }
 }

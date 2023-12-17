@@ -284,7 +284,7 @@ namespace Woose.API
             return result;
         }
 
-        public ReturnValue DeleteOut<T>(T target, string whereStr) where T : IEntity, new()
+        public ReturnValue DeleteOut<T>(string whereStr) where T : IEntity, new()
         {
             var result = new ReturnValue();
 
@@ -355,7 +355,7 @@ namespace Woose.API
             return result;
         }
 
-        public ExecuteResult DeleteIn<T>(T target, string whereStr) where T : IEntity, new()
+        public ExecuteResult DeleteIn<T>(string whereStr) where T : IEntity, new()
         {
             var result = new ExecuteResult();
 
