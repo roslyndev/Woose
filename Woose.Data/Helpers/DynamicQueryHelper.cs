@@ -306,7 +306,7 @@ namespace Woose.Data
                     }
                     break;
                 case "Count":
-                    builder.Append($"Select 1 as [Count] from [{this.Target.GetTableName()}] with (nolock)");
+                    builder.Append($"Select Count(1) as [Count] from [{this.Target.GetTableName()}] with (nolock)");
                     if (this.TryToWhereString(out string where2))
                     {
                         builder.Append($" where {where2}");
@@ -315,7 +315,7 @@ namespace Woose.Data
                 case "Insert":
                     if (this.IsTryCatch)
                     {
-                        builder.AppendLine("Declare @Err int, @Code bigint, @Value varchar(100), @Msg nvarchar(100)");
+                        builder.AppendLine("Declare @Err int");
                         builder.AppendLine("SET @Err = 0");
                         builder.AppendLine("SET @Code = -1");
                         builder.AppendLine("SET @Value = ''");
@@ -359,7 +359,7 @@ namespace Woose.Data
                 case "Update":
                     if (this.IsTryCatch)
                     {
-                        builder.AppendLine("Declare @Err int, @Code bigint, @Value varchar(100), @Msg nvarchar(100)");
+                        builder.AppendLine("Declare @Err int");
                         builder.AppendLine("SET @Err = 0");
                         builder.AppendLine("SET @Code = -1");
                         builder.AppendLine("SET @Value = ''");
@@ -397,7 +397,7 @@ namespace Woose.Data
                 case "Delete":
                     if (this.IsTryCatch)
                     {
-                        builder.AppendLine("Declare @Err int, @Code bigint, @Value varchar(100), @Msg nvarchar(100)");
+                        builder.AppendLine("Declare @Err int");
                         builder.AppendLine("SET @Err = 0");
                         builder.AppendLine("SET @Code = -1");
                         builder.AppendLine("SET @Value = ''");
@@ -427,12 +427,13 @@ namespace Woose.Data
                     builder.Append($"SELECT TOP ({this.TopCount} * {this.CurPage}) ROW_NUMBER () OVER (ORDER BY {this.OrderType}) AS rownumber,");
                     builder.Append($"{(string.IsNullOrWhiteSpace(this.Columns) ? "*" : this.Columns)} ");
                     builder.Append($"From [{this.Target.GetTableName()}] with (nolock) ");
-                    builder.Append($") AS resultTable ");
-                    builder.Append($"WHERE rownumber > ({this.CurPage} - 1) * {this.TopCount} ");
                     if (this.TryToWhereString(out string where5))
                     {
-                        builder.Append($" and {where5}");
+                        builder.Append($" where {where5}");
                     }
+                    builder.Append($") AS resultTable ");
+                    builder.Append($"WHERE rownumber > ({this.CurPage} - 1) * {this.TopCount} ");
+
                     break;
                 case "Direct":
                     builder = new StringBuilder(SpName);
