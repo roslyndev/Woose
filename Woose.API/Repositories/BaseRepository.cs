@@ -37,7 +37,24 @@ namespace Woose.API
             using (var db = context.getConnection())
             using (var cmd = db.CreateCommand())
             {
-                var info = result.GetInfo().Where(x => x.IsKey).FirstOrDefault();
+                var infos = result.GetInfo();
+
+                var info = infos.Where(x => x.IsKey).FirstOrDefault();
+                if (info == null)
+                {
+                    info = infos.Where(x => x.Type == System.Data.SqlDbType.BigInt).FirstOrDefault();
+                }
+
+                if (info == null)
+                {
+                    info = infos.Where(x => x.Type == System.Data.SqlDbType.Int).FirstOrDefault();
+                }
+
+                if (info == null)
+                {
+                    info = infos.FirstOrDefault();
+                }
+
                 if (info != null)
                 {
                     cmd.On<T>().Select(1).Where(info.ColumnName, idx).Set();

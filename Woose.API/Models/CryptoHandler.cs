@@ -165,6 +165,7 @@ namespace Woose.API
                         {
                             result.Id = userId.Value;
                             result.Name = userName.Value;
+                            result.ServerToken = serverToken?.Value ?? "";
                         }
                     }
                 }
