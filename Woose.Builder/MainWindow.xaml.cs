@@ -872,7 +872,7 @@ namespace Woose.Builder
                 app.Config.AppID = option.ProjectName.Replace(".", "");
                 app.Config.CookieVar = $"{option.ProjectName}Token";
                 app.ServerToken = CryptoHelper.SHA256.Encrypt($"W{option.ProjectName.Trim().ToUpper()}O{DateTime.Now.ToString("YYMMDD")}S");
-                File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app));
+                File.WriteAllText($"{selectedFolderPath}\\appsettings.json", JsonConvert.SerializeObject(app, Formatting.Indented));
 
                 CSharpCreater creater = new CSharpCreater();
                 File.WriteAllText($"{selectedFolderPath}\\Program.cs", creater.CreateProgram(option, this.viewModel.entities.ToList()));
@@ -1627,6 +1627,11 @@ namespace Woose.Builder
                     Directory.CreateDirectory($"{selectedFolderPath}\\models");
                 }
 
+                if (!Directory.Exists($"{selectedFolderPath}\\models\\entities"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\models\\entities");
+                }
+
                 if (!Directory.Exists($"{selectedFolderPath}\\routes"))
                 {
                     Directory.CreateDirectory($"{selectedFolderPath}\\routes");
@@ -1655,6 +1660,31 @@ namespace Woose.Builder
                 }
                 File.WriteAllText($"{selectedFolderPath}\\config.js", creater.NodeConfigCreate(this.option));
 
+                if (!File.Exists($"{selectedFolderPath}\\global.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\global.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\global.js", creater.NodeGlobalJsCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\swagger.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\swagger.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\swagger.js", creater.NodeSwaggerJsCreate(this.option));
+
+                foreach(DbEntity entity in viewModel.entities)
+                {
+                    if (!Directory.Exists($"{selectedFolderPath}\\routes\\{entity.name}"))
+                    {
+                        Directory.CreateDirectory($"{selectedFolderPath}\\routes\\{entity.name}");
+                    }
+
+                    if (!File.Exists($"{selectedFolderPath}\\models\\entities\\{entity.name}.js"))
+                    {
+                        File.Create($"{selectedFolderPath}\\models\\entities\\{entity.name}.js").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\models\\entities\\{entity.name}.js", creater.NodeSequelizeEntitiyCreate(this.option, option.GetTableProperties(entity.name)));
+                }
 
                 MessageBox.Show($"모든 파일이 생성되었습니다.");
             }

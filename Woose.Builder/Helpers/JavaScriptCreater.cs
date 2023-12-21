@@ -267,7 +267,7 @@ namespace Woose.Builder
         {
             StringBuilder builder = new StringBuilder(200);
             PackageJson json = new PackageJson();
-            json.name = options.ProjectName.FirstCharToLower();
+            json.name = options.ProjectName.ToLower();
             json.version = "1.0.0";
             json.description = $"{options.ProjectName} with Woose Api Server";
             json.main = "index.js";
@@ -276,10 +276,30 @@ namespace Woose.Builder
             json.repository.type = "git";
             json.keywords.Add(options.ProjectName);
             json.license = "ISC";
-            builder.Append(JsonConvert.SerializeObject(json));
-            builder.Replace(",", $",{Environment.NewLine}");
-            builder.Replace("{", "{" + $"{Environment.NewLine}");
-            builder.Replace("}", $"{Environment.NewLine}" + "}");
+            // 각각의 라이브러리를 추가
+            json.dependencies.axios = "^0.27.2";
+            json.dependencies.bcryptjs = "^2.4.3";
+            json.dependencies.cors = "^2.8.5";
+            json.dependencies.crypto = "^1.0.1";
+            json.dependencies.express = "^4.18.1";
+            json.dependencies.expressFileupload = "^1.4.0";
+            json.dependencies.jsonwebtoken = "^8.5.1";
+            json.dependencies.moment = "^2.29.4";
+            json.dependencies.multer = "^1.4.5-lts.1";
+            json.dependencies.nodemailer = "^6.8.0";
+            json.dependencies.nodemon = "^2.0.19";
+            json.dependencies.sequelize = "^6.21.4";
+            json.dependencies.sharp = "^0.30.7";
+            json.dependencies.swaggerCli = "^4.0.4";
+            json.dependencies.swaggerJsdoc = "^6.2.5";
+            json.dependencies.swaggerUiExpress = "^4.5.0";
+            json.dependencies.tedious = "^15.0.1";
+            json.dependencies.uuid4 = "^2.0.3";
+            json.dependencies.yamljs = "^0.3.0";
+            json.devDependencies.swaggerUiExpress = "^4.1.3";
+            json.devDependencies.yamljs = "^0.2.31";
+
+            builder.Append(JsonConvert.SerializeObject(json, Formatting.Indented));
             return builder.ToString();
         }
 
@@ -297,12 +317,9 @@ namespace Woose.Builder
             json.secret = $"{options.ProjectName}  JWT key @ Woose";
 
             builder.Append("var config = ");
-            builder.AppendLine(JsonConvert.SerializeObject(json));
+            builder.AppendLine(JsonConvert.SerializeObject(json, Formatting.Indented));
             builder.AppendLine("");
             builder.AppendLine("module.exports = config;");
-            builder.Replace(",", $",{Environment.NewLine}");
-            builder.Replace("{", "{" + $"{Environment.NewLine}");
-            builder.Replace("}", $"{Environment.NewLine}" + "}");
             return builder.ToString();
         }
 
@@ -338,6 +355,107 @@ namespace Woose.Builder
             builder.AppendLine("app.listen(config.port, () => {");
             builder.AppendTabStringLine(1, "console.log(`Server running successfully on ${config.port}`);");
             builder.AppendLine("});");
+            return builder.ToString();
+        }
+
+        public string NodeGlobalJsCreate(BindOption options)
+        {
+            return @"
+var global = { current : (function() {
+    var instance;
+    var name = 'global';
+    var data = [];
+    function init() {
+      return {
+        name: name,
+        data: data,
+        set: function(key, value) {
+          data.push({ key : key, value : value});
+        },
+        get: function(key) {
+            let result = null;
+            for(let i = 0; i < data.length; i++) {
+                if (data[i].key === key) {
+                    result = data[i].value;
+                    break;
+                }
+            }
+
+            return result;
+        }
+      };
+    }
+    return {
+      getInstance: function() {
+        if (!instance) {
+          instance = init();
+        }
+        return instance;
+      }
+    }
+  })()
+};
+
+module.exports = global;
+                    ";
+        }
+
+        public string NodeSwaggerJsCreate(BindOption options)
+        {
+            StringBuilder builder = new StringBuilder(200);
+            builder.Append(@"
+const swaggerUi = require(""swagger-ui-express"")
+const swaggereJsdoc = require(""swagger-jsdoc"")
+
+const config = require('./config');
+
+const options = {
+  swaggerDefinition: {
+    openapi: ""3.0.0"",
+    info: {
+      version: ""1.0.0"",
+      title: """);
+            builder.Append(options.ProjectName);
+            builder.Append(@" v1.0 swagger"",
+      description:
+        ""Documentation service to help with API development"",
+    },
+    components: {
+      securitySchemes: {
+        bearer : {
+          type: ""http"",
+          name: ""access_token"",
+          scheme: ""bearer"",
+          in:""header""
+        }
+      }
+    },
+    securityDefinitions:{
+      bearer:{
+        type: ""http"",
+        name: ""access_token"",
+        scheme: ""bearer"",
+        in:""header""
+      }
+      },
+    security: [
+      {
+        bearer: []
+      },
+    ],
+    servers: [
+      {
+        url: `localhost:4000`,
+      },
+    ],
+  },
+  apis: [
+    `./routes/*.js`, 
+  ],
+}
+const specs = swaggereJsdoc(options)
+
+module.exports = { swaggerUi, specs }");
             return builder.ToString();
         }
     }

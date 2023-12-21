@@ -1,6 +1,4 @@
 using System.Data;
-using Woose.API;
-using Woose.Data;
 
 namespace Woose.Tests
 {

@@ -1,4 +1,6 @@
-﻿namespace Woose.Builder
+﻿using Newtonsoft.Json;
+
+namespace Woose.Builder
 {
     public class PackageJson
     {
@@ -24,9 +26,9 @@
 
         public string homepage { get; set; } = string.Empty;
 
-        public dynamic dependencies { get; set; }
+        public PackageJsonDependencies dependencies { get; set; } = new PackageJsonDependencies();
 
-        public dynamic devDependencies { get; set; }
+        public PackageJsonDevDependencies devDependencies { get; set; } = new PackageJsonDevDependencies();
 
         public PackageJson()
         {
@@ -56,6 +58,53 @@
         public string url { get; set; } = string.Empty;
 
         public PackageJsonBugs()
+        {
+        }
+    }
+
+    public class PackageJsonDependencies
+    {
+        public string axios { get; set; } = string.Empty;
+        public string bcryptjs { get; set; } = string.Empty;
+        public string cors { get; set; } = string.Empty;
+        public string crypto { get; set; } = string.Empty;
+        public string express { get; set; } = string.Empty;
+        [JsonProperty("express-fileupload")]
+        public string expressFileupload { get; set; } = string.Empty;
+        public string jsonwebtoken { get; set; } = string.Empty;
+        public string moment { get; set; } = string.Empty;
+        public string multer { get; set; } = string.Empty;
+        public string nodemailer { get; set; } = string.Empty;
+        public string nodemon { get; set; } = string.Empty;
+        public string sequelize { get; set; } = string.Empty;
+        public string sharp { get; set; } = string.Empty;
+
+        [JsonProperty("swagger-cli")]
+        public string swaggerCli { get; set; } = string.Empty;
+
+        [JsonProperty("swagger-jsdoc")]
+        public string swaggerJsdoc { get; set; } = string.Empty;
+
+        [JsonProperty("swagger-ui-express")]
+        public string swaggerUiExpress { get; set; } = string.Empty;
+        public string tedious { get; set; } = string.Empty;
+        public string uuid4 { get; set; } = string.Empty;
+        public string yamljs { get; set; } = string.Empty;
+
+        public PackageJsonDependencies()
+        {
+        }
+    }
+
+    public class PackageJsonDevDependencies
+    {
+        [JsonProperty("@types/swagger-ui-express")]
+        public string swaggerUiExpress { get; set; } = string.Empty;
+
+        [JsonProperty("@types/yamljs")]
+        public string yamljs { get; set; } = string.Empty;
+
+        public PackageJsonDevDependencies()
         {
         }
     }
