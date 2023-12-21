@@ -1632,6 +1632,11 @@ namespace Woose.Builder
                     Directory.CreateDirectory($"{selectedFolderPath}\\models\\entities");
                 }
 
+                if (!Directory.Exists($"{selectedFolderPath}\\models\\helpers"))
+                {
+                    Directory.CreateDirectory($"{selectedFolderPath}\\models\\helpers");
+                }
+
                 if (!Directory.Exists($"{selectedFolderPath}\\routes"))
                 {
                     Directory.CreateDirectory($"{selectedFolderPath}\\routes");
@@ -1660,11 +1665,11 @@ namespace Woose.Builder
                 }
                 File.WriteAllText($"{selectedFolderPath}\\config.js", creater.NodeConfigCreate(this.option));
 
-                if (!File.Exists($"{selectedFolderPath}\\global.js"))
+                if (!File.Exists($"{selectedFolderPath}\\models\\globalConfig.js"))
                 {
-                    File.Create($"{selectedFolderPath}\\global.js").Close();
+                    File.Create($"{selectedFolderPath}\\models\\globalConfig.js").Close();
                 }
-                File.WriteAllText($"{selectedFolderPath}\\global.js", creater.NodeGlobalJsCreate(this.option));
+                File.WriteAllText($"{selectedFolderPath}\\models\\globalConfig.js", creater.NodeGlobalJsCreate(this.option));
 
                 if (!File.Exists($"{selectedFolderPath}\\swagger.js"))
                 {
@@ -1672,7 +1677,25 @@ namespace Woose.Builder
                 }
                 File.WriteAllText($"{selectedFolderPath}\\swagger.js", creater.NodeSwaggerJsCreate(this.option));
 
-                foreach(DbEntity entity in viewModel.entities)
+                if (!File.Exists($"{selectedFolderPath}\\models\\helpers\\cryptoHelper.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\helpers\\cryptoHelper.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\helpers\\cryptoHelper.js", creater.NodeCryptoHelperCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\models\\helpers\\mailHelper.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\helpers\\mailHelper.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\helpers\\mailHelper.js", creater.NodeMailHelperCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\models\\db.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\db.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\db.js", creater.NodeSequelizeDbCreate(this.option));
+
+                foreach (DbEntity entity in viewModel.entities)
                 {
                     if (!Directory.Exists($"{selectedFolderPath}\\routes\\{entity.name}"))
                     {

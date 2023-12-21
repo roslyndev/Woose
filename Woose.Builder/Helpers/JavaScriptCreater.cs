@@ -368,12 +368,12 @@ var global = { current : (function() {
     function init() {
       return {
         name: name,
-        data: data,
         set: function(key, value) {
-          data.push({ key : key, value : value});
+          data.push({ key : key, value : value });
         },
         get: function(key) {
             let result = null;
+
             for(let i = 0; i < data.length; i++) {
                 if (data[i].key === key) {
                     result = data[i].value;
@@ -382,6 +382,14 @@ var global = { current : (function() {
             }
 
             return result;
+        },
+        remove: function(key) {
+            for(let i = 0; i < data.length; i++) {
+                if (data[i].key === key) {
+                    data = data.splice(i, 1);
+                    break;
+                }
+            }
         }
       };
     }
@@ -456,6 +464,164 @@ const options = {
 const specs = swaggereJsdoc(options)
 
 module.exports = { swaggerUi, specs }");
+            return builder.ToString();
+        }
+
+        public string NodeCryptoHelperCreate(BindOption options)
+        {
+            return @"
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const crypto = require(""crypto"");
+const config = require(""../../config"");
+const uuid4 = require('uuid4');
+const { ReturnValue, ReturnValues } = require(""../ReturnValue"");
+
+function generateJwtToken(manager) {
+    let data = { id : manager.id, managerid : manager.ManagerID };
+    let expired = { expiresIn: '150m' };
+    let token = jwt.sign(data, config.secret, expired);
+    return token;
+}
+
+function reverseJwtToken(token) {
+    return jwt.decode(token, config.secret);
+};
+
+async function hashAsync(password) {
+    return await bcrypt.hash(password, 10);
+}
+
+async function compareAsync(password, passwordHash) {
+    return bcrypt.compare(password, passwordHash);
+}
+
+function hash(password, callback) {
+    bcrypt.hash(password, 10, function(err, hashresult) {
+        callback(hashresult);
+    });
+}
+
+function randomTokenString() {
+    return crypto.randomBytes(40).toString('hex');
+}
+
+function tokenGet(header) {
+    let token = """";
+
+    try {
+        if (header !== null && header !== undefined) {
+            let tmp = String(header).trim();
+
+            if (tmp !== null && tmp !== undefined && tmp !== """") {
+                if (tmp === ""eyemcast-test"") {
+                    token = { id : 1 };
+                } else {
+                    token = reverseJwtToken(tmp);
+                }
+                
+            }
+        }
+    } catch (e) {
+        console.log(""tokenGet Error : "", e.message);
+    }
+
+    return token;
+}
+
+const uuid = () => {
+    const tokens = uuid4().split('-');
+    return tokens[2] + tokens[1] + tokens[0] + tokens[3] + tokens[4];
+}
+
+module.exports = {
+    generateJwtToken,
+    hash,
+    hashAsync,
+    randomTokenString,
+    uuid,
+    compareAsync,
+    reverseJwtToken,
+    tokenGet
+};
+                    ";
+        }
+
+        public string NodeMailHelperCreate(BindOption options)
+        {
+            return @"
+const { sendEmailSync } = require(""../../models/sendmail"");
+const config = require('../../config');
+const { ReturnValue } = require(""../ReturnValue"");
+
+const mailHelper = {
+    Send : (email, title, body) => {
+        var result = new ReturnValue();
+
+        try {
+            sendEmailSync({
+                to: email,
+                subject: title,
+                html: body
+            });
+
+            result.Success(1, email);
+        } catch (e) {
+            result.Error(e.message);
+        }
+
+        return result;
+    }
+};
+
+module.exports = mailHelper;
+";
+        }
+
+        public string NodeSequelizeDbCreate(BindOption options)
+        {
+            StringBuilder builder = new StringBuilder(200);
+            builder.AppendLine("const config = require('../config');");
+            builder.AppendLine("const { Sequelize } = require('sequelize');");
+            builder.AppendLine("const { hashAsync } = require(\"./helpers/cryptoHelper\");");
+            builder.AppendLine("");
+            builder.AppendLine("module.exports = db = {};");
+            builder.AppendLine("");
+            builder.AppendLine("initialize();");
+            builder.AppendLine("");
+            builder.AppendLine("async function initialize() {");
+            builder.AppendTabStringLine(1, "const { host, port, user, password, database } = config.database;");
+            builder.AppendLine("");
+            builder.AppendTabStringLine(1, "var seqConfig = {");
+            builder.AppendTabStringLine(2, "host: host, ");
+            builder.AppendTabStringLine(2, "dialect: 'mssql',");
+            builder.AppendTabStringLine(2, "timezone: '+09:00',");
+            builder.AppendTabStringLine(2, "dialectOptions: {");
+            builder.AppendTabStringLine(3, "charset: 'utf8mb4',");
+            builder.AppendTabStringLine(3, "dateStrings: true,");
+            builder.AppendTabStringLine(3, "typeCast: true");
+            builder.AppendTabStringLine(2, "},");
+            builder.AppendTabStringLine(2, "define: {");
+            builder.AppendTabStringLine(3, "timestamps: true");
+            builder.AppendTabStringLine(2, "}");
+            builder.AppendTabStringLine(1, "};");
+            builder.AppendLine("");
+            builder.AppendTabStringLine(1, "const sequelize = new Sequelize(database, user, password, seqConfig);");
+            builder.AppendTabStringLine(1, "db.origin = sequelize;");
+            foreach(var entity in options.tables)
+            {
+                builder.AppendTabStringLine(1, $"db.{entity.name} = require('./entities/{entity.name.FirstCharToLower()}')(sequelize);");
+            }
+            
+            builder.AppendLine("");
+            builder.AppendTabStringLine(1, "await sequelize.sync({ force: false })");
+            builder.AppendTabStringLine(1, ".catch(e => {");
+            builder.AppendTabStringLine(2, "console.log('error:', e);");
+            builder.AppendTabStringLine(1, "})");
+            builder.AppendTabStringLine(1, ".then(() => {");
+            builder.AppendTabStringLine(2, "console.log('sequelize OK');");
+            builder.AppendTabStringLine(1, "});");
+            builder.AppendLine("}");
             return builder.ToString();
         }
     }
