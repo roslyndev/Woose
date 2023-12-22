@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using Woose.Data;
 
 namespace Woose.Builder
 {
@@ -31,10 +33,10 @@ namespace Woose.Builder
                     num++;
                 }
                 builder.AppendLine(") => {");
-                builder.AppendTabStringLine(1, "let result = new ApiResult();");
+                builder.AppendTabLine(1, "let result = new ApiResult();");
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, "try {");
-                builder.AppendTabString(2, $"const [results, metadata] = await sequelize.query('EXEC {spName} ");
+                builder.AppendTabLine(1, "try {");
+                builder.AppendTab(2, $"const [results, metadata] = await sequelize.query('EXEC {spName} ");
                 num = 0;
                 foreach(var item in info)
                 {
@@ -43,33 +45,33 @@ namespace Woose.Builder
                     num++;
                 }
                 builder.AppendLine("', {");
-                builder.AppendTabStringLine(3, "replacements: {");
+                builder.AppendTabLine(3, "replacements: {");
                 num = 0;
                 foreach (var item in info)
                 {
                     if (num > 0) 
                     { 
-                        builder.AppendTabString(4, ","); 
+                        builder.AppendTab(4, ","); 
                     }
                     else
                     {
-                        builder.AppendTabString(4, "");
+                        builder.AppendTab(4, "");
                     }
-                    builder.AppendTabStringLine(1, $"{item.name.Replace("@", "")}: {item.name.Replace("@", "").FirstCharToLower()}");
+                    builder.AppendTabLine(1, $"{item.name.Replace("@", "")}: {item.name.Replace("@", "").FirstCharToLower()}");
                     num++;
                 }
-                builder.AppendTabStringLine(3, "}");
-                builder.AppendTabStringLine(2, "");
-                builder.AppendTabStringLine(3, "if (metadata && metadata.rowsAffected && metadata.rowsAffected[0] > 0) {");
-                builder.AppendTabStringLine(4, "result.Success(metadata.rowsAffected[0]);");
-                builder.AppendTabStringLine(3, "} else {");
-                builder.AppendTabStringLine(4, "result.Error('Update Fail');");
-                builder.AppendTabStringLine(3, "}");
-                builder.AppendTabStringLine(1, "} catch (e) {");
-                builder.AppendTabStringLine(2, "result.Error(e.message);");
-                builder.AppendTabStringLine(1, "} finally {");
-                builder.AppendTabStringLine(2, "return result;");
-                builder.AppendTabStringLine(1, "}");
+                builder.AppendTabLine(3, "}");
+                builder.AppendTabLine(2, "");
+                builder.AppendTabLine(3, "if (metadata && metadata.rowsAffected && metadata.rowsAffected[0] > 0) {");
+                builder.AppendTabLine(4, "result.Success(metadata.rowsAffected[0]);");
+                builder.AppendTabLine(3, "} else {");
+                builder.AppendTabLine(4, "result.Error('Update Fail');");
+                builder.AppendTabLine(3, "}");
+                builder.AppendTabLine(1, "} catch (e) {");
+                builder.AppendTabLine(2, "result.Error(e.message);");
+                builder.AppendTabLine(1, "} finally {");
+                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(1, "}");
                 builder.AppendLine("};");
             }
 
@@ -96,17 +98,20 @@ namespace Woose.Builder
                 builder.AppendEmptyLine();
                 builder.AppendLine($"function {entityName}(sequelize)");
                 builder.AppendLine("{");
-                builder.AppendTabStringLine(1, "const attributes = {");
+                builder.AppendTabLine(1, "const attributes = {");
                 foreach(var item in info)
                 {
                     if (item.is_identity)
                     {
-                        builder.AppendTabString(2, $"{item.Name}: ");
+                        builder.AppendTab(2, $"{item.Name}: ");
                         builder.Append("{");
-                        builder.Append($" type: DataTypes.{item.ColumnType.ToUpper()}");
+                        builder.Append($" type: DataTypes.{item.SequelizeMsSqlType}");
                         if (item.IsSize)
                         {
-                            builder.Append($"({item.max_length})");
+                            if (item.max_length > 0)
+                            {
+                                builder.Append($"({item.max_length})");
+                            }
                         }
                         builder.Append($", allowNull:false, primaryKey: true");
                         if (item.is_identity)
@@ -117,7 +122,7 @@ namespace Woose.Builder
                     }
                     else
                     {
-                        builder.AppendTabString(2, $"{item.Name}: ");
+                        builder.AppendTab(2, $"{item.Name}: ");
                         builder.Append("{");
                         if (item.IsDate)
                         {
@@ -125,7 +130,7 @@ namespace Woose.Builder
                         }
                         else
                         {
-                            builder.Append($" type: DataTypes.{item.ColumnType.ToUpper()}");
+                            builder.Append($" type: DataTypes.{item.SequelizeMsSqlType}");
                         }
                         if (item.IsSize)
                         {
@@ -155,30 +160,30 @@ namespace Woose.Builder
                     }
                     
                 }
-                builder.AppendTabStringLine(1, "};");
+                builder.AppendTabLine(1, "};");
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, "const options = {");
-                builder.AppendTabStringLine(2, $"tableName: \"{info[0].TableName}\",");
+                builder.AppendTabLine(1, "const options = {");
+                builder.AppendTabLine(2, $"tableName: \"{info[0].TableName}\",");
                 if (info.Where(x => x.Name.Equals("Password", StringComparison.OrdinalIgnoreCase)).Count() > 0)
                 {
-                    builder.AppendTabStringLine(2, "defaultScope: {");
-                    builder.AppendTabStringLine(3, "attributes: { exclude: ['Password'] }");
-                    builder.AppendTabStringLine(2, "},");
-                    builder.AppendTabStringLine(2, "scopes: {");
-                    builder.AppendTabStringLine(3, "withHash: { attributes: {}, }");
-                    builder.AppendTabStringLine(2, "},");
+                    builder.AppendTabLine(2, "defaultScope: {");
+                    builder.AppendTabLine(3, "attributes: { exclude: ['Password'] }");
+                    builder.AppendTabLine(2, "},");
+                    builder.AppendTabLine(2, "scopes: {");
+                    builder.AppendTabLine(3, "withHash: { attributes: {}, }");
+                    builder.AppendTabLine(2, "},");
                 }
                 if (primaryKey != null)
                 {
                     if (!(primaryKey.IsNumber && primaryKey.is_identity))
                     {
-                        builder.AppendTabStringLine(2, "freezeTableName: true,");
+                        builder.AppendTabLine(2, "freezeTableName: true,");
                     }
                 }
-                builder.AppendTabStringLine(2, "timestamps: false");
-                builder.AppendTabStringLine(1, "};");
+                builder.AppendTabLine(2, "timestamps: false");
+                builder.AppendTabLine(1, "};");
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, $"return sequelize.define('{entityName}', attributes, options);");
+                builder.AppendTabLine(1, $"return sequelize.define('{entityName}', attributes, options);");
                 builder.AppendLine("}");
             }
 
@@ -201,60 +206,60 @@ namespace Woose.Builder
 
                 builder.Append($"exports.Save = async ({entityName.FirstCharToLower()}) => ");
                 builder.AppendLine("{");
-                builder.AppendTabStringLine(1, "let result = new ApiResult();");
+                builder.AppendTabLine(1, "let result = new ApiResult();");
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, "try {");
-                builder.AppendTabString(2, $"if ({entityName.FirstCharToLower()} !== null && {entityName.FirstCharToLower()} !== undefined)");
+                builder.AppendTabLine(1, "try {");
+                builder.AppendTab(2, $"if ({entityName.FirstCharToLower()} !== null && {entityName.FirstCharToLower()} !== undefined)");
                 builder.AppendLine(" {");
-                builder.AppendTabString(3, $"let target = await db.{entityName.FirstCharToLower()}.findOne(");
+                builder.AppendTab(3, $"let target = await db.{entityName.FirstCharToLower()}.findOne(");
                 builder.AppendLine("{");
-                builder.AppendTabString(4, "where : { ");
+                builder.AppendTab(4, "where : { ");
                 builder.Append($"{primaryKey?.ColumnName} : {entityName.FirstCharToLower()}.{primaryKey?.ColumnName}");
                 builder.AppendLine(" }");
-                builder.AppendTabStringLine(3, "});");
+                builder.AppendTabLine(3, "});");
                 builder.AppendEmptyLine();
-                builder.AppendTabString(3, $"if (target !== null && target !== undefined && target.{primaryKey?.ColumnName} > 0)");
+                builder.AppendTab(3, $"if (target !== null && target !== undefined && target.{primaryKey?.ColumnName} > 0)");
                 builder.AppendLine(" {");
                 foreach (var item in info.Where(x => x.ColumnName != primaryKey?.ColumnName))
                 {
-                    builder.AppendTabStringLine(4, $"target.{item.ColumnName} = {entityName.FirstCharToLower()}.{item.ColumnName}");
+                    builder.AppendTabLine(4, $"target.{item.ColumnName} = {entityName.FirstCharToLower()}.{item.ColumnName}");
                 }
-                builder.AppendTabStringLine(4, "await target.save();");
+                builder.AppendTabLine(4, "await target.save();");
                 builder.AppendEmptyLine();
-                builder.AppendTabString(4, $"if (target.{primaryKey?.ColumnName} > 0) ");
+                builder.AppendTab(4, $"if (target.{primaryKey?.ColumnName} > 0) ");
                 builder.AppendLine("{");
-                builder.AppendTabStringLine(5, $"result.Success(target.{primaryKey?.ColumnName});");
-                builder.AppendTabStringLine(4, "} else {");
-                builder.AppendTabStringLine(5, "result.Error(\"수정에 실패하였습니다.\");");
-                builder.AppendTabStringLine(4, "}");
-                builder.AppendTabStringLine(3, "} else {");
-                builder.AppendTabStringLine(4, $"let target = new db.{entityName.FirstCharToLower()}();");
+                builder.AppendTabLine(5, $"result.Success(target.{primaryKey?.ColumnName});");
+                builder.AppendTabLine(4, "} else {");
+                builder.AppendTabLine(5, "result.Error(\"수정에 실패하였습니다.\");");
+                builder.AppendTabLine(4, "}");
+                builder.AppendTabLine(3, "} else {");
+                builder.AppendTabLine(4, $"let target = new db.{entityName.FirstCharToLower()}();");
                 builder.AppendEmptyLine();
                 foreach(var item in info.Where(x => x.ColumnName != primaryKey?.ColumnName))
                 {
-                    builder.AppendTabStringLine(4, $"target.{item.ColumnName} = {entityName.FirstCharToLower()}.{item.ColumnName}");
+                    builder.AppendTabLine(4, $"target.{item.ColumnName} = {entityName.FirstCharToLower()}.{item.ColumnName}");
                 }
-                builder.AppendTabStringLine(4, "await target.save();");
+                builder.AppendTabLine(4, "await target.save();");
                 builder.AppendEmptyLine();
-                builder.AppendTabString(4, $"if (target.{primaryKey?.ColumnName} > 0) ");
+                builder.AppendTab(4, $"if (target.{primaryKey?.ColumnName} > 0) ");
                 builder.AppendLine("{");
-                builder.AppendTabStringLine(5, $"result.Success(target.{primaryKey?.ColumnName});");
-                builder.AppendTabStringLine(4, "} else {");
-                builder.AppendTabStringLine(5, "result.Error(\"추가에 실패하였습니다.\");");
-                builder.AppendTabStringLine(4, "}");
-                builder.AppendTabStringLine(3, "}");
+                builder.AppendTabLine(5, $"result.Success(target.{primaryKey?.ColumnName});");
+                builder.AppendTabLine(4, "} else {");
+                builder.AppendTabLine(5, "result.Error(\"추가에 실패하였습니다.\");");
+                builder.AppendTabLine(4, "}");
+                builder.AppendTabLine(3, "}");
                 
                 
                 
 
-                builder.AppendTabStringLine(2, "} else {");
-                builder.AppendTabStringLine(3, "result.Error(\"잘못된 접근입니다.\");");
-                builder.AppendTabStringLine(2, "}");
-                builder.AppendTabStringLine(1, "} catch (e) {");
-                builder.AppendTabStringLine(2, "result.Error(e.message);");
-                builder.AppendTabStringLine(1, "} finally {");
-                builder.AppendTabStringLine(2, "return result;");
-                builder.AppendTabStringLine(1, "}");
+                builder.AppendTabLine(2, "} else {");
+                builder.AppendTabLine(3, "result.Error(\"잘못된 접근입니다.\");");
+                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "} catch (e) {");
+                builder.AppendTabLine(2, "result.Error(e.message);");
+                builder.AppendTabLine(1, "} finally {");
+                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(1, "}");
                 builder.AppendLine("}");
             }
 
@@ -289,15 +294,29 @@ namespace Woose.Builder
             json.dependencies.nodemailer = "^6.8.0";
             json.dependencies.nodemon = "^2.0.19";
             json.dependencies.sequelize = "^6.21.4";
-            json.dependencies.sharp = "^0.30.7";
+            json.dependencies.firebaseAdmin = "^11.6.0";
             json.dependencies.swaggerCli = "^4.0.4";
             json.dependencies.swaggerJsdoc = "^6.2.5";
             json.dependencies.swaggerUiExpress = "^4.5.0";
-            json.dependencies.tedious = "^15.0.1";
             json.dependencies.uuid4 = "^2.0.3";
             json.dependencies.yamljs = "^0.3.0";
             json.devDependencies.swaggerUiExpress = "^4.1.3";
             json.devDependencies.yamljs = "^0.2.31";
+
+            switch (options.Database.DatabaseType)
+            {
+                case "SQL Server":
+                case "MSSQL":
+                    json.dependencies.sharp = "^0.30.7";
+                    json.dependencies.tedious = "^15.0.1";
+                    break;
+                case "MySQL":
+                    json.dependencies.mysql = "^2.18.1";
+                    json.dependencies.mysql2 = "^3.2.3";
+                    break;
+                case "SQLite":
+                    break;
+            }
 
             builder.Append(JsonConvert.SerializeObject(json, Formatting.Indented));
             return builder.ToString();
@@ -333,6 +352,7 @@ namespace Woose.Builder
             builder.AppendLine("const apis = require('./routes');");
             builder.AppendLine("const YAML = require('yamljs');");
             builder.AppendLine("const globalConfig = require('./models/globalConfig');");
+            builder.AppendLine("const fs = require('fs');");
             builder.AppendLine("");
             builder.AppendLine("const app = express();");
             builder.AppendLine("const config = require('./config');");
@@ -344,7 +364,10 @@ namespace Woose.Builder
             builder.AppendLine("let imageURL = path.join(__dirname, 'uploads');");
             builder.AppendLine("app.use('/uploads', express.static(imageURL)); ");
             builder.AppendLine("");
-            builder.AppendLine("const swaggerSpec = YAML.load(path.join(__dirname, './swagger/openapi.yaml'));");
+            builder.AppendLine("const configYaml = YAML.parse(fs.readFileSync('./swagger/config.yaml', 'utf8'));");
+            builder.AppendLine("const openapi = YAML.parse(fs.readFileSync('./swagger/openapi.yaml', 'utf8'));");
+            builder.AppendLine("const components = YAML.parse(fs.readFileSync('./swagger/components.yaml', 'utf8'));");
+            builder.AppendLine("const swaggerSpec = Object.assign({}, configYaml, openapi, components);");
             builder.AppendLine("");
             builder.AppendLine("let global = globalConfig.current.getInstance();");
             builder.AppendLine("global.set(\"root\", __dirname);");
@@ -353,7 +376,7 @@ namespace Woose.Builder
             builder.AppendLine("app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));");
             builder.AppendLine("");
             builder.AppendLine("app.listen(config.port, () => {");
-            builder.AppendTabStringLine(1, "console.log(`Server running successfully on ${config.port}`);");
+            builder.AppendTabLine(1, "console.log(`Server running successfully on ${config.port}`);");
             builder.AppendLine("});");
             return builder.ToString();
         }
@@ -361,7 +384,7 @@ namespace Woose.Builder
         public string NodeGlobalJsCreate(BindOption options)
         {
             return @"
-var global = { current : (function() {
+var globalConfig = { current : (function() {
     var instance;
     var name = 'global';
     var data = [];
@@ -404,8 +427,26 @@ var global = { current : (function() {
   })()
 };
 
-module.exports = global;
+module.exports = globalConfig;
                     ";
+        }
+
+        public string NodeSendMailJsCreate(BindOption options)
+        {
+            return @"const nodemailer = require('nodemailer');
+const config = require('../config');
+
+async function sendEmail({ to, subject, html, from = config.emailFrom }) {
+    const transporter = nodemailer.createTransport(config.smtpOptions);
+    await transporter.sendMail({ from, to, subject, html });
+}
+
+function sendEmailSync({ to, subject, html, from = config.emailFrom }) {
+    const transporter = nodemailer.createTransport(config.smtpOptions);
+    transporter.sendMail({ from, to, subject, html });
+}
+
+module.exports = { sendEmail, sendEmailSync };";
         }
 
         public string NodeSwaggerJsCreate(BindOption options)
@@ -475,7 +516,8 @@ const bcrypt = require('bcryptjs');
 const crypto = require(""crypto"");
 const config = require(""../../config"");
 const uuid4 = require('uuid4');
-const { ReturnValue, ReturnValues } = require(""../ReturnValue"");
+const { ReturnValue } = require(""../ReturnValue"");
+const { ReturnValues } = require(""../ReturnValues"");
 
 function generateJwtToken(manager) {
     let data = { id : manager.id, managerid : manager.ManagerID };
@@ -590,39 +632,505 @@ module.exports = mailHelper;
             builder.AppendLine("initialize();");
             builder.AppendLine("");
             builder.AppendLine("async function initialize() {");
-            builder.AppendTabStringLine(1, "const { host, port, user, password, database } = config.database;");
+            builder.AppendTabLine(1, "const { host, port, user, password, database } = config.database;");
             builder.AppendLine("");
-            builder.AppendTabStringLine(1, "var seqConfig = {");
-            builder.AppendTabStringLine(2, "host: host, ");
-            builder.AppendTabStringLine(2, "dialect: 'mssql',");
-            builder.AppendTabStringLine(2, "timezone: '+09:00',");
-            builder.AppendTabStringLine(2, "dialectOptions: {");
-            builder.AppendTabStringLine(3, "charset: 'utf8mb4',");
-            builder.AppendTabStringLine(3, "dateStrings: true,");
-            builder.AppendTabStringLine(3, "typeCast: true");
-            builder.AppendTabStringLine(2, "},");
-            builder.AppendTabStringLine(2, "define: {");
-            builder.AppendTabStringLine(3, "timestamps: true");
-            builder.AppendTabStringLine(2, "}");
-            builder.AppendTabStringLine(1, "};");
+            builder.AppendTabLine(1, "var seqConfig = {");
+            builder.AppendTabLine(2, "host: host, ");
+            builder.AppendTabLine(2, "dialect: 'mssql',");
+            builder.AppendTabLine(2, "timezone: '+09:00',");
+            builder.AppendTabLine(2, "dialectOptions: {");
+            builder.AppendTabLine(3, "charset: 'utf8mb4',");
+            builder.AppendTabLine(3, "dateStrings: true,");
+            builder.AppendTabLine(3, "typeCast: true");
+            builder.AppendTabLine(2, "},");
+            builder.AppendTabLine(2, "define: {");
+            builder.AppendTabLine(3, "timestamps: true");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "};");
             builder.AppendLine("");
-            builder.AppendTabStringLine(1, "const sequelize = new Sequelize(database, user, password, seqConfig);");
-            builder.AppendTabStringLine(1, "db.origin = sequelize;");
-            foreach(var entity in options.tables)
+            builder.AppendTabLine(1, "const sequelize = new Sequelize(database, user, password, seqConfig);");
+            builder.AppendTabLine(1, "db.origin = sequelize;");
+            foreach(var entity in options.tables.Where(x => x.ObjectType.Equals("TABLE", StringComparison.OrdinalIgnoreCase)))
             {
-                builder.AppendTabStringLine(1, $"db.{entity.name} = require('./entities/{entity.name.FirstCharToLower()}')(sequelize);");
+                builder.AppendTabLine(1, $"db.{entity.name} = require('./entities/{entity.name.FirstCharToLower()}')(sequelize);");
             }
-            
             builder.AppendLine("");
-            builder.AppendTabStringLine(1, "await sequelize.sync({ force: false })");
-            builder.AppendTabStringLine(1, ".catch(e => {");
-            builder.AppendTabStringLine(2, "console.log('error:', e);");
-            builder.AppendTabStringLine(1, "})");
-            builder.AppendTabStringLine(1, ".then(() => {");
-            builder.AppendTabStringLine(2, "console.log('sequelize OK');");
-            builder.AppendTabStringLine(1, "});");
+            foreach (var entity in options.tables.Where(x => x.ObjectType.Equals("TABLE", StringComparison.OrdinalIgnoreCase)))
+            {
+                foreach (var fk in options.GetParentForeignKeys(entity.name))
+                {
+                    builder.AppendTab(1, $"db.{fk.ParentTableName}.hasMany(db.{fk.ReferencedTableName},");
+                    builder.Append(" { ");
+                    builder.Append($"foreignKey: '{fk.ReferencedColumnName}', sourceKey:'{fk.ParentColumnName}', onDelete:'CASCADE'");
+                    builder.AppendLine(" });");
+
+                    builder.AppendTab(1, $"db.{fk.ReferencedTableName}.belongsTo(db.{fk.ParentTableName},");
+                    builder.Append(" { ");
+                    builder.Append($"foreignKey: '{fk.ReferencedColumnName}', sourceKey:'{fk.ParentColumnName}'");
+                    builder.AppendLine(" });");
+                    builder.AppendLine("");
+                }
+            }
+            builder.AppendTabLine(1, "await sequelize.sync({ force: false })");
+            builder.AppendTabLine(1, ".catch(e => {");
+            builder.AppendTabLine(2, "console.log('error:', e);");
+            builder.AppendTabLine(1, "})");
+            builder.AppendTabLine(1, ".then(() => {");
+            builder.AppendTabLine(2, "console.log('sequelize OK');");
+            builder.AppendTabLine(1, "});");
             builder.AppendLine("}");
             return builder.ToString();
+        }
+
+        public string NodeRouteIndexCreate(BindOption option, DbEntity entity)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            builder.AppendLine("const Router = require(\"express\").Router();");
+            builder.AppendLine($"const Controller = require(\"./{entity.name.FirstCharToLower()}.controller\");");
+            builder.AppendLine("const { ReturnValue, ReturnValues } = require(\"../../models/ReturnValue\");");
+            builder.AppendLine("const cryptoHelper = require(\"../../models/helpers/cryptoHelper\");");
+            builder.AppendLine("const config = require(\"../../config\");");
+            builder.AppendEmptyLine();
+            builder.AppendLine("Router.get(\"/list\", async (req, res) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendTabLine(1, "let header_token = req.header(config.tokenKey);");
+            builder.AppendTabLine(1, "let token = cryptoHelper.tokenGet(header_token);");
+            builder.AppendTabLine(1, $"");
+            builder.AppendTabLine(1, "if (token !== null && token !== undefined && token.id !== null && token.id !== undefined) {");
+            builder.AppendTabLine(2, "try {");
+            builder.AppendTabLine(3, $"result = await Controller.List(token.id, req.query);");
+            builder.AppendTabLine(2, "} catch (e) {");
+            builder.AppendTabLine(3, "result.Error(e.message);");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} else {");
+            builder.AppendTabLine(2, "result.Error(\"Authorization header not found\");");
+            builder.AppendTabLine(1, "}");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, $"res.status(200).json(result);");
+            builder.AppendLine("});");
+            builder.AppendEmptyLine();
+            builder.AppendLine("Router.get(\"/view/:id\", async (req, res) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendTabLine(1, "let header_token = req.header(config.tokenKey);");
+            builder.AppendTabLine(1, "let token = cryptoHelper.tokenGet(header_token);");
+            builder.AppendTabLine(1, $"");
+            builder.AppendTabLine(1, "if (token !== null && token !== undefined && token.id !== null && token.id !== undefined) {");
+            builder.AppendTabLine(2, "try {");
+            builder.AppendTabLine(3, "if (req.params.id !== null && req.params.id !== undefined) {");
+            builder.AppendTabLine(4, "result = await Controller.Detail(token.id, req.params.id);");
+            builder.AppendTabLine(3, "} else {");
+            builder.AppendTabLine(4, "result.Error('NotFound Target');");
+            builder.AppendTabLine(3, "}");
+            builder.AppendTabLine(2, "} catch (e) {");
+            builder.AppendTabLine(3, "result.Error(e.message);");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} else {");
+            builder.AppendTabLine(2, "result.Error(\"Authorization header not found\");");
+            builder.AppendTabLine(1, "}");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, $"res.status(200).json(result);");
+            builder.AppendLine("});");
+            builder.AppendEmptyLine();
+            builder.AppendLine("Router.post(\"/save\", async (req, res) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendTabLine(1, "let header_token = req.header(config.tokenKey);");
+            builder.AppendTabLine(1, "let token = cryptoHelper.tokenGet(header_token);");
+            builder.AppendTabLine(1, $"");
+            builder.AppendTabLine(1, "if (token !== null && token !== undefined && token.id !== null && token.id !== undefined) {");
+            builder.AppendTabLine(2, "try {");
+            builder.AppendTabLine(3, "if (req.body !== null && req.body !== undefined) {");
+            builder.AppendTabLine(4, "result = await Controller.Save(token.id, req.body);");
+            builder.AppendTabLine(3, "} else {");
+            builder.AppendTabLine(4, "result.Error('Required input');");
+            builder.AppendTabLine(3, "}");
+            builder.AppendTabLine(2, "} catch (e) {");
+            builder.AppendTabLine(3, "result.Error(e.message);");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} else {");
+            builder.AppendTabLine(2, "result.Error(\"Authorization header not found\");");
+            builder.AppendTabLine(1, "}");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, $"res.status(200).json(result);");
+            builder.AppendLine("});");
+            builder.AppendLine($"");
+            builder.AppendEmptyLine();
+            builder.AppendLine("Router.delete(\"/erase/:id\", async (req, res) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendTabLine(1, "let header_token = req.header(config.tokenKey);");
+            builder.AppendTabLine(1, "let token = cryptoHelper.tokenGet(header_token);");
+            builder.AppendTabLine(1, $"");
+            builder.AppendTabLine(1, "if (token !== null && token !== undefined && token.id !== null && token.id !== undefined) {");
+            builder.AppendTabLine(2, "try {");
+            builder.AppendTabLine(3, "if (req.params.id !== null && req.params.id !== undefined) {");
+            builder.AppendTabLine(4, "result = await Controller.Remove(token.id, req.params.id);");
+            builder.AppendTabLine(3, "} else {");
+            builder.AppendTabLine(4, "result.Error('Required target');");
+            builder.AppendTabLine(3, "}");
+            builder.AppendTabLine(2, "} catch (e) {");
+            builder.AppendTabLine(3, "result.Error(e.message);");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} else {");
+            builder.AppendTabLine(2, "result.Error(\"Authorization header not found\");");
+            builder.AppendTabLine(1, "}");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, $"res.status(200).json(result);");
+            builder.AppendLine("});");
+            builder.AppendEmptyLine();
+            builder.AppendLine($"module.exports = Router;");
+            
+            return builder.ToString();
+        }
+
+        public string NodeRouteControllerCreate(BindOption option, DbEntity entity)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            builder.AppendLine("const db = require('../../models/db');");
+            builder.AppendLine("const { ReturnValue, ReturnValues } = require(\"../../models/ReturnValue\");");
+            builder.AppendEmptyLine();
+            builder.AppendLine("exports.List = async (userid, query) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, "try {");
+            builder.AppendTab(2, $"let list = await db.{entity.name}.findAll(");
+            builder.AppendLine("{");
+            builder.AppendTabLine(3, "//검색조건 추가");
+            builder.AppendTabLine(2, "});");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(2, "if (list === null || list === undefined) {");
+            builder.AppendTabLine(3, "result.check = true;");
+            builder.AppendTabLine(3, "result.code = 0;");
+            builder.AppendTabLine(2, "} else {");
+            builder.AppendTabLine(3, "result.Success(list.length, list, '', '');");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} catch (e) {");
+            builder.AppendTabLine(2, "result.Error(e.message);");
+            builder.AppendTabLine(1, "} finally {");
+            builder.AppendTabLine(2, "return result;");
+            builder.AppendTabLine(1, "}");
+            builder.AppendLine("};");
+            builder.AppendEmptyLine();
+            builder.AppendLine("exports.Detail = async (userid, targetid) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, "try {");
+            builder.AppendTab(2, $"let detail = await db.{entity.name}.findOne(");
+            builder.AppendLine("{");
+            var primaryColumn = option.GetTableProperties(entity.name).Where(x => x.is_identity).FirstOrDefault();
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendTabLine(3, "where : { " + primaryColumn.ColumnName + " : targetid }");
+            }
+            builder.AppendTabLine(2, "});");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(2, "if (detail !== null && detail !== undefined) {");
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendTabLine(3, $"result.Success(detail.{primaryColumn.ColumnName}, detail, '', '');");
+            }
+            else
+            {
+                builder.AppendTabLine(3, $"result.Success(targetid, detail, '', '');");
+            }
+            builder.AppendTabLine(2, "} else {");
+            builder.AppendTabLine(3, "result.Error('NotFound Target');");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} catch (e) {");
+            builder.AppendTabLine(2, "result.Error(e.message);");
+            builder.AppendTabLine(1, "} finally {");
+            builder.AppendTabLine(2, "return result;");
+            builder.AppendTabLine(1, "}");
+            builder.AppendLine("};");
+
+            builder.AppendEmptyLine();
+            builder.AppendLine("exports.Remove = async (userid, id) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, "try {");
+            builder.AppendTab(2, $"let detail = await db.{entity.name}.findOne(");
+            builder.AppendLine("{");
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendTabLine(3, "where : { " + primaryColumn.ColumnName + " : id }");
+            }
+            builder.AppendTabLine(2, "});");
+            builder.AppendTabLine(2, "");
+            builder.AppendTabLine(2, "if (detail !== null && detail !== undefined) {");
+            builder.AppendTab(3, $"await db.{entity.name}.destroy(");
+            builder.AppendLine("{");
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendTabLine(4, "where : { " + primaryColumn.ColumnName + " : id }");
+            }
+            builder.AppendTabLine(3, "});");
+            builder.AppendTabLine(2, "");
+            builder.AppendTabLine(3, "result.Success(id, '', '');");
+            builder.AppendTabLine(2, "} else {");
+            builder.AppendTabLine(3, "result.Error(\"NotFound Target\");");
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} catch (e) {");
+            builder.AppendTabLine(2, "result.Error(e.message);");
+            builder.AppendTabLine(1, "} finally {");
+            builder.AppendTabLine(2, "return result;");
+            builder.AppendTabLine(1, "}");
+            builder.AppendLine("};");
+
+            builder.AppendEmptyLine();
+            builder.AppendLine("exports.Save = async (userid, body) => {");
+            builder.AppendTabLine(1, "let result = new ReturnValues();");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(1, "try {");
+            builder.AppendTab(2, $"let detail = await db.{entity.name}.findOne(");
+            builder.AppendLine("{");
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendTabLine(3, "where : { " + primaryColumn.ColumnName + " : id }");
+            }
+            builder.AppendTabLine(2, "});");
+            builder.AppendEmptyLine();
+            builder.AppendTabLine(2, "if (detail !== null && detail !== undefined) {");
+            builder.AppendTabLine(3, "//update");
+            foreach(var item in option.GetTableProperties(entity.name))
+            {
+                builder.AppendTabLine(3, $"detail.{item.Name} = body.{item.Name.FirstCharToLower()};");
+            }
+            builder.AppendTabLine(3, "await detail.save();");
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(3, $"if (detail.{primaryColumn.ColumnName} > 0) " + "{");
+                builder.AppendTabLine(4, $"result.Success(detail.{primaryColumn.ColumnName}, \"\", \"\");");
+                builder.AppendTabLine(3, "} else {");
+                builder.AppendTabLine(4, "result.Error(\"Save Fail\");");
+                builder.AppendTabLine(3, "}");
+            }
+            builder.AppendTabLine(2, "} else {");
+            builder.AppendTabLine(3, "//insert");
+            builder.AppendTabLine(3, $"let target = new db.{entity.name}();");
+            foreach (var item in option.GetTableProperties(entity.name))
+            {
+                builder.AppendTabLine(3, $"target.{item.Name} = body.{item.Name.FirstCharToLower()};");
+            }
+            builder.AppendTabLine(3, "await target.save();");
+            if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+            {
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(3, $"if (target.{primaryColumn.ColumnName} > 0) " + "{");
+                builder.AppendTabLine(4, $"result.Success(target.{primaryColumn.ColumnName}, \"\", \"\");");
+                builder.AppendTabLine(3, "} else {");
+                builder.AppendTabLine(4, "result.Error(\"Save Fail\");");
+                builder.AppendTabLine(3, "}");
+            }
+            builder.AppendTabLine(2, "}");
+            builder.AppendTabLine(1, "} catch (e) {");
+            builder.AppendTabLine(2, "result.Error(e.message);");
+            builder.AppendTabLine(1, "} finally {");
+            builder.AppendTabLine(2, "return result;");
+            builder.AppendTabLine(1, "}");
+            builder.AppendLine("};");
+
+            return builder.ToString();
+        }
+
+        public string NodeRootRouteIndexCreate(BindOption option)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            builder.AppendLine("const router = require(\"express\").Router();");
+
+            foreach (var entity in option.tables)
+            {
+                builder.AppendLine($"const {entity.name.FirstCharToLower()} = require(\"./{entity.name.FirstCharToLower()}\");");
+            }
+            builder.AppendEmptyLine();
+            foreach (var entity in option.tables)
+            {
+                builder.AppendLine($"router.use(\"/{entity.name.FirstCharToLower()}\", {entity.name.FirstCharToLower()});");
+            }
+            builder.AppendEmptyLine();
+            builder.AppendLine("module.exports = router;");
+
+            return builder.ToString();
+        }
+
+        public string NodeReturnValue(BindOption option)
+        {
+            return @"class ReturnValue {
+    check = false;
+    code = -1;
+    value = """";
+    message = """";
+
+    constructor() {
+    }
+
+    Success = (code, value, msg) => {
+        this.check = true;
+        this.code = code;
+        this.value = value;
+        this.message = msg;
+    };
+
+    Error = (msg) => {
+        this.check = false;
+        this.code = -1;
+        this.message = msg;
+    }
+};
+
+module.exports = {
+    ReturnValue
+};";
+        }
+
+        public string NodeReturnValues(BindOption option)
+        {
+            return @"class ReturnValues {
+    check = false;
+    code = -1;
+    value = """";
+    message = """";
+    data = null;
+
+    constructor() {
+    }
+
+    Success = (code, data, value, msg) => {
+        this.check = true;
+        this.code = code;
+        this.data = data;
+        this.value = value;
+        this.message = msg;
+    };
+
+    Error = (msg) => {
+        this.check = false;
+        this.code = -1;
+        this.message = msg;
+    }
+};
+
+module.exports = {
+    ReturnValues
+};";
+        }
+
+        public string NodeLogger(BindOption option)
+        {
+            return @"const fs = require('fs');
+const moment = require('moment');
+
+const LOG_DIR = './Log/';
+const LOG_LEVEL = {DEBUG: 1, INFO: 2, WARN: 3, ERROR: 4, FATAL: 5};
+const MAX_SIZE = 1024 * 1024 * 4;
+
+class Logger {
+  constructor() {
+    if (!fs.existsSync(LOG_DIR)) {
+      fs.mkdirSync(LOG_DIR);
+    }
+  }
+
+  _writeLog(level, message) {
+    const date = moment().format('YYMMDD');
+    const time = moment().format('HHmmss');
+
+    if (!fs.existsSync(`${LOG_DIR}/${date}`)) {
+        fs.mkdirSync(`${LOG_DIR}/${date}`);
+    }
+
+    const logFile = `${LOG_DIR}/${date}/${moment().format('DDHH')}.log`;
+
+    const logMessage = `[${moment().format('YYYY-MM-DD HH:mm:ss')}] [${level}] ${message}\n`;
+
+    fs.stat(logFile, (err, stats) => {
+      if (err) {
+        fs.appendFileSync(logFile, logMessage);
+      } else {
+        if (stats.size >= MAX_SIZE) {
+          const backupFile = `${LOG_DIR}/${date}_${time}.log`;
+
+          fs.renameSync(logFile, backupFile);
+          fs.appendFileSync(logFile, logMessage);
+        } else {
+          fs.appendFileSync(logFile, logMessage);
+        }
+      }
+    });
+  }
+
+  debug(message) {
+    this._writeLog('DEBUG', message);
+  }
+
+  info(message) {
+    this._writeLog('INFO', message);
+  }
+
+  warn(message) {
+    this._writeLog('WARN', message);
+  }
+
+  error(message) {
+    this._writeLog('ERROR', message);
+  }
+
+  fatal(message) {
+    this._writeLog('FATAL', message);
+  }
+}
+
+module.exports = new Logger();";
+        }
+
+        public string NodePusher(BindOption option)
+        {
+            return @"const admin = require('firebase-admin');
+const serviceAccount = require('../key/service-account.json');
+const config = require(""../config"");
+
+class Pusher {
+  constructor() {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+  }
+
+  async _sendproc(token, title, body) {
+    const message = {
+        ""token"": token,
+        ""notification"": {
+          ""body"": body,
+          ""title"": title,
+        },
+        ""android"": {
+          ""notification"": {
+            ""channel_id"": config.fcm.channel_id,
+            ""sound"": (config.fcm.sound !== null && config.fcm.sound !== undefined && String(config.fcm.sound).trim() !== """") ? config.fcm.sound : """"
+          }
+        }
+    };
+
+    admin.messaging().send(message)
+    .then((response) => {
+      console.log(""Successfully sent message:"", response);
+    })
+    .catch((error) => {
+      console.log(""Error sending message:"", error);
+    });
+  }
+
+  async send(token, title, body) {
+    await this._sendproc(token, title, body);
+  }
+
+  sendSync(token, title, body) {
+    this._sendproc(token, title, body);
+  }
+}
+
+module.exports = new Pusher();";
         }
     }
 }

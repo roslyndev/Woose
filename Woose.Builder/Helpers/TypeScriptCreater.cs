@@ -26,13 +26,13 @@ namespace Woose.Builder
                 builder.AppendLine("{");
                 foreach (var item in info)
                 {
-                    builder.AppendTabStringLine(1, $"public {item.Name.FirstCharToLower()}:{item.ScriptType};");
+                    builder.AppendTabLine(1, $"public {item.Name.FirstCharToLower()}:{item.ScriptType};");
                 }
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, "constructor() {");
+                builder.AppendTabLine(1, "constructor() {");
                 foreach (var item in info)
                 {
-                    builder.AppendTabString(2, $"this.{item.Name.FirstCharToLower()} = ");
+                    builder.AppendTab(2, $"this.{item.Name.FirstCharToLower()} = ");
                     switch (item.ScriptType)
                     {
                         case "string":
@@ -52,7 +52,7 @@ namespace Woose.Builder
                             break;
                     }
                 }
-                builder.AppendTabStringLine(1, "}");
+                builder.AppendTabLine(1, "}");
                 builder.AppendLine("}");
             }
 
@@ -85,17 +85,17 @@ namespace Woose.Builder
                 foreach (var item in outputs)
                 {
                     typeObj = DbTypeHelper.MSSQL.ParseColumnType(item.system_type_name);
-                    builder.AppendTabStringLine(1, $"public {item.name.FirstCharToLower()}:{DbTypeHelper.MSSQL.GetObjectTypeByTypeScript(typeObj.Name)};");
+                    builder.AppendTabLine(1, $"public {item.name.FirstCharToLower()}:{DbTypeHelper.MSSQL.GetObjectTypeByTypeScript(typeObj.Name)};");
                 }
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, $"constructor()");
-                builder.AppendTabStringLine(1, "{");
+                builder.AppendTabLine(1, $"constructor()");
+                builder.AppendTabLine(1, "{");
                 foreach (var item in outputs)
                 {
                     typeObj = DbTypeHelper.MSSQL.ParseColumnType(item.system_type_name);
-                    builder.AppendTabStringLine(2, $"this.{item.name.FirstCharToLower()} = {DbTypeHelper.MSSQL.GetObjectDefaultValueByTypeScript(typeObj.Name)};");
+                    builder.AppendTabLine(2, $"this.{item.name.FirstCharToLower()} = {DbTypeHelper.MSSQL.GetObjectDefaultValueByTypeScript(typeObj.Name)};");
                 }
-                builder.AppendTabStringLine(1, "}");
+                builder.AppendTabLine(1, "}");
                 builder.AppendLine("}");
                 builder.AppendEmptyLine();
             }
@@ -107,16 +107,16 @@ namespace Woose.Builder
                 builder.AppendLine("{");
                 foreach (var item in properties.Where(x => !x.is_output))
                 {
-                    builder.AppendTabStringLine(1, $"public {item.name.Replace("@", "").FirstCharToLower()}:{DbTypeHelper.MSSQL.GetObjectTypeByTypeScript(item.type)};");
+                    builder.AppendTabLine(1, $"public {item.name.Replace("@", "").FirstCharToLower()}:{DbTypeHelper.MSSQL.GetObjectTypeByTypeScript(item.type)};");
                 }
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(1, $"constructor()");
-                builder.AppendTabStringLine(1, "{");
+                builder.AppendTabLine(1, $"constructor()");
+                builder.AppendTabLine(1, "{");
                 foreach (var item in properties.Where(x => !x.is_output))
                 {
-                    builder.AppendTabStringLine(2, $"this.{item.name.Replace("@", "").FirstCharToLower()} = {DbTypeHelper.MSSQL.GetObjectDefaultValueByTypeScript(item.type)};");
+                    builder.AppendTabLine(2, $"this.{item.name.Replace("@", "").FirstCharToLower()} = {DbTypeHelper.MSSQL.GetObjectDefaultValueByTypeScript(item.type)};");
                 }
-                builder.AppendTabStringLine(1, "}");
+                builder.AppendTabLine(1, "}");
                 builder.AppendLine("}");
                 builder.AppendEmptyLine();
             }

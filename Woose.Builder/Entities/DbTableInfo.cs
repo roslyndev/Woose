@@ -100,6 +100,59 @@ namespace Woose.Builder
             }
         }
 
+        public string SequelizeMsSqlType
+        {
+            get
+            {
+                switch (this.ColumnType)
+                {
+                    case "real":
+                    case "money":
+                    case "decimal":
+                    case "numeric":
+                    case "smallmoney":
+                    case "tinyint":
+                    case "smallint":
+                    case "int":
+                        return "INTEGER";
+                    case "uniqueidentifier":
+                        return "UUID";
+                    case "float":
+                        return "FLOAT";
+                    case "bigint":
+                        return "BIGINT";
+                    case "timestamp":
+                    case "date":
+                    case "time":
+                    case "datetime2":
+                    case "datetimeoffset":
+                    case "smalldatetime":
+                    case "datetime":
+                        return "DATE";
+                    case "text":
+                    case "ntext":
+                    case "nvarchar":
+                    case "nchar":
+                    case "varchar":
+                    case "char":
+                        return "STRING";
+                    case "bit":
+                        return "BOOLEAN";
+                    case "sql_variant":
+                    case "hierarchyid":
+                    case "geometry":
+                    case "geography":
+                    case "varbinary":
+                    case "binary":
+                    case "xml":
+                    case "sysname":
+                    case "image":
+                    default:
+                        return "Unknown";
+                }
+            }
+        }
+
         public string ObjectType
         {
             get

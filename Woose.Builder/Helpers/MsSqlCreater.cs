@@ -37,8 +37,8 @@ namespace Woose.Builder
                     {
                         builder.Append(",");
                     }
-                    builder.AppendTabString(1, $"@{item.Name}");
-                    builder.AppendTabString((item.Name.Length < 7) ? 4 : 3, item.ColumnType);
+                    builder.AppendTab(1, $"@{item.Name}");
+                    builder.AppendTab((item.Name.Length < 7) ? 4 : 3, item.ColumnType);
                     switch (item.ColumnType)
                     {
                         case "text":
@@ -62,8 +62,8 @@ namespace Woose.Builder
                     {
                         builder.Append(",");
                     }
-                    builder.AppendTabString(1, $"@{item.Name}");
-                    builder.AppendTabString((item.Name.Length < 7) ? 4 : 3, item.ColumnType);
+                    builder.AppendTab(1, $"@{item.Name}");
+                    builder.AppendTab((item.Name.Length < 7) ? 4 : 3, item.ColumnType);
                     switch (item.ColumnType)
                     {
                         case "text":
@@ -78,7 +78,7 @@ namespace Woose.Builder
                             }
                             break;
                     }
-                    builder.AppendTabString(1, "= null");
+                    builder.AppendTab(1, "= null");
                     builder.AppendEmptyLine();
                     num++;
                 }
@@ -86,8 +86,8 @@ namespace Woose.Builder
                 {
                     builder.Append(",");
                 }
-                builder.AppendTabString(1, $"@{primaryKey.Name}");
-                builder.AppendTabString((primaryKey.Name.Length < 7) ? 4 : 3, primaryKey.ColumnType);
+                builder.AppendTab(1, $"@{primaryKey.Name}");
+                builder.AppendTab((primaryKey.Name.Length < 7) ? 4 : 3, primaryKey.ColumnType);
                 switch (primaryKey.ColumnType)
                 {
                     case "text":
@@ -104,27 +104,27 @@ namespace Woose.Builder
                 }
                 if (primaryKey.IsNumber)
                 {
-                    builder.AppendTabString(3, "= -1");
+                    builder.AppendTab(3, "= -1");
                 }
                 else
                 {
-                    builder.AppendTabString(3, "= null");
+                    builder.AppendTab(3, "= null");
                 }
                 builder.AppendEmptyLine();
                 if (options.BindModel == OptionData.BindModelType.ReturnValue.ToString())
                 {
                     builder.Append(",");
-                    builder.AppendTabString(1, $"@Code");
-                    builder.AppendTabString(4, "bigint");
-                    builder.AppendTabStringLine(2, "output");
+                    builder.AppendTab(1, $"@Code");
+                    builder.AppendTab(4, "bigint");
+                    builder.AppendTabLine(2, "output");
                     builder.Append(",");
-                    builder.AppendTabString(1, $"@Value");
-                    builder.AppendTabString(4, "varchar(100)");
-                    builder.AppendTabStringLine(1, "output");
+                    builder.AppendTab(1, $"@Value");
+                    builder.AppendTab(4, "varchar(100)");
+                    builder.AppendTabLine(1, "output");
                     builder.Append(",");
-                    builder.AppendTabString(1, $"@Msg");
-                    builder.AppendTabString(4, "nvarchar(100)");
-                    builder.AppendTabStringLine(1, "output");
+                    builder.AppendTab(1, $"@Msg");
+                    builder.AppendTab(4, "nvarchar(100)");
+                    builder.AppendTabLine(1, "output");
                 }
                 builder.AppendEmptyLine();
                 builder.AppendLine(")");
@@ -157,20 +157,20 @@ namespace Woose.Builder
                     builder.Append($"IsNull(@{primaryKey.Name},'') <> '' and ");
                 }
                 builder.AppendLine($"Exists (Select {primaryKey.Name} from [{info[0].TableName}] where {primaryKey.Name} = @{primaryKey.Name})");
-                builder.AppendTabStringLine(1, "BEGIN");
-                builder.AppendTabStringLine(2, $"Update [{info[0].TableName}] set");
+                builder.AppendTabLine(1, "BEGIN");
+                builder.AppendTabLine(2, $"Update [{info[0].TableName}] set");
                 for (int i = 0; i < info.Count; i++)
                 {
                     if (info[i].Name != primaryKey.Name && info[i].Name != "RegistDate")
                     {
-                        builder.AppendTabString(2, $"[{info[i].Name}]");
+                        builder.AppendTab(2, $"[{info[i].Name}]");
                         if (info[i].IsDate)
                         {
-                            builder.AppendTabString(3, $"= getdate()");
+                            builder.AppendTab(3, $"= getdate()");
                         }
                         else
                         {
-                            builder.AppendTabString((info[i].Name.Length < 7) ? 4 : 3, $"= @{info[i].Name}");
+                            builder.AppendTab((info[i].Name.Length < 7) ? 4 : 3, $"= @{info[i].Name}");
                         }
                         if (i < info.Count - 1)
                         {
@@ -182,91 +182,91 @@ namespace Woose.Builder
                         }
                     }
                 }
-                builder.AppendTabStringLine(2, $"where [{primaryKey.Name}] = @{primaryKey.Name}");
+                builder.AppendTabLine(2, $"where [{primaryKey.Name}] = @{primaryKey.Name}");
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(2, $"SET @Err = @Err + @@Error");
+                builder.AppendTabLine(2, $"SET @Err = @Err + @@Error");
                 builder.AppendEmptyLine();
-                builder.AppendTabStringLine(2, "IF IsNull(@Err,0) = 0");
-                builder.AppendTabStringLine(3, "BEGIN");
-                builder.AppendTabStringLine(4, $"SET @idx = @{primaryKey.Name}");
-                builder.AppendTabStringLine(3, "END");
+                builder.AppendTabLine(2, "IF IsNull(@Err,0) = 0");
+                builder.AppendTabLine(3, "BEGIN");
+                builder.AppendTabLine(4, $"SET @idx = @{primaryKey.Name}");
+                builder.AppendTabLine(3, "END");
 
-                builder.AppendTabStringLine(1, "END");
+                builder.AppendTabLine(1, "END");
                 builder.AppendLine("ELSE");
-                builder.AppendTabStringLine(1, "BEGIN");
-                builder.AppendTabStringLine(2, $"Insert into [{info[0].TableName}] (");
+                builder.AppendTabLine(1, "BEGIN");
+                builder.AppendTabLine(2, $"Insert into [{info[0].TableName}] (");
                 num = 0;
                 foreach (var item in info.Where(x => x.Name != primaryKey?.Name))
                 {
-                    builder.AppendTabString(2, "");
+                    builder.AppendTab(2, "");
                     if (num > 0)
                     {
                         builder.Append(",");
                     }
-                    builder.AppendTabStringLine(1, $"[{item.Name}]");
+                    builder.AppendTabLine(1, $"[{item.Name}]");
                     num++;
                 }
                 if (primaryKey != null && !primaryKey.is_identity)
                 {
-                    builder.AppendTabString(2, "");
+                    builder.AppendTab(2, "");
                     if (num > 0)
                     {
                         builder.Append(",");
                     }
-                    builder.AppendTabStringLine(1, $"[{primaryKey.Name}]");
+                    builder.AppendTabLine(1, $"[{primaryKey.Name}]");
                 }
-                builder.AppendTabStringLine(2, ") values (");
+                builder.AppendTabLine(2, ") values (");
                 num = 0;
                 foreach (var item in info.Where(x => x.Name != primaryKey?.Name))
                 {
-                    builder.AppendTabString(2, "");
+                    builder.AppendTab(2, "");
                     if (num > 0)
                     {
                         builder.Append(",");
                     }
                     if (item.IsDate)
                     {
-                        builder.AppendTabStringLine(1, "getdate()");
+                        builder.AppendTabLine(1, "getdate()");
                     }
                     else
                     {
-                        builder.AppendTabStringLine(1, $"@{item.Name}");
+                        builder.AppendTabLine(1, $"@{item.Name}");
                     }
                     num++;
                 }
                 if (primaryKey != null && !primaryKey.is_identity)
                 {
-                    builder.AppendTabString(2, "");
+                    builder.AppendTab(2, "");
                     if (num > 0)
                     {
                         builder.Append(",");
                     }
                     if (primaryKey.IsDate)
                     {
-                        builder.AppendTabStringLine(1, "getdate()");
+                        builder.AppendTabLine(1, "getdate()");
                     }
                     else
                     {
-                        builder.AppendTabStringLine(1, $"@{primaryKey.Name}");
+                        builder.AppendTabLine(1, $"@{primaryKey.Name}");
                     }
                 }
-                builder.AppendTabStringLine(2, ")");
+                builder.AppendTabLine(2, ")");
                 if (primaryKey != null && primaryKey.is_identity)
                 {
                     builder.AppendEmptyLine();
-                    builder.AppendTabStringLine(2, "SET @idx = @@IDENTITY");
+                    builder.AppendTabLine(2, "SET @idx = @@IDENTITY");
                     builder.AppendEmptyLine();
-                    builder.AppendTabStringLine(2, "IF Not(IsNull(@idx,0) > 0)");
-                    builder.AppendTabStringLine(3, "BEGIN");
-                    builder.AppendTabStringLine(4, "SET @Err = @Err + 1");
-                    builder.AppendTabStringLine(3, "END");
+                    builder.AppendTabLine(2, "IF Not(IsNull(@idx,0) > 0)");
+                    builder.AppendTabLine(3, "BEGIN");
+                    builder.AppendTabLine(4, "SET @Err = @Err + 1");
+                    builder.AppendTabLine(3, "END");
                 }
                 else
                 {
                     builder.AppendEmptyLine();
-                    builder.AppendTabStringLine(2, "SET @Err = @Err + @@Error");
+                    builder.AppendTabLine(2, "SET @Err = @Err + @@Error");
                 }
-                builder.AppendTabStringLine(1, "END");
+                builder.AppendTabLine(1, "END");
 
                 builder.AppendLine("");
                 if (options.BindModel == OptionData.BindModelType.ExecuteResult.ToString())

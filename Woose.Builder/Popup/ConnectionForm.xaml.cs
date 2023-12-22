@@ -85,7 +85,7 @@ namespace Woose.Builder.Popup
 
             ReturnValue rst = new ReturnValue();
 
-            using(var rep = new SqliteRepository())
+            using(var rep = new AppRepository())
             {
                 if (this.database.Id > 0)
                 {

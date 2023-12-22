@@ -19,9 +19,9 @@
                         <TextBlock Text="{Binding Content}" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
-                <ComboBoxItem Content="SQL Server" />
+                <ComboBoxItem Content="MSSQL" />
                 <ComboBoxItem Content="MySQL" />
-                <ComboBoxItem Content="SQLite" />
+                <ComboBoxItem Content="PostgreSQL" />
             </ComboBox>
 
             <!-- 데이터베이스 접속 문자열 입력 TextBox -->

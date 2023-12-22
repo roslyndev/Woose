@@ -68,7 +68,7 @@ namespace Woose.Builder
 
         public MainViewModel()
         {
-            using (var db = new SqliteRepository())
+            using (var db = new AppRepository())
             {
                 var rtn = db.GetDatabases();
                 if (rtn.Check)
@@ -80,7 +80,7 @@ namespace Woose.Builder
 
         public void RefreshDatabases()
         {
-            using (var db = new SqliteRepository())
+            using (var db = new AppRepository())
             {
                 var rtn = db.GetDatabases();
                 if (rtn.Check)

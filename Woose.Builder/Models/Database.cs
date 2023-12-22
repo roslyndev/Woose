@@ -29,6 +29,7 @@ namespace Woose.Builder
             {
                 switch (db.DatabaseType.Trim())
                 {
+                    case "SQL Server":
                     case "MSSQL":
                         SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(db.ConnectionString);
                         result = builder.ConnectionString;
@@ -143,6 +144,7 @@ namespace Woose.Builder
             {
                 switch (db.DatabaseType.Trim())
                 {
+                    case "SQL Server":
                     case "MSSQL":
                         SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(db.ConnectionString);
                         result = builder.ApplicationName;
@@ -165,6 +167,7 @@ namespace Woose.Builder
             {
                 switch (db.DatabaseType.Trim())
                 {
+                    case "SQL Server":
                     case "MSSQL":
                         SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(db.ConnectionString);
                         result = 1433;

@@ -4,6 +4,8 @@ namespace Woose.Builder
 {
     public class BindOption
     {
+        public List<ForeignKeyInfo> fks { get; set; } = new List<ForeignKeyInfo>();
+
         public string ProjectName { get; set; } = string.Empty;
 
         public string MethodName { get; set; } = string.Empty;
@@ -145,6 +147,30 @@ namespace Woose.Builder
             }
 
             return new List<SpTable>();
+        }
+
+        public List<ForeignKeyInfo> GetParentForeignKeys(string tableName)
+        {
+            List<ForeignKeyInfo> result = new List<ForeignKeyInfo>();
+
+            if (this.fks != null && this.fks.Count > 0)
+            {
+                result = this.fks.Where(x => x.ParentTableName.Equals(tableName, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            return result;
+        }
+
+        public List<ForeignKeyInfo> GetReferenceForeignKeys(string tableName)
+        {
+            List<ForeignKeyInfo> result = new List<ForeignKeyInfo>();
+
+            if (this.fks != null && this.fks.Count > 0)
+            {
+                result = this.fks.Where(x => x.ReferencedTableName.Equals(tableName, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            return result;
         }
 
         public DbEntity? Find(List<DbEntity> tables, List<SpOutput> spoutput)

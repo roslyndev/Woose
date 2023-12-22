@@ -1,4 +1,5 @@
-﻿using Woose.Core;
+﻿using System.Xml.Linq;
+using Woose.Core;
 using Woose.Data;
 using Woose.Data.Entities;
 
@@ -297,7 +298,44 @@ order by B.[depid] desc";
             return result;
         }
 
+        public List<ForeignKeyInfo> GetForeignKeys()
+        {
+            var result = new List<ForeignKeyInfo>();
 
+            try
+            {
+                string query = @$"SELECT 
+    FK.name AS ForeignKeyName,
+    TP.name AS ParentTableName,
+    CP.name AS ParentColumnName,
+    RFK.name AS ReferencedTableName,
+    RC.name AS ReferencedColumnName
+FROM 
+    sys.foreign_keys AS FK
+INNER JOIN 
+    sys.tables AS TP ON FK.parent_object_id = TP.object_id
+INNER JOIN 
+    sys.tables AS RFK ON FK.referenced_object_id = RFK.object_id
+INNER JOIN 
+    sys.foreign_key_columns AS FKC ON FKC.constraint_object_id = FK.object_id
+INNER JOIN 
+    sys.columns AS CP ON FKC.parent_column_id = CP.column_id AND FKC.parent_object_id = CP.object_id
+INNER JOIN 
+    sys.columns AS RC ON FKC.referenced_column_id = RC.column_id AND FKC.referenced_object_id = RC.object_id;";
+                using (var db = context.getConnection())
+                using (var cmd = db.CreateCommand())
+                {
+                    var dt = Entity.Run.On(cmd).Query(query).ToList();
+                    result = EntityHelper.ColumnToEntities<ForeignKeyInfo>(dt);
+                }
+            }
+            catch
+            {
+                result = new List<ForeignKeyInfo>();
+            }
+
+            return result;
+        }
 
 
         protected virtual void Dispose(bool disposing)

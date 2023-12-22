@@ -77,7 +77,9 @@ namespace Woose.Builder
         public string nodemailer { get; set; } = string.Empty;
         public string nodemon { get; set; } = string.Empty;
         public string sequelize { get; set; } = string.Empty;
-        public string sharp { get; set; } = string.Empty;
+
+        [JsonProperty("firebase-admin")]
+        public string firebaseAdmin { get; set; } = string.Empty;
 
         [JsonProperty("swagger-cli")]
         public string swaggerCli { get; set; } = string.Empty;
@@ -88,6 +90,11 @@ namespace Woose.Builder
         [JsonProperty("swagger-ui-express")]
         public string swaggerUiExpress { get; set; } = string.Empty;
         public string tedious { get; set; } = string.Empty;
+        public string sharp { get; set; } = string.Empty;
+
+        public string mysql { get; set; } = string.Empty;
+        public string mysql2 { get; set; } = string.Empty;
+
         public string uuid4 { get; set; } = string.Empty;
         public string yamljs { get; set; } = string.Empty;
 

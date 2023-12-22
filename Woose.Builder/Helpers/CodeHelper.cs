@@ -416,7 +416,7 @@ namespace Woose.Builder
 
     public static class ExtendCodeHelper
     {
-        public static void AppendTabString(this StringBuilder builder, int tabCount, string str)
+        public static void AppendTab(this StringBuilder builder, int tabCount, string str)
         {
             if (tabCount > 0)
             {
@@ -428,13 +428,37 @@ namespace Woose.Builder
             builder.Append(str);
         }
 
-        public static void AppendTabStringLine(this StringBuilder builder, int tabCount, string str)
+        public static void AppendTabLine(this StringBuilder builder, int tabCount, string str)
         {
             if (tabCount > 0)
             {
                 for (int i = 0; i < tabCount; i++)
                 {
                     builder.Append('\t');
+                }
+            }
+            builder.AppendLine(str);
+        }
+
+        public static void AppendSpace(this StringBuilder builder, int tabCount, string str)
+        {
+            if (tabCount > 0)
+            {
+                for (int i = 0; i < tabCount; i++)
+                {
+                    builder.Append("  ");
+                }
+            }
+            builder.Append(str);
+        }
+
+        public static void AppendSpaceLine(this StringBuilder builder, int tabCount, string str)
+        {
+            if (tabCount > 0)
+            {
+                for (int i = 0; i < tabCount; i++)
+                {
+                    builder.Append("  ");
                 }
             }
             builder.AppendLine(str);

@@ -17,6 +17,7 @@ using System.Xml.Linq;
 using Woose.Builder.Popup;
 using Woose.Core;
 using Woose.Data;
+using Woose.Data.Entities;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Woose.Builder
@@ -25,7 +26,7 @@ namespace Woose.Builder
     {
         private bool IsConnection = false;
 
-        protected SqliteRepository db { get; set; }
+        protected AppRepository db { get; set; }
 
         public MainViewModel viewModel { get; set; }
 
@@ -38,7 +39,7 @@ namespace Woose.Builder
         public MainWindow()
         {
             InitializeComponent();
-            this.db = new SqliteRepository();
+            this.db = new AppRepository();
             this.db.Init();
 
             viewModel = new MainViewModel();
@@ -349,6 +350,8 @@ namespace Woose.Builder
                                 });
                             }
                         }
+
+                        target.option.fks = rep.GetForeignKeys();
                     }
                 }
 
@@ -1620,7 +1623,9 @@ namespace Woose.Builder
             try
             {
                 string selectedFolderPath = Convert.ToString(paramData);
+
                 JavaScriptCreater creater = new JavaScriptCreater();
+                YAMLCreater yaml = new YAMLCreater();
 
                 if (!Directory.Exists($"{selectedFolderPath}\\models"))
                 {
@@ -1665,17 +1670,71 @@ namespace Woose.Builder
                 }
                 File.WriteAllText($"{selectedFolderPath}\\config.js", creater.NodeConfigCreate(this.option));
 
+                if (!File.Exists($"{selectedFolderPath}\\routes\\index.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\routes\\index.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\routes\\index.js", creater.NodeRootRouteIndexCreate(this.option));
+
                 if (!File.Exists($"{selectedFolderPath}\\models\\globalConfig.js"))
                 {
                     File.Create($"{selectedFolderPath}\\models\\globalConfig.js").Close();
                 }
                 File.WriteAllText($"{selectedFolderPath}\\models\\globalConfig.js", creater.NodeGlobalJsCreate(this.option));
 
+                if (!File.Exists($"{selectedFolderPath}\\models\\sendmail.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\sendmail.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\sendmail.js", creater.NodeSendMailJsCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\models\\ReturnValue.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\ReturnValue.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\ReturnValue.js", creater.NodeReturnValue(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\models\\ReturnValues.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\ReturnValues.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\ReturnValues.js", creater.NodeReturnValues(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\models\\Logger.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\Logger.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\Logger.js", creater.NodeLogger(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\models\\Pusher.js"))
+                {
+                    File.Create($"{selectedFolderPath}\\models\\Pusher.js").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\models\\Pusher.js", creater.NodePusher(this.option));
+
                 if (!File.Exists($"{selectedFolderPath}\\swagger.js"))
                 {
                     File.Create($"{selectedFolderPath}\\swagger.js").Close();
                 }
                 File.WriteAllText($"{selectedFolderPath}\\swagger.js", creater.NodeSwaggerJsCreate(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\swagger\\config.yaml"))
+                {
+                    File.Create($"{selectedFolderPath}\\swagger\\config.yaml").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\swagger\\config.yaml", yaml.CreateDeclareYaml(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\swagger\\openapi.yaml"))
+                {
+                    File.Create($"{selectedFolderPath}\\swagger\\openapi.yaml").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\swagger\\openapi.yaml", yaml.CreateApiYaml(this.option));
+
+                if (!File.Exists($"{selectedFolderPath}\\swagger\\components.yaml"))
+                {
+                    File.Create($"{selectedFolderPath}\\swagger\\components.yaml").Close();
+                }
+                File.WriteAllText($"{selectedFolderPath}\\swagger\\components.yaml", yaml.CreateComponentYaml(this.option));
 
                 if (!File.Exists($"{selectedFolderPath}\\models\\helpers\\cryptoHelper.js"))
                 {
@@ -1695,12 +1754,24 @@ namespace Woose.Builder
                 }
                 File.WriteAllText($"{selectedFolderPath}\\models\\db.js", creater.NodeSequelizeDbCreate(this.option));
 
-                foreach (DbEntity entity in viewModel.entities)
+                foreach (DbEntity entity in viewModel.entities.Where(x => x.ObjectType.Equals("TABLE", StringComparison.OrdinalIgnoreCase)))
                 {
                     if (!Directory.Exists($"{selectedFolderPath}\\routes\\{entity.name}"))
                     {
                         Directory.CreateDirectory($"{selectedFolderPath}\\routes\\{entity.name}");
                     }
+
+                    if (!File.Exists($"{selectedFolderPath}\\routes\\{entity.name}\\index.js"))
+                    {
+                        File.Create($"{selectedFolderPath}\\routes\\{entity.name}\\index.js").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\routes\\{entity.name}\\index.js", creater.NodeRouteIndexCreate(this.option, entity));
+
+                    if (!File.Exists($"{selectedFolderPath}\\routes\\{entity.name}\\{entity.name.FirstCharToLower()}.controller.js"))
+                    {
+                        File.Create($"{selectedFolderPath}\\routes\\{entity.name}\\{entity.name.FirstCharToLower()}.controller.js").Close();
+                    }
+                    File.WriteAllText($"{selectedFolderPath}\\routes\\{entity.name}\\{entity.name.FirstCharToLower()}.controller.js", creater.NodeRouteControllerCreate(this.option, entity));
 
                     if (!File.Exists($"{selectedFolderPath}\\models\\entities\\{entity.name}.js"))
                     {

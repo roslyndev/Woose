@@ -4,7 +4,7 @@ using Woose.Core;
 
 namespace Woose.Builder
 {
-    public class SqliteRepository : IDisposable
+    public class AppRepository : IDisposable
     {
         private bool disposedValue;
 
@@ -13,7 +13,7 @@ namespace Woose.Builder
         protected SqliteConnection SqlConn { get; set; }
 
 
-        public SqliteRepository()
+        public AppRepository()
         {
             this.SqlConn = new SqliteConnection(DbConnectionString);
             this.SqlConn.Open();
@@ -208,7 +208,7 @@ namespace Woose.Builder
             }
         }
 
-        ~SqliteRepository()
+        ~AppRepository()
         {
             Dispose(disposing: false);
         }
