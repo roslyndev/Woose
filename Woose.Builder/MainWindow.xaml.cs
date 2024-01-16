@@ -936,7 +936,7 @@ namespace Woose.Builder
                 {
                     File.Create($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs").Close();
                 }
-                File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateAbstract(option, this.viewModel.sps.ToList(), true));
+                File.WriteAllText($"{selectedFolderPath}\\Abstracts\\I{option.MethodName}Repository.cs", creater.CreateDefaultAbstract(option, this.viewModel.sps.ToList(), true));
 
                 if (!File.Exists($"{selectedFolderPath}\\Repositories\\{option.MethodName}Repository.cs"))
                 {

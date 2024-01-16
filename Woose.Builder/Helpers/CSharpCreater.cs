@@ -1089,45 +1089,42 @@ namespace Woose.Builder
             return builder.ToString();
         }
 
-        public string CreateAbstract(BindOption options, List<DbEntity> properties, bool IsNamespace = false)
+        public string CreateDefaultAbstract(BindOption options, List<DbEntity> properties, bool IsNamespace = false)
         {
             StringBuilder builder = new StringBuilder(200);
 
+            if (IsNamespace)
+            {
+                builder.AppendLine($"using Woose.Core;");
+                builder.AppendLine($"using Woose.Data;");
+                builder.AppendLine($"using Woose.API;");
+                builder.AppendEmptyLine();
+                builder.AppendLine($"namespace {options.ProjectName}");
+                builder.AppendLine("{");
+            }
+
+            builder.AppendTabLine((IsNamespace ? 1 : 0), $"public interface I{options.MethodName}Repository : IRepository");
+            builder.AppendTabLine((IsNamespace ? 1 : 0), "{");
+
             if (properties != null && properties.Count > 0)
             {
-                if (IsNamespace)
+                int num = 0;
+                foreach (var sp in properties)
                 {
-                    builder.AppendLine($"using Woose.Core;");
-                    builder.AppendLine($"using Woose.Data;");
-                    builder.AppendLine($"using Woose.API;");
-                    builder.AppendEmptyLine();
-                    builder.AppendLine($"namespace {options.ProjectName}");
-                    builder.AppendLine("{");
-                }
-
-                builder.AppendTabLine((IsNamespace ? 1 : 0), $"public interface I{options.MethodName}Repository : IRepository");
-                builder.AppendTabLine((IsNamespace ? 1 : 0), "{");
-                
-                if (properties != null && properties.Count > 0)
-                {
-                    int num = 0;
-                    foreach (var sp in properties)
+                    if (num > 0)
                     {
-                        if (num > 0)
-                        {
-                            builder.AppendEmptyLine();
-                        }
-                        builder.AppendLine(CreateSPAbstractItem(options, sp, IsNamespace));
-                        num++;
+                        builder.AppendEmptyLine();
                     }
+                    builder.AppendLine(CreateSPAbstractItem(options, sp, IsNamespace));
+                    num++;
                 }
+            }
 
-                builder.AppendTabLine((IsNamespace ? 1 : 0), "}");
+            builder.AppendTabLine((IsNamespace ? 1 : 0), "}");
 
-                if (IsNamespace)
-                {
-                    builder.AppendLine("}");
-                }
+            if (IsNamespace)
+            {
+                builder.AppendLine("}");
             }
 
             return builder.ToString();
