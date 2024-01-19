@@ -520,6 +520,30 @@ namespace Woose.Builder
                             break;
                     }
                     break;
+                case "NEST.JS":
+                    selectedTab = NestOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+                    text = option.Binder.Serialize(this.context);
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            NestEntity.Document = CreateRichText(text);
+                            break;
+                        case "CONTROLLER":
+                            NestController.Document = CreateRichText(text);
+                            break;
+                        case "DTO":
+                            NestDTO.Document = CreateRichText(text);
+                            break;
+                        case "REPOSITORY":
+                            NestRepository.Document = CreateRichText(text);
+                            break;
+                    }
+                    break;
                 case "VUE.JS":
                     selectedTab = VueOptions.SelectedItem as TabItem;
                     if (selectedTab != null)
@@ -1353,6 +1377,29 @@ namespace Woose.Builder
                             break;
                     }
                     break;
+                case "NEST.JS":
+                    selectedTab = NestOptions.SelectedItem as TabItem;
+                    if (selectedTab != null)
+                    {
+                        option.Category = selectedTab.Header.ToString();
+                    }
+
+                    switch ((this.option?.Category ?? "").Trim().ToUpper())
+                    {
+                        case "ENTITY":
+                            result = NestEntity;
+                            break;
+                        case "CONTROLLER":
+                            result = NestController;
+                            break;
+                        case "DTO":
+                            result = NestDTO;
+                            break;
+                        case "REPOSITORY":
+                            result = NestRepository;
+                            break;
+                    }
+                    break;
                 case "VUE.JS":
                     selectedTab = VueOptions.SelectedItem as TabItem;
                     if (selectedTab != null)
@@ -1786,6 +1833,11 @@ namespace Woose.Builder
             {
                 MessageBox.Show(ex.Message.ToString());
             }
+        }
+
+        private void Btn_Nest_Create_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

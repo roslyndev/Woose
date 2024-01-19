@@ -29,6 +29,9 @@ namespace Woose.Builder
         private static readonly Lazy<HTMLCreater> html = new Lazy<HTMLCreater>(() => new HTMLCreater());
         public static HTMLCreater HTML { get { return html.Value; } }
 
+        private static readonly Lazy<NestJsHelper> nest = new Lazy<NestJsHelper>(() => new NestJsHelper());
+        public static NestJsHelper NEST { get { return nest.Value; } }
+
         public CodeHelper()
         {
         }
@@ -152,6 +155,26 @@ namespace Woose.Builder
                                                 break;
                                             case "YAML":
                                                 builder.Append(CodeHelper.YAML.CreateEntity(this.option, tableproperties));
+                                                break;
+                                            default:
+                                                builder.Append("분류 탭을 선택해 주세요.");
+                                                break;
+                                        }
+                                        break;
+                                    case "NEST.JS":
+                                        switch (this.option.Category.Trim().ToUpper())
+                                        {
+                                            case "ENTITY":
+                                                builder.Append(CodeHelper.NEST.EntitiyCreate(this.option, tableproperties));
+                                                break;
+                                            case "CONTROLLER":
+                                                builder.Append("");
+                                                break;
+                                            case "DTO":
+                                                builder.Append(CodeHelper.NEST.DtoCreate(this.option, tableproperties));
+                                                break;
+                                            case "REPOSITORY":
+                                                builder.Append("");
                                                 break;
                                             default:
                                                 builder.Append("분류 탭을 선택해 주세요.");
@@ -478,6 +501,17 @@ namespace Woose.Builder
 
             char[] inputArray = input.ToCharArray();
             inputArray[0] = char.ToLower(inputArray[0]);
+            return new string(inputArray);
+        }
+        public static string FirstCharToUpper(this string input)
+        {
+            if (string.IsNullOrEmpty(input) || char.IsLower(input[0]))
+            {
+                return input;
+            }
+
+            char[] inputArray = input.ToCharArray();
+            inputArray[0] = char.ToUpper(inputArray[0]);
             return new string(inputArray);
         }
 

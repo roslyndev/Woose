@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Woose.API\Woose.API.csproj" />
     <ProjectReference Include="..\Woose.Core\Woose.Core.csproj" />
     <ProjectReference Include="..\Woose.Data\Woose.Data.csproj" />
+    <ProjectReference Include="..\Woose.V8\Woose.V8.csproj" />
   </ItemGroup>
 
 </Project>

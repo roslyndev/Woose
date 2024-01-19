@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Woose.Tests", "Woose.Tests\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Woose.Builder", "Woose.Builder\Woose.Builder.csproj", "{99FEA21E-B1AB-44FA-9DA8-33FFA33D9FBE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Woose.API", "Woose.API\Woose.API.csproj", "{CAC0A92D-1502-468A-80DA-0A2CD97ACF6B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Woose.API", "Woose.API\Woose.API.csproj", "{CAC0A92D-1502-468A-80DA-0A2CD97ACF6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Woose.V8", "Woose.V8\Woose.V8.csproj", "{2D77E781-EBFB-481B-B5E7-338DEB60FBEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{CAC0A92D-1502-468A-80DA-0A2CD97ACF6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CAC0A92D-1502-468A-80DA-0A2CD97ACF6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CAC0A92D-1502-468A-80DA-0A2CD97ACF6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D77E781-EBFB-481B-B5E7-338DEB60FBEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D77E781-EBFB-481B-B5E7-338DEB60FBEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D77E781-EBFB-481B-B5E7-338DEB60FBEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D77E781-EBFB-481B-B5E7-338DEB60FBEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
