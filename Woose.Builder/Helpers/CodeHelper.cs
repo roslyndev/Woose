@@ -168,13 +168,13 @@ namespace Woose.Builder
                                                 builder.Append(CodeHelper.NEST.EntitiyCreate(this.option, tableproperties));
                                                 break;
                                             case "CONTROLLER":
-                                                builder.Append("");
+                                                builder.Append(CodeHelper.NEST.ControllerCreate(this.option, tableproperties));
                                                 break;
                                             case "DTO":
                                                 builder.Append(CodeHelper.NEST.DtoCreate(this.option, tableproperties));
                                                 break;
-                                            case "REPOSITORY":
-                                                builder.Append("");
+                                            case "SERVICE":
+                                                builder.Append(CodeHelper.NEST.ServiceCreate(this.option, tableproperties));
                                                 break;
                                             default:
                                                 builder.Append("분류 탭을 선택해 주세요.");

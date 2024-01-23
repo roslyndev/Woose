@@ -539,8 +539,8 @@ namespace Woose.Builder
                         case "DTO":
                             NestDTO.Document = CreateRichText(text);
                             break;
-                        case "REPOSITORY":
-                            NestRepository.Document = CreateRichText(text);
+                        case "SERVICE":
+                            NestService.Document = CreateRichText(text);
                             break;
                     }
                     break;
@@ -646,6 +646,30 @@ namespace Woose.Builder
                         break;
                     case "NODE.JS":
                         filename = $"{option.target.name}";
+                        break;
+                    case "NEST.JS":
+                        selectedTab = NestOptions.SelectedItem as TabItem;
+                        if (selectedTab != null)
+                        {
+                            switch ((selectedTab.Header?.ToString() ?? "").Trim().ToUpper())
+                            {
+                                case "CONTROLLER":
+                                    filename = $"{option.target.name.ToLower()}.controller.ts";
+                                    break;
+                                case "SERVICE":
+                                    filename = $"{option.target.name.ToLower()}.service.ts";
+                                    break;
+                                case "DTO":
+                                    filename = $"{option.target.name.ToLower()}.dto.ts";
+                                    break;
+                                case "ENTITY":
+                                    filename = $"{option.target.name.ToLower()}.entity.ts";
+                                    break;
+                                default:
+                                    filename = $"{option.target.name}";
+                                    break;
+                            }
+                        }
                         break;
                     case "VUE.JS":
                         filename = $"{option.target.name}";
@@ -1395,8 +1419,8 @@ namespace Woose.Builder
                         case "DTO":
                             result = NestDTO;
                             break;
-                        case "REPOSITORY":
-                            result = NestRepository;
+                        case "SERVICE":
+                            result = NestService;
                             break;
                     }
                     break;
@@ -1506,11 +1530,13 @@ namespace Woose.Builder
                         case "DATABASE":
                             extend = "sql";
                             break;
+                        case "NEST.JS":
                         case "TYPESCRIPT":
                             extend = "ts";
                             break;
                         case "NODE.JS":
                             extend = "js";
+                            break;
                             break;
                         case "VUE.JS":
                             extend = "vue";
@@ -1838,6 +1864,16 @@ namespace Woose.Builder
         private void Btn_Nest_Create_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void CheckUseDeco_Checked(object sender, RoutedEventArgs e)
+        {
+            this.option.IsUseApiOperation = true;
+        }
+
+        private void CheckUseDeco_UnChecked(object sender, RoutedEventArgs e)
+        {
+            this.option.IsUseApiOperation = false;
         }
     }
 }

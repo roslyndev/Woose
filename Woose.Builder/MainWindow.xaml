@@ -354,7 +354,7 @@
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
                             <StackPanel Orientation="Horizontal" Height="40" Margin="5" VerticalAlignment="Center">
-                                <CheckBox Name="NestCheckUseCustomModel" Content="Using Custom Model" Checked="CheckUseCustomModel_Checked" Unchecked="CheckUseCustomModel_Unchecked" Margin="15,5,5,5" VerticalAlignment="Center" />
+                                <CheckBox Name="NestCheckUseDeco" Content="Using ApiOperation" Checked="CheckUseDeco_Checked" Unchecked="CheckUseDeco_UnChecked" Margin="15,5,5,5" VerticalAlignment="Center" />
                                 <CheckBox Name="NestCheckNoModel" Content="No Model" Checked="CheckNoModel_Checked" Unchecked="CheckNoModel_Unchecked" Margin="15,5,20,5" VerticalAlignment="Center" />
 
                                 <ComboBox Name="NestReturnType" SelectedIndex="0" SelectionChanged="ReturnType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
@@ -394,8 +394,8 @@
                                     <RichTextBox Name="NestDTO" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
                                     </RichTextBox>
                                 </TabItem>
-                                <TabItem Header="Repository" Margin="5,0,-5,0" Width="80">
-                                    <RichTextBox Name="NestRepository" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
+                                <TabItem Header="Service" Margin="5,0,-5,0" Width="80">
+                                    <RichTextBox Name="NestService" IsReadOnly="True" VerticalScrollBarVisibility="Auto">
                                     </RichTextBox>
                                 </TabItem>
                             </TabControl>

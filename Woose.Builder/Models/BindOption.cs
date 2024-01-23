@@ -27,6 +27,8 @@ namespace Woose.Builder
 
         public bool UsingCustomModel { get; set; } = false;
 
+        public bool IsUseApiOperation { get; set; } = false;
+
         public bool Usei18n { get; set; } = false;
 
         public bool UseMultiApi { get; set; } = false;
