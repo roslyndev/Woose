@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using Woose.Data;
 
@@ -781,6 +782,164 @@ module.exports = mailHelper;
             
             return builder.ToString();
         }
+
+        public string NodeRouteControllerCreate(BindOption option, List<DbTableInfo> info)
+        {
+            StringBuilder builder = new StringBuilder(200);
+
+            if (info != null && info.Count > 0)
+            {
+                DbTableInfo primaryColumn = info.Where(x => x.is_identity).FirstOrDefault();
+                if (primaryColumn == null)
+                {
+                    primaryColumn = info.OrderBy(x => x.column_id).FirstOrDefault();
+                }
+
+                string entityName = info[0].TableName;
+
+                builder.AppendLine("const db = require('../../models/db');");
+                builder.AppendLine("const { ReturnValue, ReturnValues } = require(\"../../models/ReturnValue\");");
+                builder.AppendEmptyLine();
+                builder.AppendLine("exports.List = async (userid, query) => {");
+                builder.AppendTabLine(1, "let result = new ReturnValues();");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(1, "try {");
+                builder.AppendTab(2, $"let list = await db.{entityName}.findAll(");
+                builder.AppendLine("{");
+                builder.AppendTabLine(3, "//검색조건 추가");
+                builder.AppendTabLine(2, "});");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(2, "if (list === null || list === undefined) {");
+                builder.AppendTabLine(3, "result.check = true;");
+                builder.AppendTabLine(3, "result.code = 0;");
+                builder.AppendTabLine(2, "} else {");
+                builder.AppendTabLine(3, "result.Success(list.length, list, '', '');");
+                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "} catch (e) {");
+                builder.AppendTabLine(2, "result.Error(e.message);");
+                builder.AppendTabLine(1, "} finally {");
+                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(1, "}");
+                builder.AppendLine("};");
+                builder.AppendEmptyLine();
+                builder.AppendLine("exports.Detail = async (userid, targetid) => {");
+                builder.AppendTabLine(1, "let result = new ReturnValues();");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(1, "try {");
+                builder.AppendTab(2, $"let detail = await db.{entityName}.findOne(");
+                builder.AppendLine("{");
+                builder.AppendTabLine(2, "});");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(2, "if (detail !== null && detail !== undefined) {");
+                if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+                {
+                    builder.AppendTabLine(3, $"result.Success(detail.{primaryColumn.ColumnName}, detail, '', '');");
+                }
+                else
+                {
+                    builder.AppendTabLine(3, $"result.Success(targetid, detail, '', '');");
+                }
+                builder.AppendTabLine(2, "} else {");
+                builder.AppendTabLine(3, "result.Error('NotFound Target');");
+                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "} catch (e) {");
+                builder.AppendTabLine(2, "result.Error(e.message);");
+                builder.AppendTabLine(1, "} finally {");
+                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(1, "}");
+                builder.AppendLine("};");
+
+                builder.AppendEmptyLine();
+                builder.AppendLine("exports.Remove = async (userid, id) => {");
+                builder.AppendTabLine(1, "let result = new ReturnValues();");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(1, "try {");
+                builder.AppendTab(2, $"let detail = await db.{entityName}.findOne(");
+                builder.AppendLine("{");
+                if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+                {
+                    builder.AppendTabLine(3, "where : { " + primaryColumn.ColumnName + " : id }");
+                }
+                builder.AppendTabLine(2, "});");
+                builder.AppendTabLine(2, "");
+                builder.AppendTabLine(2, "if (detail !== null && detail !== undefined) {");
+                builder.AppendTab(3, $"await db.{entityName}.destroy(");
+                builder.AppendLine("{");
+                if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+                {
+                    builder.AppendTabLine(4, "where : { " + primaryColumn.ColumnName + " : id }");
+                }
+                builder.AppendTabLine(3, "});");
+                builder.AppendTabLine(2, "");
+                builder.AppendTabLine(3, "result.Success(id, '', '');");
+                builder.AppendTabLine(2, "} else {");
+                builder.AppendTabLine(3, "result.Error(\"NotFound Target\");");
+                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "} catch (e) {");
+                builder.AppendTabLine(2, "result.Error(e.message);");
+                builder.AppendTabLine(1, "} finally {");
+                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(1, "}");
+                builder.AppendLine("};");
+
+                builder.AppendEmptyLine();
+                builder.AppendLine("exports.Save = async (userid, body) => {");
+                builder.AppendTabLine(1, "let result = new ReturnValues();");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(1, "try {");
+                builder.AppendTab(2, $"let detail = await db.{entityName}.findOne(");
+                builder.AppendLine("{");
+                if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+                {
+                    builder.AppendTabLine(3, "where : { " + primaryColumn.ColumnName + " : id }");
+                }
+                builder.AppendTabLine(2, "});");
+                builder.AppendEmptyLine();
+                builder.AppendTabLine(2, "if (detail !== null && detail !== undefined) {");
+                builder.AppendTabLine(3, "//update");
+                foreach (var item in option.GetTableProperties(entityName))
+                {
+                    builder.AppendTabLine(3, $"detail.{item.Name} = body.{item.Name.FirstCharToLower()};");
+                }
+                builder.AppendTabLine(3, "await detail.save();");
+                if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+                {
+                    builder.AppendEmptyLine();
+                    builder.AppendTabLine(3, $"if (detail.{primaryColumn.ColumnName} > 0) " + "{");
+                    builder.AppendTabLine(4, $"result.Success(detail.{primaryColumn.ColumnName}, \"\", \"\");");
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "result.Error(\"Save Fail\");");
+                    builder.AppendTabLine(3, "}");
+                }
+                builder.AppendTabLine(2, "} else {");
+                builder.AppendTabLine(3, "//insert");
+                builder.AppendTabLine(3, $"let target = new db.{entityName}();");
+                foreach (var item in info)
+                {
+                    builder.AppendTabLine(3, $"target.{item.Name} = body.{item.Name.FirstCharToLower()};");
+                }
+                builder.AppendTabLine(3, "await target.save();");
+                if (primaryColumn != null && !string.IsNullOrWhiteSpace(primaryColumn.ColumnName))
+                {
+                    builder.AppendEmptyLine();
+                    builder.AppendTabLine(3, $"if (target.{primaryColumn.ColumnName} > 0) " + "{");
+                    builder.AppendTabLine(4, $"result.Success(target.{primaryColumn.ColumnName}, \"\", \"\");");
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "result.Error(\"Save Fail\");");
+                    builder.AppendTabLine(3, "}");
+                }
+                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "} catch (e) {");
+                builder.AppendTabLine(2, "result.Error(e.message);");
+                builder.AppendTabLine(1, "} finally {");
+                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(1, "}");
+                builder.AppendLine("};");
+            }
+
+            return builder.ToString();
+        }
+
 
         public string NodeRouteControllerCreate(BindOption option, DbEntity entity)
         {

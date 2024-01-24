@@ -145,7 +145,7 @@ namespace Woose.Builder
                                                 builder.Append(CodeHelper.JavaScript.NodeSequelizeEntitiyCreate(this.option, tableproperties));
                                                 break;
                                             case "CONTROLLER":
-                                                builder.Append("");
+                                                builder.Append(CodeHelper.JavaScript.NodeRouteControllerCreate(this.option, tableproperties));
                                                 break;
                                             case "ABSTRACT":
                                                 builder.Append("");
