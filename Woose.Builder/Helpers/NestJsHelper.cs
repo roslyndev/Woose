@@ -28,7 +28,10 @@ namespace Woose.Builder
 
                 string entityName = info[0].TableName;
 
-                builder.AppendLine("import { ApiProperty } from '@nestjs/swagger';");
+                if (option.IsUseApiOperation)
+                {
+                    builder.AppendLine("import { ApiProperty } from '@nestjs/swagger';");
+                }
                 builder.AppendLine("import { " + entityName + " } from 'src/entities';");
                 builder.AppendEmptyLine();
                 builder.AppendLine("class " + entityName.FirstCharToUpper() + "Regist {");
@@ -36,7 +39,10 @@ namespace Woose.Builder
                 {
                     if (!item.is_identity && !item.IsDate)
                     {
-                        builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                        if (option.IsUseApiOperation)
+                        {
+                            builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                        }
                         builder.AppendTabLine(1, $"public {item.Name.FirstCharToLower()}:{item.ScriptType};");
                         builder.AppendEmptyLine();
                     }
@@ -75,7 +81,10 @@ namespace Woose.Builder
                 {
                     if (!item.IsDate)
                     {
-                        builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                        if (option.IsUseApiOperation)
+                        {
+                            builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                        }
                         builder.AppendTabLine(1, $"public {item.Name.FirstCharToLower()}:{item.ScriptType};");
                         builder.AppendEmptyLine();
                     }
@@ -130,7 +139,10 @@ namespace Woose.Builder
                 string entityName = info[0].TableName;
                 bool isKey = false;
 
-                builder.AppendLine("import { ApiProperty } from '@nestjs/swagger';");
+                if (option.IsUseApiOperation)
+                {
+                    builder.AppendLine("import { ApiProperty } from '@nestjs/swagger';");
+                }
                 builder.AppendLine("import { Entity,Column,PrimaryGeneratedColumn,CreateDateColumn,UpdateDateColumn,PrimaryColumn,ManyToOne,JoinColumn } from 'typeorm';");
                 var fks = option.GetParentForeignKeys(entityName);
                 if (fks != null && fks.Count > 0)
@@ -161,7 +173,10 @@ namespace Woose.Builder
                         if (fks.Where(x => x.ParentColumnName == item.ColumnName).Any())
                         {
                             var fk = fks.Where(x => x.ParentColumnName == item.ColumnName).First();
-                            builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                            if (option.IsUseApiOperation)
+                            {
+                                builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                            }
                             builder.AppendTabLine(1, "@ManyToOne(() => " + fk.ReferencedTableName + ")");
                             builder.AppendTabLine(1, "@JoinColumn({ name: '" + fk.ReferencedColumnName + "' })");
                             if (isKey)
@@ -183,7 +198,10 @@ namespace Woose.Builder
                                 }
                                 else
                                 {
-                                    builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                                    if (option.IsUseApiOperation)
+                                    {
+                                        builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                                    }
                                     builder.AppendTab(1, "@Column('" + item.ColumnType + "', { name: '" + item.Name + "'");
                                     if (item.IsSize)
                                     {
@@ -194,7 +212,10 @@ namespace Woose.Builder
                             }
                             else
                             {
-                                builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                                if (option.IsUseApiOperation)
+                                {
+                                    builder.AppendTabLine(1, "@ApiProperty({ description: '" + item.Name + "' })");
+                                }
                                 builder.AppendTab(1, "@Column('" + item.ColumnType + "', { name: '" + item.Name + "'");
                                 if (item.IsSize)
                                 {
@@ -242,8 +263,11 @@ namespace Woose.Builder
                 builder.AppendLine("import { " + entityName  + "Regist, " + entityName + "Update } from 'src/dto';");
                 builder.AppendEmptyLine();
                 builder.AppendLine($"@ApiTags(\"{entityName.ToLower()}\")");
-                builder.AppendLine("@ApiBearerAuth(\"AccessToken\")");
-                builder.AppendLine("@UseInterceptors(AuthInterceptor)");
+                if (!option.IsNoModel)
+                {
+                    builder.AppendLine("@ApiBearerAuth(\"AccessToken\")");
+                    builder.AppendLine("@UseInterceptors(AuthInterceptor)");
+                }
                 builder.AppendLine($"@Controller('{entityName.ToLower()}')");
                 builder.AppendLine("export class " + entityName + "Controller {");
                 builder.AppendTabLine(1, "constructor(private readonly service: " + entityName + "Service) {}");
@@ -254,8 +278,8 @@ namespace Woose.Builder
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Regist', description: '" + entityName + " Regist Api Method' })");
                 }
-                builder.AppendTabLine(1, "async create(@Req() request, @Body() data:" + entityName + "Regist): Promise<ReturnValue> {");
-                builder.AppendTabLine(2, "return await this.service.create(request.accessToken, data);");
+                builder.AppendTabLine(1, "async create(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Body() data:" + entityName + "Regist): Promise<ReturnValue> {");
+                builder.AppendTabLine(2, "return await this.service.create(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "data);");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
                 builder.AppendTabLine(1, "@Put(\"update\")");
@@ -263,8 +287,8 @@ namespace Woose.Builder
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Update', description: '" + entityName + " Modify Api Method' })");
                 }
-                builder.AppendTabLine(1, "async update(@Req() request, @Body() data:" + entityName + "Update): Promise<ReturnValue> {");
-                builder.AppendTabLine(2, "return await this.service.update(request.accessToken, data);");
+                builder.AppendTabLine(1, "async update(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Body() data:" + entityName + "Update): Promise<ReturnValue> {");
+                builder.AppendTabLine(2, "return await this.service.update(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "data);");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
                 builder.AppendTabLine(1, "@Get(\"list\")");
@@ -272,8 +296,8 @@ namespace Woose.Builder
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " List', description: '" + entityName + " List Api Method' })");
                 }
-                builder.AppendTabLine(1, "async findlist(@Req() request): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "return await this.service.findlist(request.accessToken);");
+                builder.AppendTabLine(1, "async findlist(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "): Promise<ReturnValues> {");
+                builder.AppendTabLine(2, "return await this.service.findlist(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + ");");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
                 builder.AppendTabLine(1, "@Get('view/:id')");
@@ -281,8 +305,8 @@ namespace Woose.Builder
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Detail', description: '" + entityName + " Detail View Api Method' })");
                 }
-                builder.AppendTabLine(1, "async findById(@Req() request, @Param('id') id: number): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "return await this.service.findById(request.accessToken, id);");
+                builder.AppendTabLine(1, "async findById(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Param('id') id: number): Promise<ReturnValues> {");
+                builder.AppendTabLine(2, "return await this.service.findById(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "id);");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
                 builder.AppendTabLine(1, "@Delete('erase/:id')");
@@ -290,8 +314,8 @@ namespace Woose.Builder
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Erase', description: '" + entityName + " Erase Api Method' })");
                 }
-                builder.AppendTabLine(1, "async eraseById(@Req() request, @Param('id') id: number): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "return await this.service.eraseById(request.accessToken, id);");
+                builder.AppendTabLine(1, "async eraseById(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Param('id') id: number): Promise<ReturnValues> {");
+                builder.AppendTabLine(2, "return await this.service.eraseById(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "id);");
                 builder.AppendTabLine(1, "}");
 
                 builder.AppendLine("}");
@@ -331,165 +355,232 @@ namespace Woose.Builder
                 builder.AppendTabLine(1, ") {}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async create(accessToken:string, data:" + entityName + "Regist): Promise<ReturnValue> {");
-                builder.AppendTabLine(2, "let result = new ReturnValue();");
-                builder.AppendTabLine(2, $"let {entityName.ToLower()}:{entityName} = new {entityName}();");
+                builder.AppendTabLine(1, "async create(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "data:" + entityName + "Regist): Promise<ReturnValue> {");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
+                    builder.AppendTabLine(3, "let auth = this.crypto.tokenGet(accessToken);");
+                    builder.AppendTabLine(3, "if (auth !== null && auth !== undefined && auth.memberIDX > 0) {");
+                }
+
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let result = new ReturnValue();");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), $"let {entityName.ToLower()}:{entityName} = new {entityName}();");
                 foreach (var item in info)
                 {
                     if (!item.is_identity)
                     {
                         if (item.IsDate)
                         {
-                            builder.AppendTabLine(2, $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = new Date();");
+                            builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = new Date();");
                         }
                         else
                         {
-                            builder.AppendTabLine(2, $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = data.{item.ColumnName.FirstCharToLower()};");
+                            builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = data.{item.ColumnName.FirstCharToLower()};");
                         }
                     }
                 }
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(2, $"let target = await this.repository.save({entityName.ToLower()});");
-                builder.AppendTabLine(2, "if (target !== null && target !== undefined) {");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), $"let target = await this.repository.save({entityName.ToLower()});");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "if (target !== null && target !== undefined) {");
                 if (primaryKey != null)
                 {
-                    builder.AppendTabLine(3, $"result.Success({entityName.ToLower()}.{primaryKey.ColumnName.FirstCharToLower()}, \"\", \"\");");
+                    builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), $"result.Success({entityName.ToLower()}.{primaryKey.ColumnName.FirstCharToLower()}, \"\", \"\");");
                 }
                 else
                 {
-                    builder.AppendTabLine(3, "result.Success(1, \"\", \"\");");
+                    builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Success(1, \"\", \"\");");
                 }
-                builder.AppendTabLine(2, "} else {");
-                builder.AppendTabLine(3, "result.Error(\"Fail Save Data\");");
-                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "} else {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Error(\"Fail Save Data\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "return result;");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "throw new UnauthorizedException('Invalid access token');");
+                    builder.AppendTabLine(3, "}");
+                    builder.AppendTabLine(2, "} else {");
+                    builder.AppendTabLine(3, "throw new UnauthorizedException('Required access token');");
+                    builder.AppendTabLine(2, "}");
+                }
+
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async update(accessToken:string, data:" + entityName + "Update): Promise<ReturnValue> {");
-                builder.AppendTabLine(2, "let result = new ReturnValue();");
-                builder.AppendTabLine(2, $"let {entityName.ToLower()} = await this.repository.findOne(" + "{");
+                builder.AppendTabLine(1, "async update(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "data:" + entityName + "Update): Promise<ReturnValue> {");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
+                    builder.AppendTabLine(3, "let auth = this.crypto.tokenGet(accessToken);");
+                    builder.AppendTabLine(3, "if (auth !== null && auth !== undefined && auth.memberIDX > 0) {");
+                }
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let result = new ReturnValue();");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), $"let {entityName.ToLower()} = await this.repository.findOne(" + "{");
                 if (primaryKey != null)
                 {
-                    builder.AppendTabLine(3, "where: { " + primaryKey.ColumnName.FirstCharToLower() + ": data." + primaryKey.ColumnName.FirstCharToLower() + " }");
+                    builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "where: { " + primaryKey.ColumnName.FirstCharToLower() + ": data." + primaryKey.ColumnName.FirstCharToLower() + " }");
                 }
-                builder.AppendTabLine(2, "});");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "});");
                 builder.AppendEmptyLine();
 
 
-                builder.AppendTabLine(2, $"if ({entityName.ToLower()}) " + "{");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), $"if ({entityName.ToLower()}) " + "{");
                 foreach (var item in info)
                 {
                     if (!item.is_identity)
                     {
                         if (item.IsDate)
                         {
-                            builder.AppendTabLine(3, $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = new Date();");
+                            builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = new Date();");
                         }
                         else
                         {
-                            builder.AppendTabLine(3, $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = data.{item.ColumnName.FirstCharToLower()};");
+                            builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), $"{entityName.ToLower()}.{item.ColumnName.FirstCharToLower()} = data.{item.ColumnName.FirstCharToLower()};");
                         }
                     }
                 }
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(3, $"let target = await this.repository.save({entityName.ToLower()});");
-                builder.AppendTabLine(3, "if (target !== null && target !== undefined) {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), $"let target = await this.repository.save({entityName.ToLower()});");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "if (target !== null && target !== undefined) {");
                 if (primaryKey != null)
                 {
-                    builder.AppendTabLine(4, $"result.Success({entityName.ToLower()}.{primaryKey.ColumnName.FirstCharToLower()}, \"\", \"\");");
+                    builder.AppendTabLine(4 + ((!option.IsNoModel) ? 2 : 0), $"result.Success({entityName.ToLower()}.{primaryKey.ColumnName.FirstCharToLower()}, \"\", \"\");");
                 }
                 else
                 {
-                    builder.AppendTabLine(4, "result.Success(1, \"\", \"\");");
+                    builder.AppendTabLine(4 + ((!option.IsNoModel) ? 2 : 0), "result.Success(1, \"\", \"\");");
                 }
-                builder.AppendTabLine(3, "} else {");
-                builder.AppendTabLine(4, "result.Error(\"Fail Save Data\");");
-                builder.AppendTabLine(3, "}");
-                builder.AppendTabLine(2, "} else {");
-                builder.AppendTabLine(3, "result.Error(\"NotFound Data\");");
-                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "} else {");
+                builder.AppendTabLine(4 + ((!option.IsNoModel) ? 2 : 0), "result.Error(\"Fail Save Data\");");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "}");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "} else {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Error(\"NotFound Data\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "return result;");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "throw new UnauthorizedException('Invalid access token');");
+                    builder.AppendTabLine(3, "}");
+                    builder.AppendTabLine(2, "} else {");
+                    builder.AppendTabLine(3, "throw new UnauthorizedException('Required access token');");
+                    builder.AppendTabLine(2, "}");
+                }
+
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async findlist(accessToken:string): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "let result = new ReturnValues();");
-                builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
-                builder.AppendTabLine(3, "let user = this.crypto.tokenGet(accessToken);");
-                builder.AppendTabLine(3, "if (user !== null && user !== undefined && user.memberIDX > 0) {");
-                builder.AppendTabLine(4, "let data = await this.repository.find();");
-                builder.AppendTabLine(4, "if (data !== null && data !== undefined && data.length > 0) {");
-                builder.AppendTabLine(5, "result.Success(data.length, data, \"\", \"\");");
-                builder.AppendTabLine(4, "} else {");
-                builder.AppendTabLine(5, "result.Success(0, [], \"\", \"\");");
-                builder.AppendTabLine(4, "}");
-                builder.AppendTabLine(3, "} else {");
-                builder.AppendTabLine(4, "result.Error(\"Invalid access token\");");
-                builder.AppendTabLine(3, "}");
-                builder.AppendTabLine(2, "} else {");
-                builder.AppendTabLine(3, "result.Error(\"Required access token\");");
-                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "async findlist(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "): Promise<ReturnValues> {");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
+                    builder.AppendTabLine(3, "let auth = this.crypto.tokenGet(accessToken);");
+                    builder.AppendTabLine(3, "if (auth !== null && auth !== undefined && auth.memberIDX > 0) {");
+                }
+
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let result = new ReturnValues();");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let data = await this.repository.find();");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "if (data !== null && data !== undefined && data.length > 0) {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Success(data.length, data, \"\", \"\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "} else {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Success(0, [], \"\", \"\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "return result;");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "throw new UnauthorizedException('Invalid access token');");
+                    builder.AppendTabLine(3, "}");
+                    builder.AppendTabLine(2, "} else {");
+                    builder.AppendTabLine(3, "throw new UnauthorizedException('Required access token');");
+                    builder.AppendTabLine(2, "}");
+                }
+
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async findById(accessToken:string, idx:number): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "let result = new ReturnValues();");
-                builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
-                builder.AppendTabLine(3, "let user = this.crypto.tokenGet(accessToken);");
-                builder.AppendTabLine(3, "if (user !== null && user !== undefined && user.memberIDX > 0) {");
-                builder.AppendTabLine(4, "let data = await this.repository.findOne({");
-                if (primaryKey != null)
+                builder.AppendTabLine(1, "async findById(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "idx:number): Promise<ReturnValues> {");
+
+                if (!option.IsNoModel)
                 {
-                    builder.AppendTabLine(5, "where: { " + primaryKey.ColumnName.FirstCharToLower() + ": idx }");
+                    builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
+                    builder.AppendTabLine(3, "let auth = this.crypto.tokenGet(accessToken);");
+                    builder.AppendTabLine(3, "if (auth !== null && auth !== undefined && auth.memberIDX > 0) {");
                 }
-                builder.AppendTabLine(4, "});");
-                builder.AppendTabLine(4, "if (data !== null && data !== undefined) {");
+
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let result = new ReturnValues();");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let data = await this.repository.findOne({");
                 if (primaryKey != null)
                 {
-                    builder.AppendTabLine(5, $"result.Success(data.{primaryKey.ColumnName.FirstCharToLower()}, data, \"\", \"\");");
+                    builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "where: { " + primaryKey.ColumnName.FirstCharToLower() + ": idx }");
+                }
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "});");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "if (data !== null && data !== undefined) {");
+                if (primaryKey != null)
+                {
+                    builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), $"result.Success(data.{primaryKey.ColumnName.FirstCharToLower()}, data, \"\", \"\");");
                 }
                 else
                 {
-                    builder.AppendTabLine(5, "result.Success(idx, data, \"\", \"\");");
+                    builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Success(idx, data, \"\", \"\");");
                 }
-                builder.AppendTabLine(4, "} else {");
-                builder.AppendTabLine(5, "result.Error(\"NotFound data\");");
-                builder.AppendTabLine(4, "}");
-                builder.AppendTabLine(3, "} else {");
-                builder.AppendTabLine(4, "result.Error(\"Invalid access token\");");
-                builder.AppendTabLine(3, "}");
-                builder.AppendTabLine(2, "} else {");
-                builder.AppendTabLine(3, "result.Error(\"Required access token\");");
-                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "} else {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Error(\"NotFound data\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "}");
                 builder.AppendEmptyLine();
                 builder.AppendTabLine(2, "return result;");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "throw new UnauthorizedException('Invalid access token');");
+                    builder.AppendTabLine(3, "}");
+                    builder.AppendTabLine(2, "} else {");
+                    builder.AppendTabLine(3, "throw new UnauthorizedException('Required access token');");
+                    builder.AppendTabLine(2, "}");
+                }
+
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async eraseById(accessToken:string, idx:number): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "let result = new ReturnValues();");
-                builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
-                builder.AppendTabLine(3, "let user = this.crypto.tokenGet(accessToken);");
-                builder.AppendTabLine(3, "if (user !== null && user !== undefined && user.memberIDX > 0) {");
-                builder.AppendTabLine(4, "let data = await this.repository.delete(idx)");
-                builder.AppendTabLine(4, "if (data !== null && data !== undefined) {");
-                builder.AppendTabLine(5, "result.Success(idx, data, \"\", \"\");");
-                builder.AppendTabLine(4, "} else {");
-                builder.AppendTabLine(5, "result.Error(\"NotFound data\");");
-                builder.AppendTabLine(4, "}");
-                builder.AppendTabLine(3, "} else {");
-                builder.AppendTabLine(4, "result.Error(\"Invalid access token\");");
-                builder.AppendTabLine(3, "}");
-                builder.AppendTabLine(2, "} else {");
-                builder.AppendTabLine(3, "result.Error(\"Required access token\");");
-                builder.AppendTabLine(2, "}");
+                builder.AppendTabLine(1, "async eraseById(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "idx:number): Promise<ReturnValues> {");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(2, "if (accessToken !== null && accessToken !== undefined && accessToken !== '') {");
+                    builder.AppendTabLine(3, "let auth = this.crypto.tokenGet(accessToken);");
+                    builder.AppendTabLine(3, "if (auth !== null && auth !== undefined && auth.memberIDX > 0) {");
+                }
+
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let result = new ReturnValues();");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "let data = await this.repository.delete(idx)");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "if (data !== null && data !== undefined) {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Success(idx, data, \"\", \"\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "} else {");
+                builder.AppendTabLine(3 + ((!option.IsNoModel) ? 2 : 0), "result.Error(\"NotFound data\");");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(2, "return result;");
+                builder.AppendTabLine(2 + ((!option.IsNoModel) ? 2 : 0), "return result;");
+
+                if (!option.IsNoModel)
+                {
+                    builder.AppendTabLine(3, "} else {");
+                    builder.AppendTabLine(4, "throw new UnauthorizedException('Invalid access token');");
+                    builder.AppendTabLine(3, "}");
+                    builder.AppendTabLine(2, "} else {");
+                    builder.AppendTabLine(3, "throw new UnauthorizedException('Required access token');");
+                    builder.AppendTabLine(2, "}");
+                }
+
                 builder.AppendTabLine(1, "}");
 
                 builder.AppendLine("}");
