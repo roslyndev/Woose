@@ -249,76 +249,82 @@ namespace Woose.Builder
                 string entityName = info[0].TableName;
                 bool isKey = false;
 
-                builder.Append("import { ApiTags,ApiBearerAuth");
-                if (option.IsUseApiOperation)
+                if (!option.UsingCustomModel)
                 {
-                    builder.Append(",ApiOperation");
+                    builder.Append("import { ApiTags,ApiBearerAuth");
+                    if (option.IsUseApiOperation)
+                    {
+                        builder.Append(",ApiOperation");
+                    }
+                    builder.AppendLine(" } from '@nestjs/swagger';");
+                    builder.AppendLine("import { Controller,Get,Post,Put,Body,Param,Delete,UseInterceptors,Req } from '@nestjs/common';");
+                    builder.AppendLine("import { AuthInterceptor } from 'src/Interceptors';");
+                    builder.AppendLine("import { " + entityName + "Service } from '../services';");
+                    builder.AppendLine("import { " + entityName + " } from 'src/entities';");
+                    builder.AppendLine("import { ReturnValue, ReturnValues } from 'src/models';");
+                    builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from 'src/dto';");
+                    builder.AppendEmptyLine();
+                    builder.AppendLine($"@ApiTags(\"{entityName.ToLower()}\")");
+                    if (!option.IsNoModel)
+                    {
+                        builder.AppendLine("@ApiBearerAuth(\"AccessToken\")");
+                        builder.AppendLine("@UseInterceptors(AuthInterceptor)");
+                    }
+                    builder.AppendLine($"@Controller('{entityName.ToLower()}')");
+                    builder.AppendLine("export class " + entityName + "Controller {");
+                    builder.AppendTabLine(1, "constructor(private readonly service: " + entityName + "Service) {}");
+                    builder.AppendEmptyLine();
                 }
-                builder.AppendLine(" } from '@nestjs/swagger';");
-                builder.AppendLine("import { Controller,Get,Post,Put,Body,Param,Delete,UseInterceptors,Req } from '@nestjs/common';");
-                builder.AppendLine("import { AuthInterceptor } from 'src/Interceptors';");
-                builder.AppendLine("import { " + entityName + "Service } from '../services';");
-                builder.AppendLine("import { " + entityName + " } from 'src/entities';");
-                builder.AppendLine("import { ReturnValue, ReturnValues } from 'src/models';");
-                builder.AppendLine("import { " + entityName  + "Regist, " + entityName + "Update } from 'src/dto';");
-                builder.AppendEmptyLine();
-                builder.AppendLine($"@ApiTags(\"{entityName.ToLower()}\")");
-                if (!option.IsNoModel)
-                {
-                    builder.AppendLine("@ApiBearerAuth(\"AccessToken\")");
-                    builder.AppendLine("@UseInterceptors(AuthInterceptor)");
-                }
-                builder.AppendLine($"@Controller('{entityName.ToLower()}')");
-                builder.AppendLine("export class " + entityName + "Controller {");
-                builder.AppendTabLine(1, "constructor(private readonly service: " + entityName + "Service) {}");
-                builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "@Post(\"regist\")");
+                builder.AppendTabLine(1, "@Post(\"" + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "/regist\")");
                 if (option.IsUseApiOperation)
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Regist', description: '" + entityName + " Regist Api Method' })");
                 }
-                builder.AppendTabLine(1, "async create(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Body() data:" + entityName + "Regist): Promise<ReturnValue> {");
-                builder.AppendTabLine(2, "return await this.service.create(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "data);");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "create(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Body() data:" + entityName + "Regist): Promise<ReturnValue> {");
+                builder.AppendTabLine(2, "return await this.service." + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "create(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "data);");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(1, "@Put(\"update\")");
+                builder.AppendTabLine(1, "@Put(\"" + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "/update\")");
                 if (option.IsUseApiOperation)
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Update', description: '" + entityName + " Modify Api Method' })");
                 }
-                builder.AppendTabLine(1, "async update(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Body() data:" + entityName + "Update): Promise<ReturnValue> {");
-                builder.AppendTabLine(2, "return await this.service.update(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "data);");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "update(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Body() data:" + entityName + "Update): Promise<ReturnValue> {");
+                builder.AppendTabLine(2, "return await this.service." + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "update(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "data);");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(1, "@Get(\"list\")");
+                builder.AppendTabLine(1, "@Get(\"" + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "/list\")");
                 if (option.IsUseApiOperation)
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " List', description: '" + entityName + " List Api Method' })");
                 }
-                builder.AppendTabLine(1, "async findlist(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "return await this.service.findlist(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + ");");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "findlist(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "): Promise<ReturnValues> {");
+                builder.AppendTabLine(2, "return await this.service." + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "findlist(" + ((!option.IsNoModel) ? " request.accessToken " : "") + ");");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(1, "@Get('view/:id')");
+                builder.AppendTabLine(1, "@Get('" + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "/view/:id')");
                 if (option.IsUseApiOperation)
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Detail', description: '" + entityName + " Detail View Api Method' })");
                 }
-                builder.AppendTabLine(1, "async findById(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Param('id') id: number): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "return await this.service.findById(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "id);");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "findById(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Param('id') id: number): Promise<ReturnValues> {");
+                builder.AppendTabLine(2, "return await this.service." + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "findById(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "id);");
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
-                builder.AppendTabLine(1, "@Delete('erase/:id')");
+                builder.AppendTabLine(1, "@Delete('" + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "/erase/:id')");
                 if (option.IsUseApiOperation)
                 {
                     builder.AppendTabLine(1, "@ApiOperation({ summary: '" + entityName + " Erase', description: '" + entityName + " Erase Api Method' })");
                 }
-                builder.AppendTabLine(1, "async eraseById(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Param('id') id: number): Promise<ReturnValues> {");
-                builder.AppendTabLine(2, "return await this.service.eraseById(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "id);");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "eraseById(" + ((!option.IsNoModel) ? "@Req() request, " : "") + "@Param('id') id: number): Promise<ReturnValues> {");
+                builder.AppendTabLine(2, "return await this.service." + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "eraseById(" + ((!option.IsNoModel) ? " request.accessToken, " : "") + "id);");
                 builder.AppendTabLine(1, "}");
 
-                builder.AppendLine("}");
+                if (!option.UsingCustomModel)
+                {
+                    builder.AppendLine("}");
+                }
             }
 
             return builder.ToString();
@@ -338,24 +344,26 @@ namespace Woose.Builder
 
                 string entityName = info[0].TableName;
 
-                builder.AppendLine("import { Injectable, UnauthorizedException, } from '@nestjs/common';");
-                builder.AppendLine("import { InjectRepository } from '@nestjs/typeorm';");
-                builder.AppendLine("import { Repository } from 'typeorm';");
-                builder.AppendLine("import { " + entityName + " } from 'src/entities';");
-                builder.AppendLine("import { ReturnValue, ReturnValues } from 'src/models';");
-                builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from 'src/dto';");
-                builder.AppendLine("import { CryptoService } from './crypto.service';");
-                builder.AppendEmptyLine();
-                builder.AppendLine($"@Injectable()");
-                builder.AppendLine("export class " + entityName + "Service {");
-                builder.AppendTabLine(1, "constructor(");
-                builder.AppendTabLine(1, "@InjectRepository(" + entityName + ")");
-                builder.AppendTabLine(1, "private readonly repository: Repository<" + entityName + ">,");
-                builder.AppendTabLine(1, "private crypto:CryptoService");
-                builder.AppendTabLine(1, ") {}");
-                builder.AppendEmptyLine();
-
-                builder.AppendTabLine(1, "async create(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "data:" + entityName + "Regist): Promise<ReturnValue> {");
+                if (!option.UsingCustomModel)
+                {
+                    builder.AppendLine("import { Injectable, UnauthorizedException, } from '@nestjs/common';");
+                    builder.AppendLine("import { InjectRepository } from '@nestjs/typeorm';");
+                    builder.AppendLine("import { Repository } from 'typeorm';");
+                    builder.AppendLine("import { " + entityName + " } from 'src/entities';");
+                    builder.AppendLine("import { ReturnValue, ReturnValues } from 'src/models';");
+                    builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from 'src/dto';");
+                    builder.AppendLine("import { CryptoService } from './crypto.service';");
+                    builder.AppendEmptyLine();
+                    builder.AppendLine($"@Injectable()");
+                    builder.AppendLine("export class " + entityName + "Service {");
+                    builder.AppendTabLine(1, "constructor(");
+                    builder.AppendTabLine(1, "@InjectRepository(" + entityName + ")");
+                    builder.AppendTabLine(1, "private readonly repository: Repository<" + entityName + ">,");
+                    builder.AppendTabLine(1, "private crypto:CryptoService");
+                    builder.AppendTabLine(1, ") {}");
+                    builder.AppendEmptyLine();
+                }
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "create(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "data:" + entityName + "Regist): Promise<ReturnValue> {");
 
                 if (!option.IsNoModel)
                 {
@@ -410,7 +418,7 @@ namespace Woose.Builder
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async update(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "data:" + entityName + "Update): Promise<ReturnValue> {");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "update(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "data:" + entityName + "Update): Promise<ReturnValue> {");
 
                 if (!option.IsNoModel)
                 {
@@ -476,7 +484,7 @@ namespace Woose.Builder
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async findlist(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "): Promise<ReturnValues> {");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "findlist(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "): Promise<ReturnValues> {");
 
                 if (!option.IsNoModel)
                 {
@@ -508,7 +516,7 @@ namespace Woose.Builder
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async findById(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "idx:number): Promise<ReturnValues> {");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "findById(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "idx:number): Promise<ReturnValues> {");
 
                 if (!option.IsNoModel)
                 {
@@ -552,7 +560,7 @@ namespace Woose.Builder
                 builder.AppendTabLine(1, "}");
                 builder.AppendEmptyLine();
 
-                builder.AppendTabLine(1, "async eraseById(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "idx:number): Promise<ReturnValues> {");
+                builder.AppendTabLine(1, "async " + ((option.UsingCustomModel) ? entityName.FirstCharToLower() : "") + "eraseById(" + ((option.IsNoModel) ? "" : "accessToken:string, ") + "idx:number): Promise<ReturnValues> {");
 
                 if (!option.IsNoModel)
                 {
@@ -582,8 +590,10 @@ namespace Woose.Builder
                 }
 
                 builder.AppendTabLine(1, "}");
-
-                builder.AppendLine("}");
+                if (!option.UsingCustomModel)
+                {
+                    builder.AppendLine("}");
+                }
             }
 
             return builder.ToString();

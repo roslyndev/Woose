@@ -1,24 +1,16 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Options;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Xml.Linq;
 using Woose.Builder.Popup;
 using Woose.Core;
 using Woose.Data;
-using Woose.Data.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Woose.Builder
 {

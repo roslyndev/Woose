@@ -354,7 +354,8 @@
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
                             <StackPanel Orientation="Horizontal" Height="40" Margin="5" VerticalAlignment="Center">
-                                <CheckBox Name="NestCheckUseDeco" Content="Using ApiOperation" Checked="CheckUseDeco_Checked" Unchecked="CheckUseDeco_UnChecked" Margin="15,5,5,5" VerticalAlignment="Center" />
+                                <CheckBox Name="NestUseCustomModel" Content="Using Custom Model" Checked="CheckUseCustomModel_Checked" Unchecked="CheckUseCustomModel_Unchecked" Margin="15,5,5,5" VerticalAlignment="Center" />
+                                <CheckBox Name="NestCheckUseDeco" Content="Using Api" Checked="CheckUseDeco_Checked" Unchecked="CheckUseDeco_UnChecked" Margin="15,5,5,5" VerticalAlignment="Center" />
                                 <CheckBox Name="NestCheckNoModel" Content="No Auth" Checked="CheckNoModel_Checked" Unchecked="CheckNoModel_Unchecked" Margin="15,5,20,5" VerticalAlignment="Center" />
 
                                 <ComboBox Name="NestReturnType" SelectedIndex="0" SelectionChanged="ReturnType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
@@ -362,11 +363,6 @@
                                     <ComboBoxItem Content="BindModel" />
                                     <ComboBoxItem Content="Entity T Bind" />
                                     <ComboBoxItem Content="Entities List Bind" />
-                                </ComboBox>
-
-                                <ComboBox Name="NestBindModel" SelectedIndex="0" SelectionChanged="BindModel_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
-                                    <ComboBoxItem Content="ExecuteResult" />
-                                    <ComboBoxItem Content="ReturnValue" />
                                 </ComboBox>
 
                                 <ComboBox Name="NestMethodType" SelectedIndex="0" SelectionChanged="MethodType_SelectionChanged" Margin="0,5,10,5" MinWidth="100" VerticalAlignment="Center" Height="30">
