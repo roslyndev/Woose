@@ -258,11 +258,11 @@ namespace Woose.Builder
                     }
                     builder.AppendLine(" } from '@nestjs/swagger';");
                     builder.AppendLine("import { Controller,Get,Post,Put,Body,Param,Delete,UseInterceptors,Req } from '@nestjs/common';");
-                    builder.AppendLine("import { AuthInterceptor } from 'src/Interceptors';");
+                    builder.AppendLine("import { AuthInterceptor } from '../Interceptors';");
                     builder.AppendLine("import { " + entityName + "Service } from '../services';");
-                    builder.AppendLine("import { " + entityName + " } from 'src/entities';");
-                    builder.AppendLine("import { ReturnValue, ReturnValues } from 'src/models';");
-                    builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from 'src/dto';");
+                    //builder.AppendLine("import { " + entityName + " } from '../entities';");
+                    builder.AppendLine("import { ReturnValue, ReturnValues } from '../models';");
+                    builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from '../dto';");
                     builder.AppendEmptyLine();
                     builder.AppendLine($"@ApiTags(\"{entityName.ToLower()}\")");
                     if (!option.IsNoModel)
@@ -349,9 +349,9 @@ namespace Woose.Builder
                     builder.AppendLine("import { Injectable, UnauthorizedException, } from '@nestjs/common';");
                     builder.AppendLine("import { InjectRepository } from '@nestjs/typeorm';");
                     builder.AppendLine("import { Repository } from 'typeorm';");
-                    builder.AppendLine("import { " + entityName + " } from 'src/entities';");
-                    builder.AppendLine("import { ReturnValue, ReturnValues } from 'src/models';");
-                    builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from 'src/dto';");
+                    builder.AppendLine("import { " + entityName + " } from '../entities';");
+                    builder.AppendLine("import { ReturnValue, ReturnValues } from '../models';");
+                    builder.AppendLine("import { " + entityName + "Regist, " + entityName + "Update } from '../dto';");
                     builder.AppendLine("import { CryptoService } from './crypto.service';");
                     builder.AppendEmptyLine();
                     builder.AppendLine($"@Injectable()");
