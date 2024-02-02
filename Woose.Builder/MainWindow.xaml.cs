@@ -252,7 +252,7 @@ namespace Woose.Builder
                 worker = new Thread(new ParameterizedThreadStart((path) => {
                     string selectedFilePath = Convert.ToString(path);
                     var list = this.db.GetDatabases();
-                    string jsonString = JsonConvert.SerializeObject(list);
+                    string jsonString = JsonConvert.SerializeObject(list, Formatting.Indented);
                     try
                     {
                         File.WriteAllText(selectedFilePath, jsonString, Encoding.UTF8);
